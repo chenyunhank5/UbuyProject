@@ -1,6 +1,6 @@
 import os
+import dj_database_url
 from pathlib import Path
-import dj_database_url  # You must add this to requirements.txt
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,7 +12,6 @@ SECRET_KEY = 'django-insecure-s8l$(311kw#lec+vp)&^@n!677mx#@n(fe3m)s(e$64^t5-ltz
 DEBUG = True
 
 # --- UPDATED: ALLOWED_HOSTS ---
-# Allows your site to be seen on Railway and locally
 ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '.railway.app']
 
 # Application definition
@@ -28,7 +27,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Recommended for static files on Railway
+    'whitenoise.middleware.WhiteNoiseMiddleware', # For CSS/Images on Railway
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -42,7 +41,7 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -56,15 +55,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
-# --- UPDATED: SMART DATABASE SETTINGS ---
-# This looks for Railway's DATABASE_URL first.
-# If it doesn't find it, it uses your local PostgreSQL settings.
+# --- SMART DATABASE SETTINGS ---
 if os.getenv('DATABASE_URL'):
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=False
+        )
     }
 else:
-    # This is only for your computer (Local)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -87,9 +86,21 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # For Railway/WhiteNoise
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- ADD THESE LINES BELOW FOR RAILWAY SECURITY ---
+
+# This fixes the "Origin checking failed" error
+CSRF_TRUSTED_ORIGINS = [
+    'https://ubuyproject.up.railway.app',
+    'https://*.railway.app'
+]
+
+# Tell Django to use secure cookies since Railway uses HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
