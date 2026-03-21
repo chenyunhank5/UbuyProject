@@ -104,3 +104,15 @@ CSRF_TRUSTED_ORIGINS = [
 # Tell Django to use secure cookies since Railway uses HTTPS
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
+
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+
+@receiver(post_migrate)
+def create_admin_user(sender, **kwargs):
+    if sender.name == 'django.contrib.auth':
+        # Replace 'admin' and 'password123' with what you want
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@example.com', 'password123')
+            print("Superuser 'admin' created successfully!")
