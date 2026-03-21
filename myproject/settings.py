@@ -59,12 +59,22 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 # --- UPDATED: SMART DATABASE SETTINGS ---
 # This looks for Railway's DATABASE_URL first.
 # If it doesn't find it, it uses your local PostgreSQL settings.
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'postgres://postgres:pwubuy@127.0.0.1:5432/ubuydatabase'),
-        conn_max_age=600
-    )
-}
+if os.getenv('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+    }
+else:
+    # This is only for your computer (Local)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'ubuydatabase',
+            'USER': 'postgres',
+            'PASSWORD': 'pwubuy',
+            'HOST': '127.0.0.1',
+            'PORT': '5432',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = []
