@@ -1,0 +1,175 @@
+<div class="px-4 py-4 min-h-[calc(100vh-120px)] animate-in fade-in duration-500" style="font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;">
+    <a href="?tab=home&lang={{ lang }}" class="flex items-center gap-2 text-slate-400 mb-5 active:opacity-50 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>
+        </svg>
+        <span class="text-[10px] font-black uppercase tracking-tight">
+            {% if lang == 'en' %}Back{% else %}Volver{% endif %}
+        </span>
+    </a>
+
+    <div class="relative overflow-hidden bg-brand rounded-2xl p-6 text-white mb-5 shadow-xl border border-amber-500/20">
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 blur-[40px] rounded-full"></div>
+
+        <p class="text-white text-[9px] font-black uppercase tracking-[0.2em]">
+            {% if lang == 'en' %}Available Balance{% else %}Saldo disponible{% endif %}
+        </p>
+        <p class="text-3xl font-black mt-1 text-white">BOB {{ profile.balance }}</p>
+
+        <div class="mt-4 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+            <p class="text-white text-[9px] font-bold uppercase">
+                {% if lang == 'en' %}Min: 50.00 BOB{% else %}Mínimo: 50.00 BOB{% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% if not profile.account_number %}
+        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-[8px] text-rose-500 uppercase font-black tracking-widest">{% if lang == 'en' %}Status{% else %}Estado{% endif %}</p>
+                <p class="font-bold text-slate-400 text-xs mt-0.5">{% if lang == 'en' %}No bank account added{% else %}Sin cuenta vinculada{% endif %}</p>
+            </div>
+            <a href="?tab=withdraw_info&lang={{ lang }}" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">
+                {% if lang == 'en' %}Add{% else %}Agregar{% endif %}
+            </a>
+        </div>
+    {% else %}
+        <a href="?tab=withdraw_info&lang={{ lang }}" class="block bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm active:bg-slate-50 transition-all group">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Method{% else %}Método{% endif %}</p>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5">Bank Transfer</p>
+                        </div>
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Bank{% else %}Banco{% endif %}</p>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5 truncate">{{ profile.bank_name|default:"---" }}</p>
+                        </div>
+                    </div>
+                    <div class="pt-3 mt-3 border-t border-slate-50">
+                        <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Account Number{% else %}Cuenta Bancaria{% endif %}</p>
+                        <p class="text-xs text-slate-600 font-mono font-bold tracking-tighter">{{ profile.account_number }}</p>
+                    </div>
+                </div>
+                <div class="pl-4 text-slate-300 group-active:text-brand transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </div>
+            </div>
+        </a>
+    {% endif %}
+
+    <form action="{% url 'submit_withdrawal' %}?lang={{ lang }}" method="POST" class="space-y-4">
+        {% csrf_token %}
+
+        <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                {% if lang == 'en' %}Amount{% else %}Monto{% endif %}
+            </label>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">BOB</span>
+                <input type="number" name="amount" required step="0.01" min="50"
+                    class="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-12 py-2 text-sm font-black focus:outline-none focus:border-amber-500 transition-all shadow-sm"
+                    placeholder="0.00">
+            </div>
+        </div>
+
+        <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                {% if lang == 'en' %}Withdrawal PIN{% else %}PIN de Retiro{% endif %}
+            </label>
+            <div class="relative">
+                <input type="password" id="withdraw_pin_field" name="password" required maxlength="6"
+                    class="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black focus:outline-none focus:border-amber-500 transition-all shadow-sm"
+                    placeholder="••••••">
+                <button type="button" onclick="toggleWithdrawPIN()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-brand transition-colors">
+                    <svg id="eye_icon_withdraw" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" {% if not profile.account_number %}disabled{% endif %}
+                class="bg-brand w-full text-white drop-shadow-sm font-black py-4 rounded-xl active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 shadow-lg shadow-amber-500/20 disabled:opacity-50">
+            {% if lang == 'en' %}Confirm Withdrawal{% else %}Confirmar Retiro{% endif %}
+        </button>
+    </form>
+
+    <p class="text-center text-[8px] text-slate-400 mt-8 font-bold leading-relaxed px-6 uppercase tracking-[0.2em]">
+        {% if lang == 'en' %}Secure encrypted transaction{% else %}Transacción segura y encriptada{% endif %}
+    </p>
+
+    <div class="mt-10 mb-6">
+        <div class="flex items-center justify-between mb-4 px-1">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                {% if lang == 'en' %}Withdrawal History{% else %}Historial de Retiros{% endif %}
+            </h3>
+            <span class="text-[8px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full font-bold">
+                {{ withdrawals|length }} {% if lang == 'en' %}Total{% else %}En total{% endif %}
+            </span>
+        </div>
+
+        <div class="space-y-3">
+            {% for w in withdrawals %}
+            {% with status=w.status|lower %}
+            <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition-all active:scale-[0.98]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center
+                        {% if status == 'pending' or status == 'procesando' %}
+                            bg-amber-100 text-amber-600
+                        {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}
+                            bg-emerald-100 text-emerald-600
+                        {% else %}
+                            bg-rose-100 text-rose-600
+                        {% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-black text-slate-800">BOB {{ w.amount }}</p>
+                        <p class="text-[9px] text-slate-400 font-bold mt-0.5">{{ w.created_at|date:"d M, H:i" }}</p>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <span class="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border
+                        {% if status == 'pending' or status == 'procesando' %}
+                            border-amber-200 text-amber-700 bg-amber-50
+                        {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}
+                            border-emerald-200 text-emerald-700 bg-emerald-50
+                        {% else %}
+                            border-rose-200 text-rose-700 bg-rose-50
+                        {% endif %}">
+
+                        {% if lang == 'en' %}
+                            {{ w.status|upper }}
+                        {% else %}
+                            {% if status == 'pending' or status == 'procesando' %}PENDIENTE
+                            {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}COMPLETADO
+                            {% else %}RECHAZADO{% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleWithdrawPIN() {
+        const input = document.getElementById('withdraw_pin_field');
+        const icon = document.getElementById('eye_icon_withdraw');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.innerHTML = `<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line>`;
+        } else {
+            input.type = "password";
+            icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+        }
+    }
+</script>

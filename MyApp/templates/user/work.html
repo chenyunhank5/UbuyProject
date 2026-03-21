@@ -1,0 +1,119 @@
+<style>
+    .goods-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 8px;
+        background-color: #fff;
+    }
+    .goods-item {
+        position: relative;
+        border: 1px solid #ebedf0;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 8px; /* Added slight rounding for a modern look */
+        overflow: hidden;
+    }
+    .goods-item .tag {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        background-color: #ee0a24;
+        color: #fff;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 8px;
+        text-transform: uppercase;
+        border-bottom-right-radius: 8px;
+    }
+    .goods-item .img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+        padding: 15px;
+        background-origin: content-box;
+        background-color: #f8fafc; /* Light bg for the product image */
+    }
+    .goods-item .info {
+        padding: 10px;
+        border-top: 1px solid #f7f8fa;
+    }
+    .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .u-m-t-8 { margin-top: 8px; }
+    .van-button--mini {
+        padding: 0 8px;
+        height: 22px;
+        font-size: 10px;
+        background-color: #ee0a24;
+        border: 1px solid #ee0a24;
+        color: #fff;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .locked-btn {
+        background-color: #c8c9cc !important;
+        border-color: #c8c9cc !important;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="goods-list">
+    {% for vip in vip_levels %}
+
+    <div class="goods-item border">
+        <span class="tag">{{ vip.name }}</span>
+
+        <div class="img"
+             style="background-image: url('{% if vip.image %}{{ vip.image.url }}{% else %}https://api.dicebear.com/7.x/identicon/svg?seed={{ vip.level_number }}{% endif %}');">
+        </div>
+
+        <div class="info">
+            <div class="text-[11px] text-slate-500 font-medium">
+                {% if lang == 'en' %}Min Balance{% else %}Balance mínimo{% endif %}
+            </div>
+            <div class="text-[13px] font-bold text-slate-900">
+                BOB {{ vip.min_balance }}
+            </div>
+
+            <div class="text-[10px] text-slate-400 mt-1">
+                {% if lang == 'en' %}Daily Limit:{% else %}Límite diario:{% endif %} {{ vip.max_tasks }}
+            </div>
+
+            <div class="flex-between u-m-t-8">
+                <span class="text-[11px] text-slate-500">
+                    {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
+                </span>
+
+                {% if profile.membership_vip.level_number >= vip.level_number and profile.balance >= vip.min_balance %}
+                <a href="?tab=mission&level={{ vip.id }}&lang={{ lang }}" class="no-underline">
+                    <button class="van-button van-button--danger van-button--mini">
+                        <div class="van-button__content">
+                            <span class="van-button__text">{{ vip.commission_rate }}%</span>
+                        </div>
+                    </button>
+                </a>
+                {% else %}
+                <button class="van-button van-button--danger van-button--mini locked-btn">
+                    <div class="van-button__content flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span class="van-button__text">{{ vip.commission_rate }}%</span>
+                    </div>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% endfor %}
+</div>

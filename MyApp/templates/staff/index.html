@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en"
+    x-data="{
+        darkMode: localStorage.getItem('darkMode') === 'true',
+        sidebarOpen: true,
+        toggleTheme() {
+            this.darkMode = !this.darkMode;
+            localStorage.setItem('darkMode', this.darkMode);
+        }
+    }"
+    :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | Ubuy Hybrid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { border-radius: 10px; background: #cbd5e1; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+        .sidebar-transition { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .content-transition { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+
+<body
+    class="font-sans antialiased transition-colors duration-300 bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-300"
+    x-data="{
+        tab: new URLSearchParams(window.location.search).get('tab') || 'home',
+        updateURL(newTab) {
+            this.tab = newTab;
+            const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?tab=' + newTab;
+            window.history.pushState({path:newurl}, '', newurl);
+        }
+    }"
+>
+
+    <div class="flex min-h-screen">
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="sidebar-transition flex flex-col fixed h-full z-20 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50">
+            <div class="p-6 h-16 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/50 text-slate-800 dark:text-white overflow-hidden">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/20 font-bold italic">U</div>
+                <div x-show="sidebarOpen" x-transition.opacity class="flex items-center flex-1 whitespace-nowrap font-bold text-xl tracking-tight">
+                    Ubuy <span class="text-blue-600 dark:text-blue-400 text-[10px] tracking-widest ml-auto uppercase font-black">Staff</span>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden">
+                <button @click="updateURL('home')" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative" :class="tab === 'home' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
+                    <span class="text-lg flex-shrink-0">🏠</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Dashboard</span>
+                </button>
+                <button @click="updateURL('users')" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative" :class="tab === 'users' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
+                    <span class="text-lg flex-shrink-0">👥</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Users</span>
+                </button>
+                <button @click="updateURL('missions')" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative" :class="tab === 'missions' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
+                    <span class="text-lg flex-shrink-0">⚡</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Missions</span>
+                </button>
+                <button @click="updateURL('withdrawals')"
+                    class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative"
+                    :class="tab === 'withdrawals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
+                    <span class="text-lg flex-shrink-0">💰</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Withdrawals</span>
+
+                    {% if pending_withdrawals %}
+                    <span class="absolute right-2 top-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950"></span>
+                    {% endif %}
+                </button>
+                <button @click="updateURL('vip')"
+                    class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative"
+                    :class="tab === 'vip' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
+                    <span class="text-lg flex-shrink-0">💎</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">VIP Levels</span>
+                </button>
+            </nav>
+
+            <div class="mt-auto p-4 space-y-2 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950/50">
+                <a href="/" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all group relative">
+                    <span class="text-lg flex-shrink-0 opacity-60">📱</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Mobile App</span>
+                </a>
+                <a href="/logout/" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all group relative">
+                    <span class="text-lg flex-shrink-0 opacity-80">🚪</span>
+                    <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <main :class="sidebarOpen ? 'ml-64' : 'ml-20'" class="content-transition flex-1 min-h-screen flex flex-col">
+            <header class="h-16 flex items-center justify-between px-6 sticky top-0 z-10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/50 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-slate-200 dark:border-slate-800">
+                        <svg x-show="sidebarOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        <svg x-show="!sidebarOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                    </button>
+                    <h1 class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]" x-text="tab.toUpperCase()"></h1>
+                </div>
+
+                <div class="flex items-center gap-4">
+
+                  <div class="relative" x-data="{ open: false, showModal: false, activeReq: {} }">
+                    <button @click="open = !open"
+                        class="relative flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-blue-600 transition-all">
+                        <span class="text-lg">🔔</span>
+                        {% if pending_recharges %}
+                        <span class="absolute top-2.5 right-2.5 flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500 border border-white dark:border-slate-950"></span>
+                        </span>
+                        {% endif %}
+                    </button>
+
+                    <div x-show="open" @click.outside="open = false" x-cloak class="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between">
+                            <h3 class="text-xs font-black uppercase dark:text-white">Pending Recharges</h3>
+                        </div>
+
+                        <div class="max-h-80 overflow-y-auto">
+                            {% for req in pending_recharges %}
+                            <div class="p-4 border-b border-slate-50 dark:border-slate-800/50">
+                                <div class="flex gap-3">
+                                    <img src="{{ req.screenshot.url }}" class="w-12 h-12 rounded-lg object-cover">
+                                    <div class="flex-1">
+                                        <p class="text-xs font-bold dark:text-white">{{ req.user.username }}</p>
+                                        <p class="text-xs text-emerald-500 font-mono font-bold">BOB {{ req.amount }}</p>
+                                    </div>
+                                </div>
+                                <button @click="activeReq = { id: '{{ req.id }}', user: '{{ req.user.username }}', amount: '{{ req.amount }}', img: '{{ req.screenshot.url }}' }; showModal = true; open = false"
+                                        class="w-full mt-3 bg-blue-600 text-white text-[10px] font-bold py-2 rounded-lg uppercase">
+                                    Review Proof
+                                </button>
+                            </div>
+                            {% empty %}
+                            <div class="p-8 text-center text-slate-400 text-xs">No pending recharges</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <template x-teleport="body">
+                        <div x-show="showModal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm" x-cloak>
+                            <div @click.outside="showModal = false" class="bg-white dark:bg-slate-950 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
+                                <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                    <h2 class="font-black text-xs uppercase dark:text-white" x-text="'Proof: ' + activeReq.user"></h2>
+                                    <button @click="showModal = false" class="text-slate-400">&times;</button>
+                                </div>
+
+                                <div class="p-6">
+                                    <img :src="activeReq.img" class="w-full rounded-2xl border dark:border-slate-800 shadow-inner mb-4">
+                                    <div class="text-center mb-6">
+                                        <p class="text-sm text-slate-500 uppercase font-bold">Amount to Credit</p>
+                                        <p class="text-3xl font-mono font-black text-emerald-500">BOB <span x-text="activeReq.amount"></span></p>
+                                    </div>
+
+                                    <div class="flex gap-3">
+                                        <a :href="'/staff/recharge/action/' + activeReq.id + '/reject/'"
+                                           class="flex-1 text-center bg-rose-50 text-rose-500 py-4 rounded-2xl font-bold uppercase text-[10px] hover:bg-rose-100">Reject</a>
+
+                                        <a :href="'/staff/recharge/action/' + activeReq.id + '/approve/'"
+                                           class="flex-1 text-center bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase text-[10px] shadow-lg shadow-blue-600/30 hover:bg-blue-700">Approve & Pay</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                    <button @click="toggleTheme()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[10px] font-bold transition-all hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm">
+                        <span x-text="darkMode ? 'LIGHT' : 'DARK'" class="hidden md:inline"></span>
+                        <span x-text="darkMode ? '☀️' : '🌙'"></span>
+                    </button>
+
+                    <div class="w-[1px] h-6 bg-slate-200 dark:bg-slate-800"></div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 leading-none">{{ request.user.username }}</p>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter mt-1">Administrator</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-600/20">
+                            {{ request.user.username|slice:":1"|upper }}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8 flex-1">
+                <section x-show="tab === 'home'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
+                    {% include "staff/home.html" %}
+                </section>
+                <section x-show="tab === 'users'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
+                    {% include "staff/usermanagement.html" %}
+                </section>
+                <section x-show="tab === 'vip'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
+                    {% include "staff/vipmanagement.html" %}
+                </section>
+                <section x-show="tab === 'missions'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
+                    <div class="bg-white dark:bg-slate-900 p-12 rounded-3xl text-center border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div class="text-4xl mb-4">⚡</div>
+                        <h2 class="text-2xl font-bold dark:text-white">Mission Configuration</h2>
+                        <p class="text-slate-500 dark:text-slate-400 mt-2">Coming soon: Product and commission management.</p>
+                    </div>
+                </section>
+                <section x-show="tab === 'withdrawals'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
+                    {% include "staff/withdrawalmanagement.html" %}
+                </section>
+            </div>
+        </main>
+    </div>
+
+    {% if messages %}
+    <div class="fixed bottom-6 right-6 z-[100] space-y-3">
+        {% for message in messages %}
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+             class="flex items-center gap-4 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 px-6 py-4 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 min-w-[320px] transition-all">
+            <div class="w-6 h-6 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center text-xs font-bold">✓</div>
+            <p class="text-xs font-semibold tracking-tight">{{ message }}</p>
+            <button @click="show = false" class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</body>
+</html>

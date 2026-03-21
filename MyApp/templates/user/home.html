@@ -1,0 +1,80 @@
+<div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500">
+    <div class="relative w-full h-44 bg-slate-200 overflow-hidden shadow-sm">
+        <img src="https://img-blog.ubuy.com.kw/2025/02/Ubuy-plus-benefits.webp" class="w-full h-full object-cover" alt="Banner">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 px-4 py-6 bg-white">
+        <a href="?tab=recharge&lang={{ lang }}" class="bg-brand text-white rounded-xl py-4 flex flex-col items-center justify-center shadow-lg shadow-orange-100 active:scale-95 transition-all border border-brand/10">
+            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span class="text-[10px] font-black uppercase tracking-tight">
+                {% if lang == 'en' %}Recharge{% else %}Recargar{% endif %}
+            </span>
+        </a>
+
+        <a href="?tab=withdraw&lang={{ lang }}" class="bg-brand text-white rounded-xl py-4 flex flex-col items-center justify-center shadow-lg shadow-orange-100 active:scale-95 transition-all border border-brand/10">
+            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+            <span class="text-[10px] font-black uppercase tracking-tight">
+                {% if lang == 'en' %}Withdraw{% else %}Retirar{% endif %}
+            </span>
+        </a>
+
+        <a href="?tab=invite&lang={{ lang }}" class="bg-brand text-white rounded-xl py-4 flex flex-col items-center justify-center shadow-lg shadow-orange-100 active:scale-95 transition-all border border-brand/10">
+            <span class="text-lg mb-1">👥</span>
+            <span class="text-[10px] font-black uppercase tracking-tight">
+                {% if lang == 'en' %}Invite{% else %}Invitar{% endif %}
+            </span>
+        </a>
+    </div>
+
+    <div class="mx-4 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-[9px] text-slate-400 uppercase tracking-widest font-black mb-1">
+                    {% if lang == 'en' %}User Profile{% else %}Perfil de Usuario{% endif %}
+                </p>
+                <p class="font-black text-lg text-slate-800 tracking-tight">{{ user.username }}</p>
+                <p class="text-[11px] font-bold text-slate-400">{{ profile.phone_number }}</p>
+            </div>
+
+            <div class="text-right">
+                <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Code{% else %}Código{% endif %}</p>
+                <p class="font-mono font-black text-[10px] text-brand bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100 mt-1">
+                    {{ profile.invite_code }}
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-5">
+            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50">
+                <p class="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-tighter">
+                    {% if lang == 'en' %}Balance{% else %}Saldo{% endif %}
+                </p>
+                <p class="font-black text-base text-slate-900">BOB {{ profile.balance }}</p>
+            </div>
+
+            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50">
+                <p class="text-[9px] text-slate-500 uppercase font-black mb-1 tracking-tighter">
+                    {% if lang == 'en' %}Credit{% else %}Crédito{% endif %}
+                </p>
+                <p class="font-black text-base text-slate-800">
+                    {{ profile.credit_points }}<span class="text-[10px] font-bold text-slate-300">/100</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="px-6 py-8">
+        <p class="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+            {% if lang == 'en' %}
+                Welcome to Ubuy. Start your daily tasks to earn rewards.
+            {% else %}
+                Bienvenido a Ubuy. Comienza tus tareas diarias para ganar recompensas.
+            {% endif %}
+        </p>
+    </div>
+</div>

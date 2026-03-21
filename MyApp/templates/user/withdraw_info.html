@@ -1,0 +1,61 @@
+{% if request.GET.tab == 'withdraw_info' %}
+<div class="max-w-md mx-auto min-h-screen bg-background relative">
+    <main class="pt-4 pb-20 min-h-screen">
+        <div class="px-4 py-4">
+            <a href="/?tab=profile" class="flex items-center gap-2 text-muted-foreground mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+                <span class="text-sm font-medium">{% if request.GET.lang == 'en' %}Withdrawal Information{% else %}Información de Retiro{% endif %}</span>
+            </a>
+
+            <form method="POST" action="{% url 'update_withdrawal_info' %}" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label class="text-sm font-medium text-foreground">Method</label>
+                    <select name="method" class="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-brand">
+                        <option value="bank_transfer" {% if user.profile.withdrawal_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                        <option value="tigo_money" {% if user.profile.withdrawal_method == 'tigo_money' %}selected{% endif %}>Tigo Money</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-foreground">Bank Name</label>
+                    <select name="bank_name" class="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <option value="Banco Económico">Banco Económico</option>
+                        <option value="Banco Ganadero (YOLO)">Banco Ganadero (YOLO)</option>
+                        <option value="Banco BCP (Yape)">Banco BCP (Yape)</option>
+                        <option value="Banco Unión (Yasta)">Banco Unión (Yasta)</option>
+                        <option value="Banco Mercantil Santa Cruz (MSC)">Banco Mercantil Santa Cruz (MSC)</option>
+                        <option value="BancoSol (Altoke)">BancoSol (Altoke)</option>
+                        </select>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-foreground">Account Name</label>
+                    <input type="text" name="account_name" value="{{ user.profile.account_name|default:'' }}"
+                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 focus:ring-2 focus:ring-brand"
+                           placeholder="Juan Perez" required>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-foreground">Account Number</label>
+                    <input type="text" name="account_number" value="{{ user.profile.account_number|default:'' }}"
+                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 focus:ring-2 focus:ring-brand"
+                           placeholder="1234567890" required>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-foreground">Phone Number</label>
+                    <input type="text" name="bank_phone" value="{{ user.profile.bank_phone_number|default:'' }}"
+                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1 focus:ring-2 focus:ring-brand"
+                           placeholder="+591 70000000">
+                </div>
+
+                <button type="submit" class="w-full mt-4 bg-brand text-white font-bold py-3 rounded-md hover:opacity-90 transition-all shadow-lg shadow-brand/20">
+                    Save Information
+                </button>
+            </form>
+        </div>
+    </main>
+</div>
+{% endif %}

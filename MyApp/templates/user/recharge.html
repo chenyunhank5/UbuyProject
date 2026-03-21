@@ -1,0 +1,144 @@
+<div class="px-4 py-4 min-h-[calc(100vh-120px)] animate-in fade-in duration-500" style="font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;">
+
+    <button onclick="window.history.back()" class="flex items-center gap-2 text-slate-400 mb-5 hover:text-slate-600 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
+        <span class="text-xs font-bold uppercase tracking-tight">{% if request.GET.lang == 'en' %}Back{% else %}Volver{% endif %}</span>
+    </button>
+
+    <div class="bg-white rounded-[12px] border border-slate-200 shadow-sm overflow-hidden mb-5">
+        <div class="p-4 border-b border-slate-50 flex items-center justify-between bg-white">
+            <h2 class="text-sm font-black text-slate-900 tracking-tight truncate pr-2">
+                {{ request.user.profile.recharge_receiver_name|default:"Admin Account" }}
+            </h2>
+            <button onclick="copyToClipboard('{{ request.user.profile.recharge_receiver_name }}')" class="p-2 text-slate-400 hover:text-slate-900 active:scale-90 transition-all shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </button>
+        </div>
+
+        <div onclick="openQR()" class="p-6 flex flex-col items-center justify-center bg-slate-50/30 cursor-pointer hover:bg-slate-100/50 transition-colors">
+            {% if request.user.profile.recharge_qr %}
+                <img src="{{ request.user.profile.recharge_qr.url }}" class="w-40 h-40 object-contain rounded-xl shadow-md bg-white p-2 border border-slate-100">
+                <p class="text-[9px] font-black text-slate-400 mt-3 uppercase tracking-[0.2em]">
+                    {% if request.GET.lang == 'en' %}Tap to Enlarge{% else %}Tocar para Ampliar{% endif %}
+                </p>
+            {% else %}
+                <p class="text-xs text-slate-400 font-medium italic">No QR Assigned</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <form action="/submit-recharge/" method="POST" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">BOB</span>
+            <input type="number" name="amount" required step="0.01" placeholder="0.00"
+                   class="w-full pl-14 pr-4 py-3.5 bg-white border border-slate-200 rounded-[10px] outline-none focus:border-slate-900 font-mono font-black text-base text-slate-900 transition-all shadow-sm">
+        </div>
+
+        <div id="dropZone" class="bg-white border border-dashed border-slate-200 rounded-[10px] py-5 text-center relative hover:border-slate-400 transition-colors group">
+            <input type="file" name="proof" id="proofInput" class="absolute inset-0 opacity-0 cursor-pointer" required onchange="updateFileName(this)">
+            <div class="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m2-5l5 5 5-5m-5 5V3"/></svg>
+                <p id="fileNameDisplay" class="text-[11px] font-bold text-slate-500 uppercase tracking-tight">
+                    {% if request.GET.lang == 'en' %}Upload Proof{% else %}Subir Comprobante{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <button type="submit"
+                class="bg-brand from-amber-400 via-amber-500 to-amber-600 w-full text-white drop-shadow-sm font-black py-4 rounded-xl active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 shadow-lg shadow-amber-500/20">
+                {% if request.GET.lang == 'en' %}Confirm Recharge{% else %}Confirmar Recarga{% endif %}
+        </button>
+    </form>
+
+    <div class="border-t border-slate-100 my-6"></div>
+
+    <div class="mb-10">
+        <div class="flex items-center justify-between mb-4 px-1">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                {% if request.GET.lang == 'en' %}Recharge History{% else %}Historial{% endif %}
+            </h3>
+            <span class="text-[8px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full font-bold border border-slate-100">
+                {{ recharges|length }} Total
+            </span>
+        </div>
+
+        <div class="space-y-2.5">
+            {% for r in recharges %}
+            {% with status=r.status|lower %}
+            <div class="bg-white border border-slate-100 p-3.5 rounded-2xl flex items-center justify-between transition-all active:scale-[0.98]">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center
+                        {% if status == 'pending' or status == 'procesando' %}bg-amber-50 text-amber-500
+                        {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'aprobado' %}bg-emerald-50 text-emerald-500
+                        {% else %}bg-rose-50 text-rose-500{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-800">BOB {{ r.amount }}</p>
+                        <p class="text-[9px] text-slate-400 font-bold leading-none mt-1">{{ r.created_at|date:"d M, H:i" }}</p>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <span class="text-[8px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-lg border
+                        {% if status == 'pending' or status == 'procesando' %}border-amber-100 text-amber-600 bg-amber-50/50
+                        {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'aprobado' %}border-emerald-100 text-emerald-600 bg-emerald-50/50
+                        {% else %}border-rose-100 text-rose-600 bg-rose-50/50{% endif %}">
+                        {% if request.GET.lang == 'en' %}{{ r.status|upper }}{% else %}
+                            {% if status == 'pending' or status == 'procesando' %}PENDIENTE{% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'aprobado' %}APROBADO{% else %}RECHAZADO{% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}
+            <div class="py-6 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <p class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{% if request.GET.lang == 'en' %}No transactions{% else %}Sin transacciones{% endif %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="qrModal" class="hidden fixed inset-0 z-[1000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4" onclick="closeQR()">
+    <div class="w-full max-w-sm bg-white rounded-3xl p-6 relative animate-in zoom-in duration-200" onclick="event.stopPropagation()">
+        <button onclick="closeQR()" class="absolute -top-12 right-0 text-white p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        {% if request.user.profile.recharge_qr %}
+            <div class="bg-white rounded-2xl mb-4 overflow-hidden border border-slate-50">
+                <img src="{{ request.user.profile.recharge_qr.url }}" class="w-full h-auto max-h-[60vh] object-contain">
+            </div>
+            <a href="{{ request.user.profile.recharge_qr.url }}" download="QR.png" class="flex items-center justify-center gap-3 w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[11px]">
+                {% if request.GET.lang == 'en' %}Save Image{% else %}Guardar Imagen{% endif %}
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function openQR() { document.getElementById('qrModal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    function closeQR() { document.getElementById('qrModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+    function updateFileName(input) {
+        const display = document.getElementById('fileNameDisplay');
+        const zone = document.getElementById('dropZone');
+        if (input.files.length > 0) {
+            display.innerText = "✓ " + input.files[0].name;
+            zone.classList.replace('border-slate-200', 'border-emerald-500');
+            zone.classList.add('bg-emerald-50/30');
+            display.classList.add('text-emerald-600');
+        }
+    }
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        const btn = event.currentTarget;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="emerald" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+        setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+    }
+</script>
+
+<style>
+    .hidden { display: none !important; }
+</style>
