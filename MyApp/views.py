@@ -146,55 +146,53 @@ def add_user(request):
 
 @staff_member_required
 def update_user(request, user_id):
-    if request.method == "POST":
-        target_user = get_object_or_404(User, id=user_id)
-        p = target_user.profile
+    if request.method == 'POST':
+        user_to_edit = get_object_or_404(User, id=user_id)
+        profile = user_to_edit.profile
 
-        # Update Basic User Data
-        target_user.username = request.POST.get('username')
-        new_pw = request.POST.get('new_password')
-        if new_pw:
-            target_user.set_password(new_pw)
-        target_user.save()
+        # --- Basic Account Info ---
+        user_to_edit.username = request.POST.get('username')
+        profile.phone_number = request.POST.get('phone')
+        profile.credit_points = request.POST.get('credit', 100)
+        profile.invite_code = request.POST.get('invite_code')
 
-        # Update Profile Data
-        p.phone_number = request.POST.get('phone')
-        p.invite_code = request.POST.get('invite_code')
-        p.credit_points = int(request.POST.get('credit', 100))
+        # --- VIP Level ---
+        vip_id = request.POST.get('vip')
+        if vip_id:
+            profile.membership_vip = VipLevel.objects.filter(id=vip_id).first()
 
-        # --- VIP UPDATE LOGIC ---
-        vip_id = request.POST.get('vip')  # CHECK THIS NAME IN YOUR HTML
+        # --- Bank Info ---
+        profile.withdrawal_method = request.POST.get('withdrawal_method')
+        profile.bank_name = request.POST.get('bank_name')
+        profile.account_name = request.POST.get('account_name')
+        profile.account_number = request.POST.get('account_number')
+        profile.bank_phone_number = request.POST.get('bank_phone_number')
 
-        if vip_id and vip_id != '0':
-            try:
-                selected_vip = VipLevel.objects.get(id=vip_id)
-                p.membership_vip = selected_vip
-            except (VipLevel.DoesNotExist, ValueError):
-                messages.error(request, f"VIP Level ID {vip_id} not found.")
+        # --- RECHARGE QR LOGIC (CRITICAL FIX) ---
+        profile.recharge_receiver_name = request.POST.get('recharge_receiver_name')
 
-        # Ensure they always have at least the lowest level
-        if not p.membership_vip:
-            p.membership_vip = VipLevel.objects.order_by('level_number').first()
-
-        # Update Security & Bank Info
-        p.withdrawal_password = request.POST.get('withdrawal_password')
-        p.bank_name = request.POST.get('bank_name')
-        p.account_name = request.POST.get('account_name')
-        p.account_number = request.POST.get('account_number')
-        p.bank_phone_number = request.POST.get('bank_phone_number')
-        p.recharge_receiver_name = request.POST.get('recharge_receiver_name')
-
-        # Handle QR Code
-        if request.POST.get('delete_qr') == 'on':
-            if p.recharge_qr:
-                p.recharge_qr.delete(save=False)
-            p.recharge_qr = None
-
+        # Check if a new file was uploaded
         if 'recharge_qr' in request.FILES:
-            p.recharge_qr = request.FILES['recharge_qr']
+            profile.recharge_qr = request.FILES['recharge_qr']
 
-        p.save()
-        messages.success(request, f"User {target_user.username} updated successfully!")
+        # Check if the "Delete QR" checkbox was ticked
+        if request.POST.get('delete_qr') == 'on': # HTML checkboxes send 'on'
+            if profile.recharge_qr:
+                profile.recharge_qr.delete(save=False) # Removes actual file
+                profile.recharge_qr = None
+
+        # --- Security ---
+        new_pass = request.POST.get('new_password')
+        if new_pass:
+            user_to_edit.set_password(new_pass)
+
+        profile.withdrawal_password = request.POST.get('withdrawal_password')
+
+        # Save both User and Profile
+        user_to_edit.save()
+        profile.save()
+
+        messages.success(request, f"Changes saved for {user_to_edit.username}")
 
     return redirect('/staff/?tab=users')
 
