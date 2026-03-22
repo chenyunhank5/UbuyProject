@@ -1,3 +1,73 @@
+
+<style>
+    .goods-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 8px;
+        background-color: #fff;
+    }
+    .goods-item {
+        position: relative;
+        border: 1px solid #ebedf0;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .goods-item .tag {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        background-color: #ee0a24;
+        color: #fff;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 8px;
+        text-transform: uppercase;
+        border-bottom-right-radius: 8px;
+    }
+    /* FIXED IMAGE CLASS */
+    .goods-item .img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        background-repeat: no-repeat;
+        /* Changed to contain so the whole badge is visible */
+        background-size: contain;
+        background-position: center;
+        /* Reduced padding so the image isn't squeezed to death */
+        padding: 10px;
+        /* Removed content-box to let background-position work normally */
+        background-color: #f8fafc;
+    }
+    .goods-item .info {
+        padding: 10px;
+        border-top: 1px solid #f7f8fa;
+    }
+    .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .u-m-t-8 { margin-top: 8px; }
+    .van-button--mini {
+        padding: 0 8px;
+        height: 22px;
+        font-size: 10px;
+        background-color: #ee0a24;
+        border: 1px solid #ee0a24;
+        color: #fff;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .locked-btn {
+        background-color: #c8c9cc !important;
+        border-color: #c8c9cc !important;
+        cursor: not-allowed;
+    }
+</style>
 <div class="goods-list">
     {% for vip in vip_levels %}
     <div class="goods-item border">
