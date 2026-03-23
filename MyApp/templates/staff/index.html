@@ -59,16 +59,17 @@
                     <span class="text-lg flex-shrink-0">👥</span>
                     <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Users</span>
                 </button>
+
                 <button @click="updateURL('missions')" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative" :class="tab === 'missions' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
                     <span class="text-lg flex-shrink-0">⚡</span>
                     <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Missions</span>
                 </button>
+
                 <button @click="updateURL('withdrawals')"
                     class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 group relative"
                     :class="tab === 'withdrawals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900/50 dark:hover:text-slate-200'">
                     <span class="text-lg flex-shrink-0">💰</span>
                     <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Withdrawals</span>
-
                     {% if pending_withdrawals %}
                     <span class="absolute right-2 top-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950"></span>
                     {% endif %}
@@ -104,72 +105,68 @@
                 </div>
 
                 <div class="flex items-center gap-4">
+                    <div class="relative" x-data="{ open: false, showModal: false, activeReq: {} }">
+                        <button @click="open = !open"
+                            class="relative flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-blue-600 transition-all">
+                            <span class="text-lg">🔔</span>
+                            {% if pending_recharges %}
+                            <span class="absolute top-2.5 right-2.5 flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500 border border-white dark:border-slate-950"></span>
+                            </span>
+                            {% endif %}
+                        </button>
 
-                  <div class="relative" x-data="{ open: false, showModal: false, activeReq: {} }">
-                    <button @click="open = !open"
-                        class="relative flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-blue-600 transition-all">
-                        <span class="text-lg">🔔</span>
-                        {% if pending_recharges %}
-                        <span class="absolute top-2.5 right-2.5 flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500 border border-white dark:border-slate-950"></span>
-                        </span>
-                        {% endif %}
-                    </button>
-
-                    <div x-show="open" @click.outside="open = false" x-cloak class="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50">
-                        <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between">
-                            <h3 class="text-xs font-black uppercase dark:text-white">Pending Recharges</h3>
+                        <div x-show="open" @click.outside="open = false" x-cloak class="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50">
+                            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between">
+                                <h3 class="text-xs font-black uppercase dark:text-white">Pending Recharges</h3>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto">
+                                {% for req in pending_recharges %}
+                                <div class="p-4 border-b border-slate-50 dark:border-slate-800/50">
+                                    <div class="flex gap-3">
+                                        <img src="{{ req.screenshot.url }}" class="w-12 h-12 rounded-lg object-cover">
+                                        <div class="flex-1">
+                                            <p class="text-xs font-bold dark:text-white">{{ req.user.username }}</p>
+                                            <p class="text-xs text-emerald-500 font-mono font-bold">BOB {{ req.amount }}</p>
+                                        </div>
+                                    </div>
+                                    <button @click="activeReq = { id: '{{ req.id }}', user: '{{ req.user.username }}', amount: '{{ req.amount }}', img: '{{ req.screenshot.url }}' }; showModal = true; open = false"
+                                            class="w-full mt-3 bg-blue-600 text-white text-[10px] font-bold py-2 rounded-lg uppercase">
+                                        Review Proof
+                                    </button>
+                                </div>
+                                {% empty %}
+                                <div class="p-8 text-center text-slate-400 text-xs">No pending recharges</div>
+                                {% endfor %}
+                            </div>
                         </div>
 
-                        <div class="max-h-80 overflow-y-auto">
-                            {% for req in pending_recharges %}
-                            <div class="p-4 border-b border-slate-50 dark:border-slate-800/50">
-                                <div class="flex gap-3">
-                                    <img src="{{ req.screenshot.url }}" class="w-12 h-12 rounded-lg object-cover">
-                                    <div class="flex-1">
-                                        <p class="text-xs font-bold dark:text-white">{{ req.user.username }}</p>
-                                        <p class="text-xs text-emerald-500 font-mono font-bold">BOB {{ req.amount }}</p>
+                        <template x-teleport="body">
+                            <div x-show="showModal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm" x-cloak>
+                                <div @click.outside="showModal = false" class="bg-white dark:bg-slate-950 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
+                                    <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                        <h2 class="font-black text-xs uppercase dark:text-white" x-text="'Proof: ' + activeReq.user"></h2>
+                                        <button @click="showModal = false" class="text-slate-400">&times;</button>
+                                    </div>
+                                    <div class="p-6">
+                                        <img :src="activeReq.img" class="w-full rounded-2xl border dark:border-slate-800 shadow-inner mb-4">
+                                        <div class="text-center mb-6">
+                                            <p class="text-sm text-slate-500 uppercase font-bold">Amount to Credit</p>
+                                            <p class="text-3xl font-mono font-black text-emerald-500">BOB <span x-text="activeReq.amount"></span></p>
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <a :href="'/staff/recharge/action/' + activeReq.id + '/reject/'"
+                                               class="flex-1 text-center bg-rose-50 text-rose-500 py-4 rounded-2xl font-bold uppercase text-[10px] hover:bg-rose-100">Reject</a>
+                                            <a :href="'/staff/recharge/action/' + activeReq.id + '/approve/'"
+                                               class="flex-1 text-center bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase text-[10px] shadow-lg shadow-blue-600/30 hover:bg-blue-700">Approve & Pay</a>
+                                        </div>
                                     </div>
                                 </div>
-                                <button @click="activeReq = { id: '{{ req.id }}', user: '{{ req.user.username }}', amount: '{{ req.amount }}', img: '{{ req.screenshot.url }}' }; showModal = true; open = false"
-                                        class="w-full mt-3 bg-blue-600 text-white text-[10px] font-bold py-2 rounded-lg uppercase">
-                                    Review Proof
-                                </button>
                             </div>
-                            {% empty %}
-                            <div class="p-8 text-center text-slate-400 text-xs">No pending recharges</div>
-                            {% endfor %}
-                        </div>
+                        </template>
                     </div>
 
-                    <template x-teleport="body">
-                        <div x-show="showModal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm" x-cloak>
-                            <div @click.outside="showModal = false" class="bg-white dark:bg-slate-950 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
-                                <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                                    <h2 class="font-black text-xs uppercase dark:text-white" x-text="'Proof: ' + activeReq.user"></h2>
-                                    <button @click="showModal = false" class="text-slate-400">&times;</button>
-                                </div>
-
-                                <div class="p-6">
-                                    <img :src="activeReq.img" class="w-full rounded-2xl border dark:border-slate-800 shadow-inner mb-4">
-                                    <div class="text-center mb-6">
-                                        <p class="text-sm text-slate-500 uppercase font-bold">Amount to Credit</p>
-                                        <p class="text-3xl font-mono font-black text-emerald-500">BOB <span x-text="activeReq.amount"></span></p>
-                                    </div>
-
-                                    <div class="flex gap-3">
-                                        <a :href="'/staff/recharge/action/' + activeReq.id + '/reject/'"
-                                           class="flex-1 text-center bg-rose-50 text-rose-500 py-4 rounded-2xl font-bold uppercase text-[10px] hover:bg-rose-100">Reject</a>
-
-                                        <a :href="'/staff/recharge/action/' + activeReq.id + '/approve/'"
-                                           class="flex-1 text-center bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase text-[10px] shadow-lg shadow-blue-600/30 hover:bg-blue-700">Approve & Pay</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
                     <button @click="toggleTheme()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[10px] font-bold transition-all hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm">
                         <span x-text="darkMode ? 'LIGHT' : 'DARK'" class="hidden md:inline"></span>
                         <span x-text="darkMode ? '☀️' : '🌙'"></span>
@@ -193,19 +190,19 @@
                 <section x-show="tab === 'home'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
                     {% include "staff/home.html" %}
                 </section>
+
                 <section x-show="tab === 'users'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
                     {% include "staff/usermanagement.html" %}
                 </section>
+
                 <section x-show="tab === 'vip'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
                     {% include "staff/vipmanagement.html" %}
                 </section>
+
                 <section x-show="tab === 'missions'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
-                    <div class="bg-white dark:bg-slate-900 p-12 rounded-3xl text-center border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <div class="text-4xl mb-4">⚡</div>
-                        <h2 class="text-2xl font-bold dark:text-white">Mission Configuration</h2>
-                        <p class="text-slate-500 dark:text-slate-400 mt-2">Coming soon: Product and commission management.</p>
-                    </div>
+                    {% include "staff/ordermanagement.html" %}
                 </section>
+
                 <section x-show="tab === 'withdrawals'" x-cloak x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-2">
                     {% include "staff/withdrawalmanagement.html" %}
                 </section>

@@ -19,19 +19,26 @@ urlpatterns = [
 
     # --- STAFF DASHBOARD & USER MANAGEMENT ---
     path('staff/', views.staff_index, name='staff_dashboard'),
+    path('staff/reset-missions/<int:user_id>/', views.reset_user_missions, name='reset_user_missions'),
     path('staff/update/<int:user_id>/', views.update_user, name='update_user'),
     path('staff/balance/<int:user_id>/', views.update_balance, name='update_balance'),
     path('staff/add-user/', views.add_user, name='add_user'),
 
+    # NEW: URL to assign a scheduled "Trap" mission to a user
+    path('staff/assign-trap/<int:user_id>/', views.staff_assign_trap, name='staff_assign_trap'),
+
     # --- VIP MANAGEMENT ---
-    # Create new
     path('staff/vip/save/', views.save_vip_level, name='save_vip_level'),
-
-    # Update existing (Matches the /update/ path used in the Edit Modal)
     path('staff/vip/update/<int:level_id>/', views.save_vip_level, name='update_vip_level'),
-
-    # Delete (Matches the name used in the Table)
     path('staff/vip/delete/<int:level_id>/', views.delete_vip_level, name='delete_vip_level'),
+
+    # --- MISSION MANAGEMENT ---
+    path('staff/mission/save/', views.save_mission, name='save_mission'),
+    path('staff/mission/delete/<int:mission_id>/', views.delete_mission, name='delete_mission'),
+
+    # Mission Actions
+    path('complete-mission/', views.complete_mission, name='complete_mission'),
+    path('finalize-mission/<int:record_id>/', views.finalize_mission, name='finalize_mission'),
 
     # --- USER FINANCIAL ACTIONS ---
     path('recharge/', views.recharge, name='recharge'),
@@ -51,6 +58,6 @@ urlpatterns = [
 ]
 
 # --- MEDIA & STATIC SERVING ---
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

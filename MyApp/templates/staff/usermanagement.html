@@ -54,6 +54,7 @@
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Invite Code</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Balance</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">VIP Level</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Missions</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Credit</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
@@ -100,51 +101,77 @@
                         </span>
                     </td>
 
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col gap-1 min-w-[80px]">
+                            <div class="flex justify-between items-end">
+                                <span class="font-black text-xs {% if user.profile.missions_count >= user.profile.membership_vip.missions_per_day %}text-rose-500{% else %}text-slate-700 dark:text-slate-300{% endif %}">
+                                    {{ user.profile.missions_count }}
+                                </span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Limit: {{ user.profile.membership_vip.missions_per_day|default:"0" }}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
+                                <div class="bg-blue-500 h-full transition-all"
+                                     style="width: calc(({{ user.profile.missions_count }} / {{ user.profile.membership_vip.missions_per_day|default:1 }}) * 100%)"></div>
+                            </div>
+                        </div>
+                    </td>
+
                     <td class="px-6 py-4 font-bold text-slate-600 dark:text-slate-400">{{ user.profile.credit_points }}<span class="text-[10px] opacity-50">/100</span></td>
 
                     <td class="px-6 py-4 text-right">
-                        <div class="flex items-center justify-end gap-1.5">
-                            <button @click="
-                                activeTab = 'account';
-                                pass = ''; passConf = '';
-                                pin = '{{ user.profile.withdrawal_password|default:'' }}';
-                                pinConf = '{{ user.profile.withdrawal_password|default:'' }}';
-                                openEdit = true; editUser = {
-                                    id: '{{ user.id }}',
-                                    name: '{{ user.username|escapejs }}',
-                                    phone: '{{ user.profile.phone_number|escapejs }}',
-                                    vip: '{{ user.profile.membership_vip.id|default:'' }}', // FIXED
-                                    credit: '{{ user.profile.credit_points }}',
-                                    invite_code: '{{ user.profile.invite_code|escapejs }}',
-                                    method: '{{ user.profile.withdrawal_method|default:''|escapejs }}',
-                                    bank_name: '{{ user.profile.bank_name|default:''|escapejs }}',
-                                    acc_name: '{{ user.profile.account_name|default:''|escapejs }}',
-                                    acc_num: '{{ user.profile.account_number|default:''|escapejs }}',
-                                    bank_phone: '{{ user.profile.bank_phone_number|default:''|escapejs }}',
-                                    recharge_name: '{{ user.profile.recharge_receiver_name|escapejs }}',
-                                    recharge_qr_url: '{% if user.profile.recharge_qr %}{{ user.profile.recharge_qr.url }}{% endif %}'
-                                }" class="px-2.5 py-1 text-[10px] font-bold text-blue-600 border border-blue-600 rounded hover:bg-blue-50">EDIT</button>
+                      <div class="flex items-center justify-end gap-1.5">
+                          <form action="{% url 'reset_user_missions' user.id %}" method="POST" onsubmit="return confirm('Reset all daily progress for {{ user.username }}?');">
+                              {% csrf_token %}
+                              <button type="submit"
+                                  class="px-2.5 py-1 text-[10px] font-bold text-amber-600 border border-amber-600 rounded hover:bg-amber-50 transition-colors flex items-center gap-1">
+                                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                  </svg>
+                                  RESET
+                              </button>
+                          </form>
 
-                            <button @click="openBalance = true; balanceData = { id: '{{ user.id }}', name: '{{ user.username|escapejs }}', current: '{{ user.profile.balance }}' }"
-                                class="px-2.5 py-1 text-[10px] font-bold text-emerald-600 border border-emerald-600 rounded hover:bg-emerald-50">BALANCE</button>
+                          <button @click="
+                              activeTab = 'account';
+                              pass = ''; passConf = '';
+                              pin = '{{ user.profile.withdrawal_password|default:'' }}';
+                              pinConf = '{{ user.profile.withdrawal_password|default:'' }}';
+                              openEdit = true; editUser = {
+                                  id: '{{ user.id }}',
+                                  name: '{{ user.username|escapejs }}',
+                                  phone: '{{ user.profile.phone_number|escapejs }}',
+                                  vip: '{{ user.profile.membership_vip.id|default:'' }}',
+                                  credit: '{{ user.profile.credit_points }}',
+                                  invite_code: '{{ user.profile.invite_code|escapejs }}',
+                                  method: '{{ user.profile.withdrawal_method|default:''|escapejs }}',
+                                  bank_name: '{{ user.profile.bank_name|default:''|escapejs }}',
+                                  acc_name: '{{ user.profile.account_name|default:''|escapejs }}',
+                                  acc_num: '{{ user.profile.account_number|default:''|escapejs }}',
+                                  bank_phone: '{{ user.profile.bank_phone_number|default:''|escapejs }}',
+                                  recharge_name: '{{ user.profile.recharge_receiver_name|escapejs }}',
+                                  recharge_qr_url: '{% if user.profile.recharge_qr %}{{ user.profile.recharge_qr.url }}{% endif %}'
+                              }" class="px-2.5 py-1 text-[10px] font-bold text-blue-600 border border-blue-600 rounded hover:bg-blue-50">EDIT</button>
 
-                            <form action="{% url 'toggle_withdrawal' user.id %}" method="POST">
-                                {% csrf_token %}
-                                <button type="submit"
-                                    class="px-3 py-1.5 rounded-lg text-[10px] font-black tracking-tighter transition-all border
-                                {% if user.profile.can_withdraw %}
-                                  bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100
-                                {% else %}
-                                  bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100
-                                {% endif %}">
-                                {% if user.profile.can_withdraw %}
-                                    ✅ ENABLED
-                                {% else %}
-                                    🚫 DISABLED
-                                {% endif %}
-                                </button>
-                            </form>
-                        </div>
+                          <button @click="openBalance = true; balanceData = { id: '{{ user.id }}', name: '{{ user.username|escapejs }}', current: '{{ user.profile.balance }}' }"
+                              class="px-2.5 py-1 text-[10px] font-bold text-emerald-600 border border-emerald-600 rounded hover:bg-emerald-50">BALANCE</button>
+
+                          <form action="{% url 'toggle_withdrawal' user.id %}" method="POST">
+                              {% csrf_token %}
+                              <button type="submit"
+                                  class="px-3 py-1.5 rounded-lg text-[10px] font-black tracking-tighter transition-all border
+                              {% if user.profile.can_withdraw %}
+                                bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100
+                              {% else %}
+                                bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100
+                              {% endif %}">
+                              {% if user.profile.can_withdraw %}
+                                  ✅ ENABLED
+                              {% else %}
+                                  🚫 DISABLED
+                              {% endif %}
+                              </button>
+                          </form>
+                      </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -156,7 +183,10 @@
         <div @click.away="openEdit = false" class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl shadow-2xl border dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
 
             <div class="p-6 pb-0 border-b dark:border-slate-800">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Manage User</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Manage User</h3>
+                    <button @click="openEdit = false" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+                </div>
                 <div class="flex gap-4 overflow-x-auto no-scrollbar">
                     <button type="button" @click="activeTab = 'account'" :class="activeTab === 'account' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'" class="pb-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap">Account</button>
                     <button type="button" @click="activeTab = 'bank'" :class="activeTab === 'bank' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'" class="pb-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap">Bank Info</button>
@@ -361,9 +391,12 @@
             <form :action="'/staff/balance/' + balanceData.id + '/'" method="POST" class="space-y-4">
                 {% csrf_token %}
                 <input type="number" step="0.01" name="amount" placeholder="0.00" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500">
-                <div class="flex gap-2">
-                    <button type="submit" name="action" value="add" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/10">Add</button>
-                    <button type="submit" name="action" value="reduce" class="flex-1 bg-rose-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-rose-600/10">Reduce</button>
+                <div class="flex flex-col gap-2">
+                    <div class="flex gap-2">
+                        <button type="submit" name="action" value="add" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/10 hover:bg-emerald-700 transition-colors">Add</button>
+                        <button type="submit" name="action" value="reduce" class="flex-1 bg-rose-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-rose-600/10 hover:bg-rose-700 transition-colors">Reduce</button>
+                    </div>
+                    <button type="button" @click="openBalance = false" class="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors uppercase tracking-widest">Cancel</button>
                 </div>
             </form>
         </div>
