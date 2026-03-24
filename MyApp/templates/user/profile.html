@@ -1,93 +1,108 @@
-<div class="bg-slate-50 min-h-screen pb-24">
-    <div class="bg-brand pt-8 pb-20 px-6 text-white relative shadow-lg">
-        <div class="absolute top-6 right-6 flex items-center gap-1 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 border border-white/10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-amber-400">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <span class="text-[10px] font-bold tracking-wider uppercase">VIP {{ user.profile.vip_level }}</span>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-full border-2 border-white/30 flex items-center justify-center text-3xl shadow-xl">
+<div class="bg-white min-h-screen pb-24 pt-14">
+    <div class="flex justify-between items-center p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-slate-100 rounded-full border border-slate-200 flex items-center justify-center text-xl shadow-sm">
                 👤
             </div>
-            <div class="flex flex-col gap-0.5">
-                <h2 class="font-bold text-xl tracking-tight">
-                    {% if user.profile.phone_number %}{{ user.profile.phone_number }}{% else %}{{ user.username }}{% endif %}
-                </h2>
-                <div class="flex items-center gap-2 opacity-80">
-                    <span class="text-[10px] uppercase font-medium tracking-widest">
-                        {% if request.GET.lang == 'en' %}Credit Score{% else %}Puntaje crediticio{% endif %}:
+
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                    <h2 class="font-bold text-base text-slate-800 tracking-tight leading-none">
+                        {{ user.profile.phone_number }}
+                    </h2>
+                    <span class="bg-slate-800 text-[#f39c12] text-[9px] font-black px-1.5 py-0.5 rounded italic shadow-sm">
+                        VIP{{ user.profile.membership_vip.level_number }}
                     </span>
-                    <span class="text-sm font-black">{{ user.profile.credit_points }}</span>
+                </div>
+
+                <div class="flex items-center gap-1.5 mt-1.5">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        ID: {{ user.profile.invite_code }}
+                    </span>
+                    <div class="flex items-center justify-center bg-orange-50 p-1 rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2.5"><rect width="18" height="5" x="3" y="8" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="mx-4 -mt-10 relative z-10 grid grid-cols-3 gap-2">
-        <div class="bg-white rounded-2xl p-4 shadow-md border border-slate-100 text-center">
-            <p class="text-[9px] text-slate-400 uppercase font-bold">{% if request.GET.lang == 'en' %}Balance{% else %}Saldo{% endif %}</p>
-            <p class="text-xs font-black text-slate-800 mt-1">BOB {{ user.profile.balance }}</p>
-        </div>
-        <div class="bg-white rounded-2xl p-4 shadow-md border-b-4 border-brand text-center">
-            <p class="text-[9px] text-brand uppercase font-bold">{% if request.GET.lang == 'en' %}Available{% else %}Disponible{% endif %}</p>
-            <p class="text-xs font-black text-brand mt-1">BOB {{ user.profile.balance }}</p>
-        </div>
-        <div class="bg-white rounded-2xl p-4 shadow-md border border-slate-100 text-center">
-            <p class="text-[9px] text-slate-400 uppercase font-bold">{% if request.GET.lang == 'en' %}Invite Code{% else %}Código{% endif %}</p>
-            <p class="text-xs font-black text-slate-800 mt-1">{{ user.profile.invite_code }}</p>
+        <div class="relative w-14 h-14 flex items-center justify-center mr-2">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" stroke-width="4"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="#f39c12" stroke-width="4"
+                    stroke-dasharray="{{ user.profile.credit_points|default:'100' }}, 100" stroke-linecap="round"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span class="text-[6px] font-black text-slate-400 uppercase leading-none">{% if request.GET.lang == 'en' %}Credit{% else %}Cuenta{% endif %}</span>
+                <span class="text-[11px] font-black text-slate-800">{{ user.profile.credit_points|default:"100" }}</span>
+            </div>
         </div>
     </div>
 
-    <div class="mx-4 mt-6 bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+    <div class="mx-4 mt-2 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+        <div class="flex justify-between items-center mb-6">
+            <span class="text-xs font-bold text-slate-500 uppercase">{% if request.GET.lang == 'en' %}Account Balance{% else %}Saldo de la cuenta{% endif %}</span>
+            <span class="text-xl font-black text-brand">BOB {{ user.profile.balance }}</span>
+        </div>
 
-        <a href="?tab=withdraw" class="w-full flex items-center gap-4 px-5 py-4 border-b border-slate-50 active:bg-slate-50 transition-all">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-brand">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16 12-4 4-4-4"/><path d="M12 8v8"/></svg>
+        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200/50">
+            <div class="flex flex-col">
+                <span class="text-[9px] font-bold text-slate-400 uppercase">{% if request.GET.lang == 'en' %}Available{% else %}Disponible{% endif %}</span>
+                <span class="text-sm font-black text-slate-800">BOB {{ user.profile.balance }}</span>
             </div>
-            <span class="flex-1 text-sm font-semibold text-slate-700">{% if request.GET.lang == 'en' %}Withdraw{% else %}Retirar{% endif %}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
-        </a>
-        <a href="?tab=withdraw_info" class="w-full flex items-center gap-4 px-5 py-4 border-b border-slate-50 active:bg-slate-50 transition-all">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-credit-card"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+            <div class="flex flex-col">
+                <span class="text-[9px] font-bold text-slate-400 uppercase">{% if request.GET.lang == 'en' %}Frozen{% else %}Congelado{% endif %}</span>
+                <span class="text-sm font-black text-slate-800">BOB 0.00</span>
             </div>
-            <span class="flex-1 text-sm font-semibold text-slate-700">
-                {% if request.GET.lang == 'en' %}Withdrawal Information{% else %}Información de retiro{% endif %}
-            </span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
-        </a>
-        <a href="?tab=settings" class="w-full flex items-center gap-4 px-5 py-4 border-b border-slate-50 active:bg-slate-50 transition-all">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        </div>
+    </div>
+
+    <div class="mt-6 px-2 space-y-0.5">
+        <a href="?tab=withdraw" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-[#f39c12]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v10"/><path d="m16 8-4 4-4-4"/><rect width="20" height="8" x="2" y="14" rx="2"/></svg>
             </div>
-            <span class="flex-1 text-sm font-semibold text-slate-700">{% if request.GET.lang == 'en' %}Personal Info{% else %}Información personal{% endif %}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Withdraw{% else %}Retirar{% endif %}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
         </a>
 
-        <a href="?tab=withdraw_record" class="w-full flex items-center gap-4 px-5 py-4 border-b border-slate-50 active:bg-slate-50 transition-all">
+        <a href="?tab=team" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Team Reports{% else %}Informes del equipo{% endif %}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="?tab=withdraw_info" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            </div>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Bank Info{% else %}Información bancaria{% endif %}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="?tab=withdraw_record" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
             <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
-            <span class="flex-1 text-sm font-semibold text-slate-700">{% if request.GET.lang == 'en' %}History{% else %}Historial{% endif %}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}History{% else %}Historial{% endif %}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
         </a>
-        <a href="?tab=security&lang={{ request.GET.lang }}" class="w-full flex items-center gap-4 px-5 py-4 border-b border-slate-50 active:bg-slate-50 transition-all">
-            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+
+        <a href="?tab=security&lang={{ request.GET.lang }}" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <span class="flex-1 text-sm font-semibold text-slate-700">{% if request.GET.lang == 'en' %}Security Settings{% else %}Seguridad{% endif %}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Security{% else %}Seguridad{% endif %}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300"><path d="m9 18 6-6-6-6"/></svg>
         </a>
-        <a href="/logout/" class="w-full flex items-center gap-4 px-5 py-4 active:bg-red-50 transition-all">
+
+        <a href="/logout/" class="flex items-center gap-4 px-4 py-6 active:bg-red-50">
             <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
             </div>
-            <span class="flex-1 text-sm font-bold text-red-500">{% if request.GET.lang == 'en' %}Logout{% else %}Cerrar sesión{% endif %}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-200"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="flex-1 text-[13px] font-black text-red-500 uppercase tracking-widest">{% if request.GET.lang == 'en' %}Logout{% else %}Cerrar sesión{% endif %}</span>
         </a>
     </div>
 </div>

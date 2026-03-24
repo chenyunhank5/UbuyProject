@@ -6,12 +6,23 @@
     <title>Ubuy Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Using Inter: It's cleaner and less "cramped" than Montserrat or standard Sans */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            letter-spacing: -0.01em; /* This takes the 'stress' out of the layout */
+        }
+
         .bg-brand { background-color: #f39c12; }
         .bg-brand-light { background-color: #ffcc00; }
         .text-brand { color: #f39c12; }
         .border-brand { border-color: #f39c12; }
+
+        /* Updated tracking to be 'tight' instead of 'tighter' so letters don't touch */
+        .tracking-tighter { letter-spacing: -0.03em !important; }
+
         @keyframes slideIn {
             from { transform: translateY(-100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -40,36 +51,44 @@
             {% endif %}
         </div>
 
-        <header class="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100">
+        <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 max-w-md mx-auto">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-brand rounded-lg flex items-center justify-center text-white font-black text-xl italic shadow-md shadow-orange-200">U</div>
-                <div class="flex flex-col">
-                    <span class="font-black tracking-tighter text-lg text-slate-800 uppercase leading-none">ubuy</span>
-                    <span class="text-[8px] font-bold text-brand uppercase tracking-widest">{{ profile.membership_vip.name }}</span>
-                </div>
+                <img src="https://d2ati23fc66y9j.cloudfront.net/world/ubuycom/images/org_Ubuy-Logo.png.webp" alt="Ubuy" class="h-8 w-auto rounded object-contain">
             </div>
+
             <div class="flex items-center gap-3">
-                <a href="?tab={{ active_tab }}&lang={% if lang == 'en' %}es{% else %}en{% endif %}" class="active:scale-95 transition-transform">
+
+                <a href="?tab={{ active_tab }}&lang={% if lang == 'en' %}es{% else %}en{% endif %}" class="group relative flex items-center active:scale-95 transition-transform">
                     {% if lang == 'en' %}
-                        <div class="w-7 h-5 bg-[#002868] relative shadow-sm border border-slate-200 rounded-sm overflow-hidden">
+                        <div class="w-8 h-6 bg-[#002868] relative shadow-sm border border-slate-200 rounded-sm overflow-hidden">
                             <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-[#002868] z-10 flex flex-wrap p-0.5">
-                                <div class="w-0.5 h-0.5 bg-white rounded-full m-px"></div><div class="w-0.5 h-0.5 bg-white rounded-full m-px"></div>
+                                <div class="w-1 h-1 bg-white rounded-full m-px"></div><div class="w-1 h-1 bg-white rounded-full m-px"></div><div class="w-1 h-1 bg-white rounded-full m-px"></div>
                             </div>
                             <div class="flex flex-col h-full w-full">
+                                <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
                                 <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
                                 <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
                                 <div class="h-[14%] bg-[#bf0a30]"></div>
                             </div>
                         </div>
                     {% else %}
-                        <div class="w-7 h-5 flex flex-col shadow-sm border border-slate-200 rounded-sm overflow-hidden">
+                        <div class="w-8 h-6 flex flex-col shadow-sm border border-slate-200 rounded-sm overflow-hidden">
                             <div class="h-1/3 bg-[#ff0000]"></div><div class="h-1/3 bg-[#ffff00]"></div><div class="h-1/3 bg-[#007a33]"></div>
                         </div>
                     {% endif %}
                 </a>
 
-                <a href="https://t.me/your_support_link" class="flex flex-col items-center justify-center bg-slate-50 p-2 rounded-xl border border-slate-100 active:scale-90 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <button class="text-[#ffa500] active:scale-90 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
+                </button>
+
+                <div class="relative text-slate-400 active:scale-90 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-rose-500 border-2 border-white rounded-full"></span>
+                </div>
+
+                <a href="https://www.global.ubuy.com/contacts" target="_blank" rel="noopener noreferrer" class="text-slate-400 active:scale-90 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
                 </a>
             </div>
         </header>
@@ -122,33 +141,43 @@
             {% endif %}
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 max-w-md mx-auto shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
-            <div class="flex items-end justify-between px-6 py-3">
+        <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 max-w-md mx-auto">
+            <div class="grid grid-cols-5 px-1 py-3">
 
-                <a href="?tab=home&lang={{ lang }}" class="flex flex-col items-center gap-1 w-12">
+                <a href="?tab=home&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'home' or not active_tab %}text-brand{% else %}text-slate-300{% endif %}"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter {% if active_tab == 'home' or not active_tab %}text-brand{% else %}text-slate-400{% endif %}">{% if lang == 'en' %}Home{% else %}Inicio{% endif %}</span>
+                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'home' or not active_tab %}text-brand{% else %}text-slate-400{% endif %}">
+                        {% if lang == 'en' %}Home{% else %}Inicio{% endif %}
+                    </span>
                 </a>
 
-                <a href="?tab=work&lang={{ lang }}" class="flex flex-col items-center gap-1 w-12">
+                <a href="?tab=work&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'work' %}text-brand{% else %}text-slate-300{% endif %}"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter {% if active_tab == 'work' %}text-brand{% else %}text-slate-400{% endif %}">{% if lang == 'en' %}Work{% else %}Trabajar{% endif %}</span>
+                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'work' %}text-brand{% else %}text-slate-400{% endif %}">
+                        {% if lang == 'en' %}Work{% else %}Trabajo{% endif %}
+                    </span>
                 </a>
 
-                <a href="?tab=mission&lang={{ lang }}" class="-mt-8 active:scale-90 transition-transform">
-                    <div class="w-14 h-14 rounded-full bg-brand flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-                    </div>
-                </a>
+                <div class="flex flex-col items-center justify-center">
+                    <a href="?tab=mission&lang={{ lang }}" class="-mt-12 active:scale-90 transition-transform relative z-10">
+                        <div class="w-16 h-16 rounded-full bg-brand flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+                        </div>
+                    </a>
+                </div>
 
-                <a href="?tab=order&lang={{ lang }}" class="flex flex-col items-center gap-1 w-12">
+                <a href="?tab=order&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'order' %}text-brand{% else %}text-slate-300{% endif %}"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter {% if active_tab == 'order' %}text-brand{% else %}text-slate-400{% endif %}">{% if lang == 'en' %}Orders{% else %}Orden{% endif %}</span>
+                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'order' %}text-brand{% else %}text-slate-400{% endif %}">
+                        {% if lang == 'en' %}Orders{% else %}Orden{% endif %}
+                    </span>
                 </a>
 
-                <a href="?tab=profile&lang={{ lang }}" class="flex flex-col items-center gap-1 w-12">
+                <a href="?tab=profile&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'profile' %}text-brand{% else %}text-slate-300{% endif %}"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span class="text-[8px] whitespace-nowrap font-black uppercase tracking-tighter {% if active_tab == 'profile' %}text-brand{% else %}text-slate-400{% endif %}">{% if lang == 'en' %}Profile{% else %}Mi Perfil{% endif %}</span>
+                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'profile' %}text-brand{% else %}text-slate-400{% endif %}">
+                        {% if lang == 'en' %}Profile{% else %}Perfil{% endif %}
+                    </span>
                 </a>
 
             </div>

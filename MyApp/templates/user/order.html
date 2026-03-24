@@ -1,5 +1,5 @@
-<div class="p-4 bg-slate-50/50 min-h-[80vh]">
-    <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto text-sm pb-2 scrollbar-hide">
+<div class="p-4 bg-slate-50/50 min-h-[80vh] pt-14">
+    <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto text-sm pt-2 scrollbar-hide">
         <button onclick="filterOrders('all', this)"
                 class="tab-btn border-b-2 border-[#f39c12] text-[#f39c12] font-bold whitespace-nowrap pb-2 outline-none transition-all">
             {% if lang == 'en' %}All{% else %}Todo{% endif %}
@@ -16,7 +16,7 @@
 
     <div class="space-y-4" id="orders-container">
         {% for item in records %}
-        <div class="order-card bg-white border border-slate-100 p-4 rounded-2xl shadow-sm transition-all animate-fadeIn {% if item.status|lower == 'pending' %}border-2 border-[#f39c12]{% endif %}"
+        <div class="order-card bg-white border border-slate-100 p-4 shadow-sm transition-all animate-fadeIn {% if item.status|lower == 'pending' %}border-2 border-[#f39c12]{% endif %}"
              data-status="{{ item.status|lower }}">
 
             <div class="flex justify-between items-start mb-3">
@@ -50,7 +50,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div class="flex items-center justify-between bg-slate-50 p-3 border border-slate-100">
                 <div class="flex flex-col">
                     <p class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{% if lang == 'en' %}Amount{% else %}Monto{% endif %}</p>
                     <p class="text-sm font-black text-slate-700">BOB {{ item.amount|floatformat:2 }}</p>
@@ -73,7 +73,7 @@
                         {% csrf_token %}
                         <button type="submit"
                                 onclick="this.disabled=true;"
-                                class="w-full bg-[#f39c12] text-white font-black py-3 rounded-xl text-sm shadow-md active:scale-95 transition-transform uppercase tracking-wider">
+                                class="w-full bg-[#f39c12] text-white font-black py-3 text-sm shadow-md active:scale-95 transition-transform uppercase tracking-wider">
                             {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
                         </button>
                     </form>

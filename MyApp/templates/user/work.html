@@ -1,169 +1,44 @@
-<main class="animate-in fade-in duration-500 bg-slate-50 min-h-screen">
+<main class="animate-in fade-in duration-500 bg-slate-50 min-h-screen pt-14 pb-2">
+    <div class="grid grid-cols-2 gap-3 p-3">
+        {% for vip in vip_levels %}
+        <div class="relative bg-white overflow-hidden shadow-sm border border-slate-100 flex flex-col active:scale-95 transition-all">
 
-    <div id="vip-selection-section">
-        <div class="p-4 bg-white border-b">
-            <h1 class="text-lg font-black text-slate-800 uppercase tracking-tight">
-                {% if lang == 'en' %}Work Center{% else %}Centro de Trabajo{% endif %}
-            </h1>
-            <p class="text-xs text-slate-400 font-bold uppercase">{% if lang == 'en' %}Select a level to start{% else %}Selecciona un nivel para empezar{% endif %}</p>
-        </div>
+            <div class="absolute top-0 left-0 z-10 bg-[#ee0a24] text-white text-[10px] px-3 py-1 rounded-br-xl font-black italic shadow-md">
+                {{ vip.name }}
+            </div>
 
-        <div class="goods-list">
-            {% for vip in vip_levels %}
-            <div class="goods-item border shadow-sm">
-                <span class="tag">{{ vip.name }}</span>
+            <div class="w-full aspect-square bg-[#f8fafc] flex items-center justify-center">
+                <img src="{% if vip.image %}{{ vip.image.url }}{% else %}https://api.dicebear.com/7.x/identicon/svg?seed={{ vip.level_number }}{% endif %}"
+                     class="w-full h-full object-contain" alt="{{ vip.name }}">
+            </div>
 
-                <div class="img" style="background-image: url('{% if vip.image %}{{ vip.image.url }}{% else %}https://api.dicebear.com/7.x/identicon/svg?seed={{ vip.level_number }}{% endif %}');">
-                </div>
+            <div class="p-3 bg-white">
+                <p class="text-[10px] text-slate-400 font-bold uppercase leading-none mb-1">
+                    {% if lang == 'en' %}Min Balance{% else %}Balance mínimo{% endif %}
+                </p>
+                <p class="text-sm font-black text-slate-900">
+                    BOB {{ vip.min_balance }}
+                </p>
 
-                <div class="info">
-                    <div class="text-[11px] text-slate-500 font-medium">
-                        {% if lang == 'en' %}Min Balance{% else %}Balance mínimo{% endif %}
-                    </div>
-                    <div class="text-[13px] font-bold text-slate-900">
-                        BOB {{ vip.min_balance }}
-                    </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">{% if lang == 'en' %}Commissions{% else %}Comisión{% endif %}</span>
 
-                    <div class="flex-between u-m-t-8">
-                        <span class="text-[11px] text-slate-500">
-                            {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
-                        </span>
-
-                        {% if profile.balance >= vip.min_balance %}
-                        <button type="button"
-                                onclick="showMissionTransition('{{ vip.name|escapejs }}', '{{ vip.id }}')"
-                                class="van-button van-button--danger van-button--mini">
-                            <span class="van-button__text">{{ vip.commission_rate }}%</span>
+                    {% if profile.balance >= vip.min_balance %}
+                        <button class="bg-[#ee0a24] text-white text-[11px] font-black px-3 py-1.5">
+                            {{ vip.commission_rate }}%
                         </button>
-                        {% else %}
-                        <button class="van-button van-button--danger van-button--mini locked-btn">
-                            <div class="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                <span>{{ vip.commission_rate }}%</span>
-                            </div>
+                    {% else %}
+                        <button class="bg-slate-200 text-slate-400 text-[11px] font-black px-3 py-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            {{ vip.commission_rate }}%
                         </button>
-                        {% endif %}
-                    </div>
+                    {% endif %}
                 </div>
             </div>
-            {% empty %}
-            <div class="col-span-2 py-20 text-center text-slate-400">No VIP levels available.</div>
-            {% endfor %}
         </div>
+        {% empty %}
+        <div class="col-span-2 py-20 text-center text-slate-400 font-bold uppercase text-xs">No VIP levels available.</div>
+        {% endfor %}
     </div>
 
-    <div id="mission-animation-section" class="hidden bg-white min-h-[80vh]">
-        <div class="p-4 border-b border-slate-50 bg-slate-50/50">
-            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                <div>
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Saldo Disponible</p>
-                    <p class="text-lg font-black text-slate-800">BOB {{ profile.balance|floatformat:2 }}</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Nivel</p>
-                    <p id="active-vip-name" class="text-sm font-bold text-[#f39c12] uppercase">--</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-6">
-            <div id="animation-steps" class="space-y-6">
-                <div id="step-1" class="flex gap-4 items-center opacity-20 transition-all duration-300">
-                    <div id="icon-1" class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center">
-                        <div class="spinner h-3 w-3 border-2 border-[#f39c12] border-t-transparent rounded-full animate-spin hidden"></div>
-                        <svg class="check hidden w-4 h-4 text-[#f39c12]" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>
-                    </div>
-                    <span class="text-sm font-bold text-slate-600">Buscando Comerciante...</span>
-                </div>
-
-                <div id="step-2" class="flex gap-4 items-center opacity-20 transition-all duration-300">
-                    <div id="icon-2" class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center">
-                        <div class="spinner h-3 w-3 border-2 border-[#f39c12] border-t-transparent rounded-full animate-spin hidden"></div>
-                        <svg class="check hidden w-4 h-4 text-[#f39c12]" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>
-                    </div>
-                    <span class="text-sm font-bold text-slate-600">Asignando Misión...</span>
-                </div>
-
-                <div id="final-card" class="hidden animate-fadeIn space-y-4 pt-4">
-                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm">
-                        <div class="bg-white rounded-xl p-2 border border-slate-100 mb-3">
-                            <img src="{{ mission.product_image }}" class="w-full h-32 object-contain">
-                        </div>
-                        <h4 class="text-sm font-black text-slate-800 leading-tight mb-2">{{ mission.name }}</h4>
-                        <div class="flex justify-between items-center py-2 border-t border-slate-200">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Valor Total</span>
-                            <span class="text-sm font-black text-slate-800">BOB {{ mission.price }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Ganancia</span>
-                            <span class="text-sm font-black text-[#f39c12]">+BOB {{ mission.commission }}</span>
-                        </div>
-                    </div>
-
-                    <form action="{% url 'complete_mission' %}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="mission_id" value="{{ mission.id }}">
-                        <button type="submit" class="w-full bg-[#f39c12] text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-                            Enviar Pedido
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </main>
-
-<style>
-    /* Grid Styles */
-    .goods-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
-    .goods-item { position: relative; border-radius: 12px; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
-    .goods-item .tag { position: absolute; top: 0; left: 0; z-index: 1; background: #ee0a24; color: #fff; font-size: 9px; padding: 2px 8px; border-bottom-right-radius: 8px; font-weight: 800; }
-    .goods-item .img { width: 100%; aspect-ratio: 1/1; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #f8fafc; padding: 15px; }
-    .goods-item .info { padding: 10px; }
-
-    /* Button Styles */
-    .van-button--mini { height: 24px; padding: 0 10px; font-size: 11px; background: #ee0a24; color: #fff; border-radius: 6px; font-weight: bold; border: none; }
-    .locked-btn { background: #d1d5db !important; }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; }
-    .u-m-t-8 { margin-top: 8px; }
-
-    /* Animations */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-    .hidden { display: none; }
-</style>
-
-<script>
-    function showMissionTransition(vipName, vipId) {
-        // 1. Swap Sections
-        document.getElementById('vip-selection-section').classList.add('hidden');
-        document.getElementById('mission-animation-section').classList.remove('hidden');
-        document.getElementById('active-vip-name').innerText = vipName;
-
-        // 2. Start Animation Sequence
-        runStep(1, 1200)
-            .then(() => runStep(2, 1500))
-            .then(() => {
-                document.getElementById('final-card').classList.remove('hidden');
-            });
-    }
-
-    function runStep(id, time) {
-        return new Promise(resolve => {
-            const row = document.getElementById('step-' + id);
-            const icon = document.getElementById('icon-' + id);
-            const spinner = icon.querySelector('.spinner');
-            const check = icon.querySelector('.check');
-
-            row.style.opacity = "1";
-            spinner.classList.remove('hidden');
-
-            setTimeout(() => {
-                spinner.classList.add('hidden');
-                check.classList.remove('hidden');
-                icon.classList.add('border-[#f39c12]', 'bg-orange-50');
-                resolve();
-            }, time);
-        });
-    }
-</script>

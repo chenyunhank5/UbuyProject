@@ -1,4 +1,4 @@
-<div class="bg-white min-h-[80vh] relative font-sans text-slate-800">
+<div class="bg-white min-h-[80vh] relative font-sans text-slate-800 pt-14">
 
     <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 
@@ -73,7 +73,7 @@
                     </div>
 
                     <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm">
-                        <img src="{{ active_mission.image }}" class="mx-auto mb-4 rounded-xl object-cover bg-white shadow-sm" width="120" height="120">
+                        <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200">
                         <div class="text-xs space-y-2">
                             <div class="flex justify-between items-start">
                                 <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
@@ -92,7 +92,7 @@
 
                     <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
                         {% csrf_token %}
-                        <button class="w-full bg-[#f39c12] text-white py-3 rounded-xl text-sm font-black shadow-lg active:scale-95 transition-all uppercase">
+                        <button class="w-full bg-[#f39c12] text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase">
                             {% if lang == 'en' %}Confirm{% else %}Confirmar{% endif %}
                         </button>
                     </form>

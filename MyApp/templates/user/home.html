@@ -1,80 +1,158 @@
-<div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500">
+<div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] pt-14">
     <div class="relative w-full h-44 bg-slate-200 overflow-hidden shadow-sm">
         <img src="https://img-blog.ubuy.com.kw/2025/02/Ubuy-plus-benefits.webp" class="w-full h-full object-cover" alt="Banner">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
     </div>
 
-    <div class="grid grid-cols-3 gap-3 px-4 py-6 bg-white">
-        <a href="?tab=recharge&lang={{ lang }}" class="bg-brand text-white rounded-xl py-4 flex flex-col items-center justify-center shadow-lg shadow-orange-100 active:scale-95 transition-all border border-brand/10">
-            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            <span class="text-[10px] font-black uppercase tracking-tight">
-                {% if lang == 'en' %}Recharge{% else %}Recargar{% endif %}
+    <div class="grid grid-cols-3 gap-3 px-3 pt-2">
+        <a href="?tab=recharge&lang={{ lang }}" class="bg-[#ffa500] text-white py-4 px-1 flex flex-col items-center justify-between border">
+            <span class="text-[10px] font-black text-center leading-tight">
+                {% if lang == 'en' %}Recharge Now{% else %}Recargar ahora{% endif %}
             </span>
+            <div class="w-5 h-5">
+                <img src="https://troverix.com/static/icons/ic_recharge.png" class="w-full h-full object-contain" alt="recharge">
+            </div>
         </a>
 
-        <a href="?tab=withdraw&lang={{ lang }}" class="bg-brand text-white rounded-xl py-4 flex flex-col items-center justify-center shadow-lg shadow-orange-100 active:scale-95 transition-all border border-brand/10">
-            <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-            </svg>
-            <span class="text-[10px] font-black uppercase tracking-tight">
-                {% if lang == 'en' %}Withdraw{% else %}Retirar{% endif %}
+        <a href="?tab=withdraw&lang={{ lang }}" class="bg-[#ffa500] text-white py-4 px-1 flex flex-col items-center justify-between border">
+            <span class="text-[10px] font-black text-center leading-tight">
+                {% if lang == 'en' %}Quick Withdraw{% else %}Retiro rápido{% endif %}
             </span>
+            <div class="w-5 h-5 mt-2">
+                <img src="https://troverix.com/static/icons/ic_withdraw.png" class="w-full h-full object-contain" alt="withdraw">
+            </div>
         </a>
 
-        <a href="?tab=invite&lang={{ lang }}" class="bg-brand text-white rounded-xl py-4 flex flex-col items-center justify-center shadow-lg shadow-orange-100 active:scale-95 transition-all border border-brand/10">
-            <span class="text-lg mb-1">👥</span>
-            <span class="text-[10px] font-black uppercase tracking-tight">
-                {% if lang == 'en' %}Invite{% else %}Invitar{% endif %}
+        <a href="?tab=invite&lang={{ lang }}" class="bg-[#ffa500] text-white py-4 px-1 flex flex-col items-center justify-between border">
+            <span class="text-[10px] font-black text-center leading-tight">
+                {% if lang == 'en' %}Invite Friends{% else %}Invitar a amigos{% endif %}
             </span>
+            <div class="w-5 h-5">
+                <img src="https://troverix.com/static/icons/ic_invite.png" class="w-full h-full object-contain" alt="invite">
+            </div>
         </a>
     </div>
 
-    <div class="mx-4 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-[9px] text-slate-400 uppercase tracking-widest font-black mb-1">
-                    {% if lang == 'en' %}User Profile{% else %}Perfil de Usuario{% endif %}
-                </p>
-                <p class="font-black text-lg text-slate-800 tracking-tight">{{ user.username }}</p>
-                <p class="text-[11px] font-bold text-slate-400">{{ profile.phone_number }}</p>
+    <div class="px-3 py-4">
+        <div class="bg-white rounded-[0.5rem] border-none p-6 shadow-xl shadow-slate-200/50">
+
+            <div class="space-y-4 mb-1">
+                <div class="flex justify-between items-center border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-600 uppercase">{% if lang == 'en' %}Username{% else %}Nombre de usuario{% endif %}</span>
+                    <span class="text-sm font-black text-slate-900">{{ user.profile.phone_number }}</span>
+                </div>
+                <div class="flex justify-between items-center border-slate-100">
+                    <span class="text-[11px] font-bold text-slate-600 uppercase">{% if lang == 'en' %}Promo Code{% else %}El código de promoción{% endif %}</span>
+                    <span class="text-sm font-black text-[#ffa500]">{{ user.profile.invite_code }}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 pb-3">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">{% if lang == 'en' %}Account Balance{% else %}Saldo de la cuenta{% endif %}</p>
+                        <p class="text-rose-500 font-black tracking-tight">BOB {{ profile.balance }}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">{% if lang == 'en' %}Mission Funds{% else %}Fondos de misión{% endif %}</p>
+                        <p class="text-rose-500 font-black tracking-tight">BOB {{ profile.mission_balance }}</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="text-right">
-                <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Code{% else %}Código{% endif %}</p>
-                <p class="font-mono font-black text-[10px] text-brand bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100 mt-1">
-                    {{ profile.invite_code }}
-                </p>
+            <div class="h-px bg-slate-100 w-full mb-8"></div>
+
+            <div class="grid grid-cols-2 gap-y-8">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Today's Profit{% else %}Las ganancias de hoy{% endif %}</span>
+                    <span class="text-[10px] font-black text-slate-900">BOB {{ today_profit }}</span>
+                </div>
+                <div class="flex flex-col text-left">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Yesterday{% else %}Ganancias de ayer{% endif %}</span>
+                    <span class="text-[10px] font-black text-slate-900">BOB {{ yesterday_profit }}</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Accumulated{% else %}Ingresos acumulados{% endif %}</span>
+                    <span class="text-[10px] font-black text-slate-900">BOB {{ total_profit }}</span>
+                </div>
+                <div class="flex flex-col text-left">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Team Benefits{% else %}Beneficios del equipo{% endif %}</span>
+                    <span class="text-[10px] font-black text-slate-900">BOB {{ team_profit|default:"0.00" }}</span>
+                </div>
             </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-3 mt-5">
-            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50">
-                <p class="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-tighter">
-                    {% if lang == 'en' %}Balance{% else %}Saldo{% endif %}
-                </p>
-                <p class="font-black text-base text-slate-900">BOB {{ profile.balance }}</p>
-            </div>
-
-            <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100/50">
-                <p class="text-[9px] text-slate-500 uppercase font-black mb-1 tracking-tighter">
-                    {% if lang == 'en' %}Credit{% else %}Crédito{% endif %}
-                </p>
-                <p class="font-black text-base text-slate-800">
-                    {{ profile.credit_points }}<span class="text-[10px] font-bold text-slate-300">/100</span>
-                </p>
-            </div>
-        </div>
     </div>
 
-    <div class="px-6 py-8">
-        <p class="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-            {% if lang == 'en' %}
-                Welcome to Ubuy. Start your daily tasks to earn rewards.
-            {% else %}
-                Bienvenido a Ubuy. Comienza tus tareas diarias para ganar recompensas.
-            {% endif %}
-        </p>
+    <div class="u-m-t-20 px-4">
+        <div class="u-font-20 font-bold u-m-b-20" style="font-size: 16px; font-weight: 900; margin-bottom: 15px;">
+            {% if lang == 'en' %}User commission income dynamics{% else %}Dinámica de ingresos por comisiones de usuarios{% endif %}
+        </div>
+
+        <div class="van-swipe" style="height: 360px; overflow: hidden; background: #fff; border-radius: 8px;">
+            <div id="van-swipe-track" class="van-swipe__track--vertical" style="transition-duration: 500ms; transform: translateY(0px);">
+                </div>
+        </div>
     </div>
 </div>
+<script>
+    const swipeTrack = document.getElementById('van-swipe-track');
+    const itemHeight = 90; // Exactly as in your provided HTML
+
+    function generateBolivianPhone() {
+        // Starts with 591, then random digits and your **** mask
+        const middle = Math.floor(Math.random() * 9);
+        const end = Math.floor(1000 + Math.random() * 9000);
+        return `591${middle}****${end}`;
+    }
+
+    function createSwipeItem() {
+        const amount = (Math.random() * 5000 + 50).toFixed(2);
+        const div = document.createElement('div');
+        div.className = "van-swipe-item";
+        div.style.height = itemHeight + "px";
+        div.style.display = "flex";
+        div.style.alignItems = "center";
+
+        div.innerHTML = `
+            <div class="flex-between align-center" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 10px;">
+                <div class="flex-full d-flex-center" style="display: flex; align-items: center;">
+                    <div class="el-image" style="width: 60px; height: 60px; flex-shrink: 0;">
+                        <img src="https://d2ati23fc66y9j.cloudfront.net/world/ubuycom/images/org_Ubuy-Logo.png.webp" class="el-image__inner" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                    <span class="u-m-l-20" style="margin-left: 20px; font-weight: 600; color: #333;">${generateBolivianPhone()}</span>
+                </div>
+                <div class="w-150 flex-between" style="margin: 0.4rem; text-align: right;">
+                    <span style="display: block; font-size: 12px; color: #999;">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                    <span class="u-m-l-20" style="font-weight: 900; color: #ff9900;">BOB ${amount}</span>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    // Initial fill
+    for (let i = 0; i < 10; i++) {
+        swipeTrack.appendChild(createSwipeItem());
+    }
+
+    let currentTranslateY = 0;
+
+    function startAnimation() {
+        setInterval(() => {
+            currentTranslateY -= itemHeight;
+            swipeTrack.style.transform = `translateY(${currentTranslateY}px)`;
+
+            // Add a new one at the bottom for infinity
+            swipeTrack.appendChild(createSwipeItem());
+
+            // Optional: Remove top elements if the list gets too long (e.g. > 50)
+        }, 3000);
+    }
+
+    startAnimation();
+</script>
+
+<style>
+    /* Adding the original class support just in case */
+    .van-swipe-item {
+        border-bottom: 1px solid #f7f8fa;
+    }
+    .u-m-l-20 { margin-left: 20px; }
+</style>
