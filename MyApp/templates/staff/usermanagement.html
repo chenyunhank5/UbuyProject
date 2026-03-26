@@ -2,6 +2,7 @@
     openEdit: false,
     openAdd: false,
     openBalance: false,
+    openAssign: false,
     searchQuery: '',
     activeTab: 'account',
     editUser: {
@@ -16,9 +17,9 @@
     passConf: '',
     pin: '',
     pinConf: '',
-    balanceData: { id: '', name: '', current: 0 }
+    balanceData: { id: '', name: '', current: 0 },
+    assignData: { id: '', name: '' } <!-- ✅ FIXED HERE -->
 }">
-
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div class="relative w-full md:w-80">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -33,7 +34,6 @@
                 class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/50 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             >
         </div>
-
         <button
             @click="openAdd = true"
             class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/20 gap-2"
@@ -44,7 +44,6 @@
             ADD NEW USER
         </button>
     </div>
-
     <div class="bg-white dark:bg-slate-900/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
         <table class="w-full text-left border-collapse">
             <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
@@ -74,7 +73,6 @@
                             <span class="text-xs text-slate-500 dark:text-slate-500">{{ user.profile.phone_number }}</span>
                         </div>
                     </td>
-
                     <td class="px-6 py-4 text-center">
                         <div class="flex justify-center">
                             {% if user.profile.recharge_qr %}
@@ -86,21 +84,17 @@
                             {% endif %}
                         </div>
                     </td>
-
                     <td class="px-6 py-4">
                         <span class="font-mono text-[11px] font-black px-2 py-1 bg-slate-100 dark:bg-slate-800/50 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 uppercase">
                             {{ user.profile.invite_code|default:"N/A" }}
                         </span>
                     </td>
-
                     <td class="px-6 py-4 font-mono font-bold text-blue-600 dark:text-blue-400">BOB {{ user.profile.balance }}</td>
-
                     <td class="px-6 py-4">
                         <span class="bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500 text-[10px] px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 font-bold uppercase">
                             {{ user.profile.membership_vip.name|default:"VIP 0" }}
                         </span>
                     </td>
-
                     <td class="px-6 py-4">
                         <div class="flex flex-col gap-1 min-w-[80px]">
                             <div class="flex justify-between items-end">
@@ -115,9 +109,7 @@
                             </div>
                         </div>
                     </td>
-
                     <td class="px-6 py-4 font-bold text-slate-600 dark:text-slate-400">{{ user.profile.credit_points }}<span class="text-[10px] opacity-50">/100</span></td>
-
                     <td class="px-6 py-4 text-right">
                       <div class="flex items-center justify-end gap-1.5">
                           <form action="{% url 'reset_user_missions' user.id %}" method="POST" onsubmit="return confirm('Reset all daily progress for {{ user.username }}?');">
@@ -151,7 +143,10 @@
                                   recharge_name: '{{ user.profile.recharge_receiver_name|escapejs }}',
                                   recharge_qr_url: '{% if user.profile.recharge_qr %}{{ user.profile.recharge_qr.url }}{% endif %}'
                               }" class="px-2.5 py-1 text-[10px] font-bold text-blue-600 border border-blue-600 rounded hover:bg-blue-50">EDIT</button>
-
+                              <a href="/staff/assign-trap/{{ user.id }}/"
+                                 class="px-2.5 py-1 text-[10px] font-bold text-violet-600 border border-violet-600 rounded hover:bg-violet-50 transition-colors inline-block text-center">
+                                  ASSIGN
+                              </a>
                           <button @click="openBalance = true; balanceData = { id: '{{ user.id }}', name: '{{ user.username|escapejs }}', current: '{{ user.profile.balance }}' }"
                               class="px-2.5 py-1 text-[10px] font-bold text-emerald-600 border border-emerald-600 rounded hover:bg-emerald-50">BALANCE</button>
 
@@ -178,7 +173,6 @@
             </tbody>
         </table>
     </div>
-
     <div x-show="openEdit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div @click.away="openEdit = false" class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl shadow-2xl border dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
 
@@ -194,7 +188,6 @@
                     <button type="button" @click="activeTab = 'security'" :class="activeTab === 'security' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent hover:text-slate-600'" class="pb-3 text-xs font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap">Security</button>
                 </div>
             </div>
-
             <form :action="'/staff/update/' + editUser.id + '/'" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden">
                 {% csrf_token %}
                 <div class="p-6 overflow-y-auto flex-1">
@@ -229,7 +222,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div x-show="activeTab === 'bank'" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -265,18 +257,15 @@
                             </div>
                         </div>
                     </div>
-
                     <div x-show="activeTab === 'recharge'" class="space-y-6" x-data="{ confirmDelete: false }">
                         <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
                             <p class="text-[11px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mb-1">Receiver Profile</p>
                             <p class="text-xs text-slate-500">Configure the payment details shown to <span class="font-bold text-slate-700 dark:text-slate-300" x-text="editUser.name"></span>.</p>
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Receiver Name (Yape/Bank Holder)</label>
                             <input type="text" name="recharge_receiver_name" x-model="editUser.recharge_name" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">QR Code Status</label>
                             <div class="flex flex-col gap-4">
@@ -313,7 +302,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div x-show="activeTab === 'security'" class="space-y-6">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 text-[10px] font-black text-blue-600 uppercase tracking-widest border-b dark:border-slate-800 pb-1">Login Credentials</div>
@@ -342,7 +330,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="p-6 border-t dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex gap-3">
                     <button type="button" @click="openEdit = false" class="flex-1 px-4 py-2.5 border dark:border-slate-700 rounded-xl font-bold text-slate-500 text-sm hover:bg-slate-100 transition-colors">Cancel</button>
                     <button type="submit"
@@ -383,7 +370,6 @@
             </form>
         </div>
     </div>
-
     <div x-show="openBalance" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div @click.away="openBalance = false" class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl border dark:border-slate-800">
             <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2 text-center">Adjust Balance</h3>

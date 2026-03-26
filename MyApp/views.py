@@ -184,24 +184,58 @@ def delete_mission(request, mission_id):
 
 @staff_member_required
 def staff_assign_trap(request, user_id):
-    if request.method == "POST":
-        target_user = get_object_or_404(User, id=user_id)
-        mission_template = get_object_or_404(Mission, id=request.POST.get('mission_id'))
-        gap_amount = Decimal(request.POST.get('gap_amount', '0'))
-        target_turn = int(request.POST.get('target_turn', '1'))
+    target_user = get_object_or_404(User, id=user_id)
 
-        MissionRecord.objects.create(
-            user=target_user,
-            mission_name=mission_template.name,
-            amount=gap_amount,
-            image_link=mission_template.image_link,
-            status='Scheduled',
-            scheduled_at=target_turn
+    search_query = request.GET.get('q_template', '')
+
+    templates = Mission.objects.all().order_by('price')
+
+    if search_query:
+        templates = templates.filter(
+            Q(name__icontains=search_query) |
+            Q(price__icontains=search_query)
         )
-        messages.success(request, f"Trap set for {target_user.username} at mission #{target_turn}")
-    return redirect('/staff/?tab=users')
 
-# --- MISSION LOGIC ---
+    scheduled_orders = MissionRecord.objects.filter(
+        user=target_user
+    ).exclude(status='Completed').order_by('scheduled_at')
+
+    if request.method == "POST":
+        if "delete_scheduled" in request.POST:
+            order_id = request.POST.get('order_id')
+            MissionRecord.objects.filter(id=order_id, user=target_user).delete()
+            messages.success(request, "Task deleted.")
+        else:
+            mission_id = request.POST.get('mission_id')
+            template = get_object_or_404(Mission, id=mission_id)
+
+            # ✅ THIS IS NOW GAP AMOUNT (NOT FINAL PRICE)
+            gap_amount = Decimal(request.POST.get('gap_amount', '0'))
+
+            target_turn = request.POST.get('target_turn', 1)
+
+            MissionRecord.objects.create(
+                user=target_user,
+                mission_name=template.name,
+                amount=gap_amount,  # 🔥 store ONLY GAP
+                commission=0,
+                image_link=template.image_link,
+                status='Scheduled',
+                scheduled_at=int(target_turn)
+            )
+
+            messages.success(request, f"Trap set for turn {target_turn}")
+
+        return redirect(request.path)
+
+    context = {
+        'target_user': target_user,
+        'templates': templates,
+        'scheduled_orders': scheduled_orders,
+        'search_query': search_query,
+    }
+
+    return render(request, 'staff/assignorder.html', context)
 
 from django.http import JsonResponse
 
@@ -214,53 +248,62 @@ def complete_mission(request):
 
     try:
         with transaction.atomic():
-
             profile = Profile.objects.select_for_update().get(user=user)
             user_vip = profile.membership_vip
 
-            # 🔒 Check pending FIRST
+            # 1. Block if a mission is already pending/locked
             pending = MissionRecord.objects.select_for_update().filter(
                 user=user,
                 status='Pending'
             ).first()
 
             if pending:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Pending mission exists'
-                })
+                return JsonResponse({'success': False, 'error': 'Pending mission exists'})
 
-            # 🚫 Limit
+            # 2. Check VIP daily limit
             if user_vip and profile.missions_count >= user_vip.missions_per_day:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Limit reached'
-                })
+                return JsonResponse({'success': False, 'error': 'Limit reached'})
 
-            missions = Mission.objects.filter(
-                price__lte=profile.balance
-            ).order_by('-price')
-
-            if not missions.exists():
-                return JsonResponse({
-                    'success': False,
-                    'error': 'No missions available'
-                })
-
-            selected = missions.first()
-
-            rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
-            commission = selected.price * rate
-
-            MissionRecord.objects.create(
+            # 3. CHECK FOR ASSIGNED TRAP
+            next_turn = profile.missions_count + 1
+            trap = MissionRecord.objects.filter(
                 user=user,
-                mission_name=selected.name,
-                amount=selected.price,
-                commission=commission,
-                image_link=selected.image_link,
-                status='Pending'
-            )
+                status='Scheduled',
+                scheduled_at=next_turn
+            ).first()
 
+            if trap:
+                # ✅ Recalculate amount dynamically (IMPORTANT FIX)
+                trap.amount = profile.balance + trap.amount
+
+                trap.status = 'Pending'
+
+                rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
+                trap.commission = trap.amount * rate
+                trap.save()
+
+            else:
+                # ✅ NORMAL MISSIONS: NEVER EXCEED BALANCE
+                missions = Mission.objects.filter(price__lte=profile.balance)
+
+                if not missions.exists():
+                    return JsonResponse({'success': False, 'error': 'Insufficient balance for any mission'})
+
+                selected = random.choice(list(missions))
+
+                rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
+                commission = selected.price * rate
+
+                MissionRecord.objects.create(
+                    user=user,
+                    mission_name=selected.name,
+                    amount=selected.price,
+                    commission=commission,
+                    image_link=selected.image_link,
+                    status='Pending'
+                )
+
+            # 4. Increment mission count
             profile.missions_count += 1
             profile.save()
 
@@ -595,6 +638,31 @@ def login_view(request):
             messages.error(request, "El número no está registrado." if lang == 'es' else "Phone not registered.")
     return render(request, 'user/login.html', {'lang': lang})
 
+def staff_login_view(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('/staff/')
+
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if user.is_staff:
+                auth_login(request, user)
+                return redirect('/staff/')
+            else:
+                messages.error(request, "Access denied. Not a staff member.")
+        else:
+            messages.error(request, "Invalid username or password.")
+
+    return render(request, 'staff/login.html')
+
+def staff_logout_view(request):
+    auth_logout(request)
+    messages.success(request, "Staff session ended safely.")
+    return redirect('staff_login')
+    
 def logout_view(request):
     auth_logout(request)
     return redirect('login')

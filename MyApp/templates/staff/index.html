@@ -1,13 +1,5 @@
 <!DOCTYPE html>
 <html lang="en"
-    x-data="{
-        darkMode: localStorage.getItem('darkMode') === 'true',
-        sidebarOpen: true,
-        toggleTheme() {
-            this.darkMode = !this.darkMode;
-            localStorage.setItem('darkMode', this.darkMode);
-        }
-    }"
     :class="{ 'dark': darkMode }">
 <head>
     <meta charset="UTF-8">
@@ -18,6 +10,13 @@
         tailwind.config = { darkMode: 'class' }
     </script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <style>
         [x-cloak] { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
@@ -32,7 +31,21 @@
 <body
     class="font-sans antialiased transition-colors duration-300 bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-300"
     x-data="{
+        darkMode: localStorage.getItem('darkMode') === 'true',
+        sidebarOpen: true,
         tab: new URLSearchParams(window.location.search).get('tab') || 'home',
+
+        toggleTheme() {
+            this.darkMode = !this.darkMode;
+            localStorage.setItem('darkMode', this.darkMode);
+            // Manually toggle class on documentElement so :class on <html> works instantly
+            if(this.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        },
+
         updateURL(newTab) {
             this.tab = newTab;
             const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?tab=' + newTab;
@@ -87,7 +100,7 @@
                     <span class="text-lg flex-shrink-0 opacity-60">📱</span>
                     <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Mobile App</span>
                 </a>
-                <a href="/logout/" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all group relative">
+                <a href="{% url 'staff_logout' %}" class="w-full flex items-center gap-4 px-3.5 py-2.5 rounded-xl text-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all group relative">
                     <span class="text-lg flex-shrink-0 opacity-80">🚪</span>
                     <span x-show="sidebarOpen" x-transition.opacity class="whitespace-nowrap font-medium">Logout</span>
                 </a>

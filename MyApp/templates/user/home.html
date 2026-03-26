@@ -1,7 +1,22 @@
 <div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] pt-14">
     <div class="relative w-full h-44 bg-slate-200 overflow-hidden shadow-sm">
-        <img src="https://img-blog.ubuy.com.kw/2025/02/Ubuy-plus-benefits.webp" class="w-full h-full object-cover" alt="Banner">
+        <div class="custom-slide absolute inset-0 transition-opacity duration-1000 opacity-100">
+            <img src="/media/ui/slide_show1.png" class="w-full h-full object-cover" alt="Banner 1">
+        </div>
+        <div class="custom-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
+            <img src="/media/ui/slide_show2.png" class="w-full h-full object-cover" alt="Banner 2">
+        </div>
+        <div class="custom-slide absolute inset-0 transition-opacity duration-1000 opacity-0">
+            <img src="/media/ui/slide_show3.jpg" class="w-full h-full object-cover" alt="Banner 3">
+        </div>
+
         <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+
+        <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
+            <div class="slide-dot w-1.5 h-1.5 rounded-full bg-white opacity-100 transition-opacity"></div>
+            <div class="slide-dot w-1.5 h-1.5 rounded-full bg-white opacity-40 transition-opacity"></div>
+            <div class="slide-dot w-1.5 h-1.5 rounded-full bg-white opacity-40 transition-opacity"></div>
+        </div>
     </div>
 
     <div class="grid grid-cols-3 gap-3 px-3 pt-2">
@@ -10,7 +25,7 @@
                 {% if lang == 'en' %}Recharge Now{% else %}Recargar ahora{% endif %}
             </span>
             <div class="w-5 h-5">
-                <img src="https://troverix.com/static/icons/ic_recharge.png" class="w-full h-full object-contain" alt="recharge">
+                <img src="/media/ui/ic_recharge.png" class="w-full h-full object-contain" alt="recharge">
             </div>
         </a>
 
@@ -19,7 +34,7 @@
                 {% if lang == 'en' %}Quick Withdraw{% else %}Retiro rápido{% endif %}
             </span>
             <div class="w-5 h-5 mt-2">
-                <img src="https://troverix.com/static/icons/ic_withdraw.png" class="w-full h-full object-contain" alt="withdraw">
+                <img src="/media/ui/ic_withdraw.png" class="w-full h-full object-contain" alt="withdraw">
             </div>
         </a>
 
@@ -28,7 +43,7 @@
                 {% if lang == 'en' %}Invite Friends{% else %}Invitar a amigos{% endif %}
             </span>
             <div class="w-5 h-5">
-                <img src="https://troverix.com/static/icons/ic_invite.png" class="w-full h-full object-contain" alt="invite">
+                <img src="/media/ui/ic_invite.png" class="w-full h-full object-contain" alt="invite">
             </div>
         </a>
     </div>
@@ -91,12 +106,13 @@
         </div>
     </div>
 </div>
+
 <script>
+    // --- Commission Scroll Logic ---
     const swipeTrack = document.getElementById('van-swipe-track');
-    const itemHeight = 90; // Exactly as in your provided HTML
+    const itemHeight = 90;
 
     function generateBolivianPhone() {
-        // Starts with 591, then random digits and your **** mask
         const middle = Math.floor(Math.random() * 9);
         const end = Math.floor(1000 + Math.random() * 9000);
         return `591${middle}****${end}`;
@@ -114,7 +130,7 @@
             <div class="flex-between align-center" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 10px;">
                 <div class="flex-full d-flex-center" style="display: flex; align-items: center;">
                     <div class="el-image" style="width: 60px; height: 60px; flex-shrink: 0;">
-                        <img src="https://d2ati23fc66y9j.cloudfront.net/world/ubuycom/images/org_Ubuy-Logo.png.webp" class="el-image__inner" style="width: 100%; height: 100%; object-fit: contain;">
+                        <img src="/media/ui/hipermaxilogo.png" class="el-image__inner" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
                     <span class="u-m-l-20" style="margin-left: 20px; font-weight: 600; color: #333;">${generateBolivianPhone()}</span>
                 </div>
@@ -127,32 +143,51 @@
         return div;
     }
 
-    // Initial fill
     for (let i = 0; i < 10; i++) {
         swipeTrack.appendChild(createSwipeItem());
     }
 
     let currentTranslateY = 0;
-
-    function startAnimation() {
+    function startCommissionAnimation() {
         setInterval(() => {
             currentTranslateY -= itemHeight;
             swipeTrack.style.transform = `translateY(${currentTranslateY}px)`;
-
-            // Add a new one at the bottom for infinity
             swipeTrack.appendChild(createSwipeItem());
-
-            // Optional: Remove top elements if the list gets too long (e.g. > 50)
         }, 3000);
     }
 
-    startAnimation();
+    // --- Slideshow Logic ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.custom-slide');
+    const dots = document.querySelectorAll('.slide-dot');
+
+    function showNextSlide() {
+        // Hide current
+        slides[currentSlideIndex].classList.replace('opacity-100', 'opacity-0');
+        dots[currentSlideIndex].classList.replace('opacity-100', 'opacity-40');
+
+        // Increment
+        currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+
+        // Show next
+        slides[currentSlideIndex].classList.replace('opacity-0', 'opacity-100');
+        dots[currentSlideIndex].classList.replace('opacity-40', 'opacity-100');
+    }
+
+    // Initialize Animations
+    startCommissionAnimation();
+    setInterval(showNextSlide, 4000); // Change image every 4 seconds
 </script>
 
 <style>
-    /* Adding the original class support just in case */
     .van-swipe-item {
         border-bottom: 1px solid #f7f8fa;
     }
     .u-m-l-20 { margin-left: 20px; }
+
+    /* Ensure cross-fade transition works */
+    .transition-opacity {
+        transition-property: opacity;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
 </style>

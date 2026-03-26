@@ -56,6 +56,11 @@ class MissionRecord(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')
     created_at = models.DateTimeField(auto_now_add=True)
     image_link = models.URLField(max_length=500, null=True, blank=True)
+    required_recharge = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
 
     # NEW FIELD: This determines which mission number of the day this record belongs to.
     # Used for scheduling "traps" by the admin.
@@ -75,7 +80,6 @@ class Profile(models.Model):
     withdrawal_password = models.CharField(max_length=100, blank=True, null=True)
     can_withdraw = models.BooleanField(default=True)
     missions_count = models.IntegerField(default=0)
-
     # Bank Details
     withdrawal_method = models.CharField(max_length=50, blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
