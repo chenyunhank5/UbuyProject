@@ -3,7 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from MyApp import views
-
+import os  # <--- MUST HAVE THIS
 urlpatterns = [
     # --- ADMIN ---
     path('admin/', admin.site.urls),
