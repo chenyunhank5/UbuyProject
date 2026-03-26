@@ -92,7 +92,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # --- ADD THESE LINES BELOW FOR RAILWAY SECURITY ---
 
 # This fixes the "Origin checking failed" error
