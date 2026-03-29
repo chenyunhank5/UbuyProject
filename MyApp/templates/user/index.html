@@ -6,13 +6,12 @@
     <title>Ubuy Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Using Inter: It's cleaner and less "cramped" than Montserrat or standard Sans */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            letter-spacing: -0.01em; /* This takes the 'stress' out of the layout */
+            letter-spacing: -0.01em;
         }
 
         .bg-brand { background-color: #f39c12; }
@@ -20,8 +19,8 @@
         .text-brand { color: #f39c12; }
         .border-brand { border-color: #f39c12; }
 
-        /* Updated tracking to be 'tight' instead of 'tighter' so letters don't touch */
         .tracking-tighter { letter-spacing: -0.03em !important; }
+        .font-numeric { font-variant-numeric: tabular-nums; }
 
         @keyframes slideIn {
             from { transform: translateY(-100%); opacity: 0; }
@@ -60,21 +59,9 @@
 
                 <a href="?tab={{ active_tab }}&lang={% if lang == 'en' %}es{% else %}en{% endif %}" class="group relative flex items-center active:scale-95 transition-transform">
                     {% if lang == 'en' %}
-                        <div class="w-8 h-6 bg-[#002868] relative shadow-sm border border-slate-200 rounded-sm overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-[#002868] z-10 flex flex-wrap p-0.5">
-                                <div class="w-1 h-1 bg-white rounded-full m-px"></div><div class="w-1 h-1 bg-white rounded-full m-px"></div><div class="w-1 h-1 bg-white rounded-full m-px"></div>
-                            </div>
-                            <div class="flex flex-col h-full w-full">
-                                <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
-                                <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
-                                <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
-                                <div class="h-[14%] bg-[#bf0a30]"></div>
-                            </div>
-                        </div>
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774547483/Flag_of_the_United_States__DDD-F-416E_specifications.svg_xmiovx.webp" alt="English" class="w-8 h-auto shadow-sm rounded-sm border border-slate-200">
                     {% else %}
-                        <div class="w-8 h-6 flex flex-col shadow-sm border border-slate-200 rounded-sm overflow-hidden">
-                            <div class="h-1/3 bg-[#ff0000]"></div><div class="h-1/3 bg-[#ffff00]"></div><div class="h-1/3 bg-[#007a33]"></div>
-                        </div>
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774547482/Flag_of_Bolivia.svg_tnyh5g.webp" alt="Español" class="w-8 h-auto shadow-sm rounded-sm border border-slate-200">
                     {% endif %}
                 </a>
 
@@ -84,7 +71,9 @@
 
                 <div class="relative text-slate-400 active:scale-90 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
-                    <span class="absolute top-0 right-0 w-2 h-2 bg-rose-500 border-2 border-white rounded-full"></span>
+                    <span id="recharge-number-badge" class="hidden absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full border-2 border-white flex items-center justify-center font-numeric shadow-sm">
+                        0
+                    </span>
                 </div>
 
                 <a href="https://www.global.ubuy.com/contacts" target="_blank" rel="noopener noreferrer" class="text-slate-400 active:scale-90 transition-transform">
@@ -195,6 +184,27 @@
                     setTimeout(() => notif.remove(), 500);
                 }, 3000);
             });
+
+            // --- RECHARGE COUNT FETCHING LOGIC ---
+            const badge = document.getElementById('recharge-number-badge');
+
+            function getPendingCount() {
+                fetch('/api/pending-recharges/')
+                    .then(response => response.json())
+                    .then(data => {
+                        const count = parseInt(data.count);
+                        if (count > 0) {
+                            badge.textContent = count > 9 ? '9+' : count;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching count:', error));
+            }
+
+            getPendingCount(); // Initial call
+            setInterval(getPendingCount, 15000); // Check every 15 seconds
         });
 
         function copyToClipboard(text) {

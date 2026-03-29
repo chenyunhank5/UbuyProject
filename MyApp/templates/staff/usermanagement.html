@@ -1,49 +1,54 @@
 <div x-data="{
-    openEdit: false,
-    openAdd: false,
-    openBalance: false,
-    openAssign: false,
-    searchQuery: '',
-    activeTab: 'account',
-    editUser: {
-        id: '', name: '', phone: '', vip: '', credit: 100,
-        method: '', bank_name: '', acc_name: '', acc_num: '', bank_phone: '',
-        withdraw_pass: '',
-        recharge_name: '',
-        recharge_qr_url: '',
-        invite_code: ''
-    },
-    pass: '',
-    passConf: '',
-    pin: '',
-    pinConf: '',
-    balanceData: { id: '', name: '', current: 0 },
-    assignData: { id: '', name: '' } <!-- ✅ FIXED HERE -->
-}">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div class="relative w-full md:w-80">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
+  openEdit: false,
+  openAdd: false,
+  openBalance: false,
+  openAssign: false,
+  searchQuery: '',
+  activeTab: 'account',
+  editUser: {
+      id: '', name: '', phone: '', vip: '', credit: 100,
+      method: '', bank_name: '', acc_name: '', acc_num: '', bank_phone: '',
+      withdraw_pass: '',
+      recharge_name: '',
+      recharge_qr_url: '',
+      invite_code: ''
+  },
+  pass: '',
+  passConf: '',
+  pin: '',
+  pinConf: '',
+  balanceData: { id: '', name: '', current: 0 },
+  assignData: { id: '', name: '' } <!-- ✅ FIXED HERE -->
+}"  balanceData: { id: '', name: '', current: 0 }>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">User Management</h2>
+        <p class="text-sm text-slate-500">View and manage all registered accounts.</p>
+    </div>
+
+    <div class="flex flex-col md:flex-row items-center gap-3">
+        <form method="GET" class="flex items-center gap-2 w-full md:w-auto">
+            <input type="hidden" name="tab" value="users">
+            <div class="relative flex-1 md:flex-none">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                <input type="text" name="user_q" value="{{ user_query }}"
+                       placeholder="Search username or phone..."
+                       class="w-full md:w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
-            <input
-                type="text"
-                x-model="searchQuery"
-                placeholder="Search user, phone or invite code..."
-                class="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/50 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            >
-        </div>
-        <button
-            @click="openAdd = true"
-            class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black tracking-widest rounded-xl transition-all shadow-lg shadow-blue-600/20 gap-2"
-        >
+            <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all">
+                Search
+            </button>
+        </form>
+
+        <button @click="openAdd = true"
+                class="w-full md:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-[10px] font-black tracking-widest rounded-xl transition-all shadow-lg gap-2 hover:scale-[1.02] active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
             </svg>
             ADD NEW USER
         </button>
     </div>
+</div>
     <div class="bg-white dark:bg-slate-900/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
         <table class="w-full text-left border-collapse">
             <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
@@ -172,6 +177,39 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+        <div class="text-xs text-slate-500 font-medium">
+            Showing page {{ users.number }} of {{ users.paginator.num_pages }}
+        </div>
+
+        {% if users.has_other_pages %}
+        <div class="px-6 py-5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <p class="text-xs text-slate-500 font-medium">
+                Showing
+                <span class="text-slate-800 dark:text-slate-200 font-bold">
+                    {{ users.start_index }}-{{ users.end_index }}
+                </span>
+                of {{ users.paginator.count }}
+            </p>
+
+            <div class="flex gap-2">
+                {% if users.has_previous %}
+                    <a href="?tab=users&page={{ users.previous_page_number }}{% if searchQuery %}&q={{ searchQuery }}{% endif %}"
+                       class="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-700 dark:text-slate-200 shadow-sm flex items-center">
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if users.has_next %}
+                    <a href="?tab=users&page={{ users.next_page_number }}{% if searchQuery %}&q={{ searchQuery }}{% endif %}"
+                       class="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-700 dark:text-slate-200 shadow-sm flex items-center">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
     <div x-show="openEdit" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div @click.away="openEdit = false" class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl shadow-2xl border dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">

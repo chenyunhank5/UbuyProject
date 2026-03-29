@@ -2,27 +2,27 @@
      x-data="{
         filter: 'Pending',
         search: '',
-        withdrawals: [],
+        recharges: [],
         loading: true,
         page: 1,
         totalPages: 1,
         hasNext: false,
         hasPrev: false,
 
-        async fetchWithdrawals() {
+        async fetchRecharges() {
             this.loading = true;
             try {
-                // Sending page, q (search), and status (filter) to the backend
-                const res = await fetch(`/api/admin/withdrawals/?page=${this.page}&q=${this.search}&status=${this.filter}`);
+                // Fetching from server with page, search (q), and filter (status)
+                const res = await fetch(`/api/admin/recharges/?page=${this.page}&q=${this.search}&status=${this.filter}`);
                 const data = await res.json();
 
-                this.withdrawals = data.withdrawals;
+                this.recharges = data.recharges;
                 this.totalPages = data.total_pages || 1;
                 this.hasNext = data.has_next || false;
                 this.hasPrev = data.has_previous || false;
                 this.loading = false;
             } catch (e) {
-                console.error('Withdrawal fetch error', e);
+                console.error('Admin fetch error', e);
                 this.loading = false;
             }
         },
@@ -30,27 +30,27 @@
         nextPage() {
             if (this.hasNext) {
                 this.page++;
-                this.fetchWithdrawals();
+                this.fetchRecharges();
             }
         },
 
         prevPage() {
             if (this.hasPrev) {
                 this.page--;
-                this.fetchWithdrawals();
+                this.fetchRecharges();
             }
         }
      }"
      x-init="
-        fetchWithdrawals();
-        $watch('search', value => { page = 1; fetchWithdrawals(); });
-        $watch('filter', value => { page = 1; fetchWithdrawals(); });
+        fetchRecharges();
+        $watch('search', value => { page = 1; fetchRecharges(); });
+        $watch('filter', value => { page = 1; fetchRecharges(); });
      ">
 
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black dark:text-white tracking-tight">Withdrawal Requests</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Review and process cash-out requests from users.</p>
+            <h2 class="text-2xl font-black dark:text-white tracking-tight">Recharge Management</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Verify and approve deposit proof from users.</p>
         </div>
 
         <div class="flex flex-col md:flex-row items-center gap-3">
@@ -58,19 +58,19 @@
                 <input
                     type="text"
                     x-model.debounce.500ms="search"
-                    placeholder="Search username or bank..."
-                    class="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-2xl px-4 py-2 text-xs font-bold dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"
+                    placeholder="Search username..."
+                    class="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-2xl px-4 py-2 text-xs font-bold dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all"
                 >
             </div>
 
             <div class="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                 <button @click="filter = 'Pending'"
-                    :class="filter === 'Pending' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+                    :class="filter === 'Pending' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
                     class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all duration-200">
                     Pending
                 </button>
                 <button @click="filter = 'All'"
-                    :class="filter === 'All' ? 'bg-white dark:bg-slate-800 shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+                    :class="filter === 'All' ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
                     class="px-6 py-2 text-[10px] font-black uppercase rounded-xl transition-all duration-200">
                     History
                 </button>
@@ -84,78 +84,80 @@
                 <thead>
                     <tr class="bg-slate-50/50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800">
                         <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">User & Time</th>
-                        <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Bank Details</th>
+                        <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Proof / Screenshot</th>
                         <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Amount</th>
                         <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Status</th>
                         <th class="px-6 py-5 text-right text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
-                    <template x-for="w in withdrawals" :key="w.id">
+                    <template x-for="r in recharges" :key="r.id">
                         <tr x-transition:enter="transition ease-out duration-200"
-                            class="hover:bg-blue-50/30 dark:hover:bg-blue-900/5 transition-colors group">
+                            class="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/5 transition-colors group">
 
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-500/20"
-                                         x-text="w.username.substring(0,1).toUpperCase()">
+                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-500/20"
+                                         x-text="r.username.charAt(0).toUpperCase()">
                                     </div>
                                     <div>
-                                        <p class="text-sm font-black dark:text-slate-200 leading-none group-hover:text-blue-600 transition-colors" x-text="w.username"></p>
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1.5" x-text="w.created_at"></p>
+                                        <p class="text-sm font-black dark:text-slate-200 leading-none group-hover:text-indigo-600 transition-colors" x-text="r.username"></p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1.5" x-text="r.created_at"></p>
                                     </div>
                                 </div>
                             </td>
 
                             <td class="px-6 py-4">
-                                <div class="flex flex-col gap-0.5">
-                                    <p class="text-[10px] font-black dark:text-slate-300 uppercase tracking-tight" x-text="w.bank_info.bank"></p>
-                                    <p class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400" x-text="w.bank_info.number"></p>
-                                    <p class="text-[9px] text-slate-400 font-medium italic" x-text="w.bank_info.name"></p>
-                                </div>
+                                <template x-if="r.screenshot">
+                                    <a :href="r.screenshot" target="_blank" class="block w-12 h-12 rounded-lg overflow-hidden border-2 border-slate-100 dark:border-slate-800 hover:border-indigo-500 transition-all active:scale-90 shadow-sm">
+                                        <img :src="r.screenshot" class="w-full h-full object-cover" alt="Proof">
+                                    </a>
+                                </template>
+                                <template x-if="!r.screenshot">
+                                    <span class="text-[9px] font-black text-slate-300 uppercase italic">No Proof</span>
+                                </template>
                             </td>
 
                             <td class="px-6 py-4">
                                 <div class="inline-flex flex-col">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Debit</span>
-                                    <span class="text-sm font-mono font-black text-rose-500" x-text="'BOB ' + w.amount"></span>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Credit</span>
+                                    <span class="text-sm font-mono font-black text-emerald-500" x-text="'BOB ' + r.amount"></span>
                                 </div>
                             </td>
 
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
                                     :class="{
-                                        'bg-amber-100 text-amber-600 dark:bg-amber-900/20': w.status === 'Pending',
-                                        'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20': w.status === 'Approved',
-                                        'bg-rose-100 text-rose-600 dark:bg-rose-950/20': w.status === 'Rejected'
+                                        'bg-amber-100 text-amber-600 dark:bg-amber-900/20': r.status === 'Pending',
+                                        'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20': r.status === 'Approved',
+                                        'bg-rose-100 text-rose-600 dark:bg-rose-950/20': r.status === 'Rejected'
                                     }">
                                     <span class="w-1.5 h-1.5 rounded-full mr-1.5"
                                         :class="{
-                                            'bg-amber-500 animate-pulse': w.status === 'Pending',
-                                            'bg-emerald-500': w.status === 'Approved',
-                                            'bg-rose-500': w.status === 'Rejected'
+                                            'bg-amber-500 animate-pulse': r.status === 'Pending',
+                                            'bg-emerald-500': r.status === 'Approved',
+                                            'bg-rose-500': r.status === 'Rejected'
                                         }"></span>
-                                    <span x-text="w.status"></span>
+                                    <span x-text="r.status"></span>
                                 </span>
                             </td>
 
                             <td class="px-6 py-4 text-right">
-                                <template x-if="w.status === 'Pending'">
+                                <template x-if="r.status === 'Pending'">
                                     <div class="flex justify-end gap-2">
-                                        <a :href="'/staff/withdraw/action/' + w.id + '/reject/'"
+                                        <a :href="'/staff/recharge/action/' + r.id + '/reject/'"
                                            class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-400 hover:bg-rose-500 hover:text-white transition-all duration-300">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
                                         </a>
-                                        <a :href="'/staff/withdraw/action/' + w.id + '/approve/'"
-                                           class="px-4 h-9 flex items-center justify-center rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all active:scale-95">
-                                            Complete
+                                        <a :href="'/staff/recharge/action/' + r.id + '/approve/'"
+                                           class="px-4 h-9 flex items-center justify-center rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
+                                            Approve
                                         </a>
                                     </div>
                                 </template>
-
-                                <template x-if="w.status !== 'Pending'">
+                                <template x-if="r.status !== 'Pending'">
                                     <div class="flex items-center justify-end gap-2 text-slate-300 dark:text-slate-700">
-                                        <span class="text-[9px] font-black uppercase tracking-widest">Handled</span>
+                                        <span class="text-[9px] font-black uppercase tracking-widest" x-text="r.status"></span>
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                         </svg>
@@ -165,12 +167,12 @@
                         </tr>
                     </template>
 
-                    <template x-if="withdrawals.length === 0 && !loading">
+                    <template x-if="!loading && recharges.length === 0">
                         <tr>
                             <td colspan="5" class="px-6 py-24 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-2xl mb-4">💸</div>
-                                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Queue is empty</p>
+                                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-2xl mb-4">💳</div>
+                                    <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">No recharge requests found</p>
                                 </div>
                             </td>
                         </tr>
@@ -181,21 +183,21 @@
 
         <div class="bg-slate-50/50 dark:bg-slate-900/40 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Page <span class="text-blue-600" x-text="page"></span> of <span x-text="totalPages"></span>
+                Page <span class="text-indigo-600" x-text="page"></span> of <span x-text="totalPages"></span>
             </span>
 
             <div class="flex gap-2">
                 <button
                     @click="prevPage()"
                     :disabled="!hasPrev"
-                    :class="!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-600 hover:text-white'"
+                    :class="!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-indigo-600 hover:text-white'"
                     class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase transition-all">
                     Previous
                 </button>
                 <button
                     @click="nextPage()"
                     :disabled="!hasNext"
-                    :class="!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-blue-600 hover:text-white'"
+                    :class="!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-indigo-600 hover:text-white'"
                     class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase transition-all">
                     Next
                 </button>

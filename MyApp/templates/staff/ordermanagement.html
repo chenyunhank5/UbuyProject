@@ -8,56 +8,72 @@
         price: '',
         image_link: ''
     }
-}" class="p-6">
+}" class="space-y-6 p-6">
 
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black dark:text-white uppercase tracking-tight">Mission Management</h2>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Mission Management</h2>
             <p class="text-sm text-slate-500">Inventory of products in the global task pool</p>
         </div>
-        <button @click="showAddModal = true; previewUrl = ''"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2">
-            <span class="text-lg">+</span> Create New Mission
-        </button>
+
+        <div class="flex items-center gap-3">
+            <form method="GET" class="flex items-center gap-2">
+                <input type="hidden" name="tab" value="missions">
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                    <input type="text" name="mission_q" value="{{ mission_query|default:'' }}"
+                           placeholder="Search missions..."
+                           class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-48 md:w-64 transition-all">
+                </div>
+                <button type="submit" class="bg-slate-800 dark:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black transition-all">
+                    Search
+                </button>
+            </form>
+
+            <button @click="showAddModal = true; previewUrl = ''"
+                    class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                <span class="text-lg">+</span> New
+            </button>
+        </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] overflow-hidden shadow-sm">
+    <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800/50 overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
-                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Product Info</th>
-                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Access Level</th>
-                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">Sale Price</th>
-                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">Actions</th>
+                    <tr class="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] uppercase tracking-[0.15em] text-slate-500 font-black border-b border-slate-100 dark:border-slate-800/50">
+                        <th class="px-6 py-5">Product Info</th>
+                        <th class="px-6 py-5">Access Level</th>
+                        <th class="px-6 py-5 text-right">Sale Price</th>
+                        <th class="px-6 py-5 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
                     {% for mission in missions %}
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
-                                <img src="{{ mission.image_link }}" class="w-12 h-12 rounded-xl object-cover bg-slate-100 border border-slate-200 dark:border-slate-700">
+                                <img src="{{ mission.image_link }}" class="w-12 h-12 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700">
                                 <div class="flex flex-col">
-                                    <span class="font-bold text-slate-700 dark:text-slate-200 text-sm max-w-[250px] truncate">
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200 max-w-[250px] truncate">
                                         {{ mission.name }}
                                     </span>
-                                    <span class="text-[9px] text-slate-400 font-mono">ID: #{{ mission.id }}</span>
+                                    <span class="text-[9px] text-slate-400 font-mono uppercase tracking-wider">ID: #{{ mission.id }}</span>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-wider">
+                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-tighter">
                                 All VIP Levels
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <span class="font-mono font-black text-slate-800 dark:text-white text-sm">
+                            <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">
                                 BOB {{ mission.price }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <div class="flex justify-end gap-3">
+                            <div class="flex justify-end gap-2">
                                 <button @click="
                                     editData.id = '{{ mission.id }}';
                                     editData.name = '{{ mission.name|escapejs }}';
@@ -65,13 +81,13 @@
                                     editData.image_link = '{{ mission.image_link }}';
                                     previewUrl = '{{ mission.image_link }}';
                                     showEditModal = true;
-                                " class="text-blue-500 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">
+                                " class="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all text-[10px] font-black uppercase tracking-widest">
                                     Edit
                                 </button>
 
                                 <a href="/staff/mission/delete/{{ mission.id }}/"
                                    onclick="return confirm('Are you sure you want to delete this product?')"
-                                   class="text-rose-500 hover:text-rose-700 text-[10px] font-black uppercase tracking-widest">
+                                   class="text-rose-500 hover:text-rose-700 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all text-[10px] font-black uppercase tracking-widest">
                                     Delete
                                 </a>
                             </div>
@@ -79,49 +95,57 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="px-6 py-20 text-center">
-                            <p class="text-slate-400 font-bold uppercase text-xs tracking-[0.2em]">No missions available in pool</p>
-                        </td>
+                        <td colspan="4" class="px-6 py-20 text-center text-slate-400 italic">No missions found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <div class="px-6 py-5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+            <p class="text-xs text-slate-500 font-medium">
+                Showing <span class="text-slate-800 dark:text-slate-200">{{ missions.start_index }}-{{ missions.end_index }}</span> of {{ missions.paginator.count }}
+            </p>
+            <div class="flex gap-2">
+                {% if missions.has_previous %}
+                    <a href="?tab=missions&mission_page={{ missions.previous_page_number }}{% if mission_query %}&mission_q={{ mission_query }}{% endif %}"
+                       class="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-700 dark:text-slate-200 shadow-sm">
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if missions.has_next %}
+                    <a href="?tab=missions&mission_page={{ missions.next_page_number }}{% if mission_query %}&mission_q={{ mission_query }}{% endif %}"
+                       class="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-700 dark:text-slate-200 shadow-sm">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <template x-teleport="body">
-        <div x-show="showAddModal"
-             x-transition.opacity
-             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" x-cloak>
-
-            <div @click.outside="showAddModal = false"
-                 class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-
+        <div x-show="showAddModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" x-cloak>
+            <div @click.outside="showAddModal = false" class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
                 <form action="/staff/mission/save/" method="POST" class="p-8">
                     {% csrf_token %}
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="text-xl font-black dark:text-white uppercase tracking-tight">Add New Product</h3>
                         <button type="button" @click="showAddModal = false" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:text-rose-500">Exit</button>
                     </div>
-
                     <div class="space-y-5">
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Display Name</label>
-                            <input type="text" name="name" required placeholder="Product title..."
-                                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <input type="text" name="name" required placeholder="Product title..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Price (BOB)</label>
-                            <input type="number" step="0.01" name="price" required placeholder="0.00"
-                                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <input type="number" step="0.01" name="price" required placeholder="0.00" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Image URL</label>
                             <div class="flex gap-4">
-                                <input type="url" name="image_link" x-model="previewUrl" required placeholder="https://..."
-                                       class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none">
+                                <input type="url" name="image_link" x-model="previewUrl" required placeholder="https://..." class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none">
                                 <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                     <template x-if="previewUrl"><img :src="previewUrl" class="w-full h-full object-cover"></template>
                                     <template x-if="!previewUrl"><span class="text-[10px] opacity-20 italic">Img</span></template>
@@ -129,58 +153,41 @@
                             </div>
                         </div>
                     </div>
-
-                    <button type="submit" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-blue-600/30 transition-all active:scale-[0.98]">
-                        Push to Pool
-                    </button>
+                    <button type="submit" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-blue-600/30 transition-all active:scale-[0.98]">Push to Pool</button>
                 </form>
             </div>
         </div>
     </template>
 
     <template x-teleport="body">
-        <div x-show="showEditModal"
-             x-transition.opacity
-             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" x-cloak>
-
-            <div @click.outside="showEditModal = false"
-                 class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-
+        <div x-show="showEditModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" x-cloak>
+            <div @click.outside="showEditModal = false" class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
                 <form :action="'/staff/mission/update/' + editData.id + '/'" method="POST" class="p-8">
                     {% csrf_token %}
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="text-xl font-black dark:text-white uppercase tracking-tight">Edit Product</h3>
                         <button type="button" @click="showEditModal = false" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:text-rose-500">Exit</button>
                     </div>
-
                     <div class="space-y-5">
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Product Name</label>
-                            <input type="text" name="name" x-model="editData.name" required
-                                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <input type="text" name="name" x-model="editData.name" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Sale Price</label>
-                            <input type="number" step="0.01" name="price" x-model="editData.price" required
-                                   class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <input type="number" step="0.01" name="price" x-model="editData.price" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
-
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">New Image URL</label>
                             <div class="flex gap-4">
-                                <input type="url" name="image_link" x-model="editData.image_link" @input="previewUrl = editData.image_link" required
-                                       class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none">
+                                <input type="url" name="image_link" x-model="editData.image_link" @input="previewUrl = editData.image_link" required class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none">
                                 <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                     <img :src="editData.image_link" class="w-full h-full object-cover">
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <button type="submit" class="w-full mt-10 bg-slate-800 hover:bg-black text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">
-                        Update Information
-                    </button>
+                    <button type="submit" class="w-full mt-10 bg-slate-800 hover:bg-black text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">Update Information</button>
                 </form>
             </div>
         </div>

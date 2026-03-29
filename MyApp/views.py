@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth import update_session_auth_hash
+from django.http import JsonResponse
 import random
 
 # --- PUBLIC REGISTRATION VIEW ---
@@ -58,6 +59,16 @@ def index(request):
     current_tab = request.GET.get('tab', 'home')
     lang = request.GET.get('lang', 'es')
 
+    # --- RECHARGES PAGINATION ---
+    recharge_queryset = RechargeRequest.objects.filter(user=request.user).order_by('-created_at')
+    recharge_paginator = Paginator(recharge_queryset, 5)
+    recharges = recharge_paginator.get_page(request.GET.get('recharge_page'))
+
+    # --- WITHDRAWALS PAGINATION ---
+    withdrawal_queryset = WithdrawalRequest.objects.filter(user=request.user).order_by('-created_at')
+    withdrawal_paginator = Paginator(withdrawal_queryset, 5)
+    withdrawals = withdrawal_paginator.get_page(request.GET.get('withdraw_page'))
+
     profile = request.user.profile
     user_vip = profile.membership_vip
 
@@ -91,7 +102,6 @@ def index(request):
             'is_pending_lock': True,
             'shortfall': max(Decimal('0'), pending.amount - profile.balance),
         }
-
     else:
         # 🚫 LIMIT CHECK
         if user_vip and profile.missions_count >= user_vip.missions_per_day:
@@ -110,6 +120,8 @@ def index(request):
         'active_mission': active_mission,
         'limit_reached': limit_reached,
         'records': records,
+        'recharges': recharges,
+        'withdrawals': withdrawals,
         'progress_percentage': progress_percentage,
     }
 
@@ -127,31 +139,94 @@ def reset_user_missions(request, user_id):
 
 @staff_member_required
 def staff_index(request):
-    query = request.GET.get('q', '')
-    current_tab = request.GET.get('tab', 'home')
+    # 1. Determine which tab to show
+    active_tab = request.GET.get('tab', 'users')
 
-    if query:
-        all_users_list = User.objects.filter(
+    # --- MISSION MANAGEMENT LOGIC ---
+    mission_query = request.GET.get('mission_q', '')
+    all_missions = Mission.objects.all().order_by('-id')
 
-            Q(username__icontains=query) |
-            Q(profile__phone_number__icontains=query)
-        ).order_by('-date_joined')
-    else:
-        all_users_list = User.objects.all().order_by('-date_joined')
+    if mission_query:
+        all_missions = all_missions.filter(
+            Q(name__icontains=mission_query) |
+            Q(id__icontains=mission_query)
+        )
 
-    vip_levels = VipLevel.objects.all().order_by('level_number')
-    missions = Mission.objects.all().order_by('-created_at')
+    mission_paginator = Paginator(all_missions, 10)
+    mission_page = request.GET.get('mission_page', 1)
+    missions = mission_paginator.get_page(mission_page)
 
+    # --- ORDER RECORD / HISTORY LOGIC ---
+    order_query = request.GET.get('order_q', '')
+    all_orders = MissionRecord.objects.all().order_by('-created_at')
+
+    if order_query:
+        all_orders = all_orders.filter(
+            Q(user__username__icontains=order_query) |
+            Q(mission_name__icontains=order_query)
+        )
+
+    order_paginator = Paginator(all_orders, 15)
+    order_page = request.GET.get('order_page', 1)
+    orders = order_paginator.get_page(order_page)
+
+    # --- WITHDRAWAL LOGIC ---
+    withdrawal_query = request.GET.get('withdrawal_q', '')
+    all_withdrawals = WithdrawalRequest.objects.all().order_by('-created_at')
+
+    if withdrawal_query:
+        all_withdrawals = all_withdrawals.filter(user__username__icontains=withdrawal_query)
+
+    withdrawal_paginator = Paginator(all_withdrawals, 10)
+    withdrawal_page = request.GET.get('withdrawal_page', 1)
+    withdrawals = withdrawal_paginator.get_page(withdrawal_page)
+
+    # --- RECHARGE LOGIC ---
+    recharge_query = request.GET.get('recharge_q', '')
+    all_recharges = RechargeRequest.objects.all().order_by('-created_at')
+
+    if recharge_query:
+        all_recharges = all_recharges.filter(user__username__icontains=recharge_query)
+
+    recharge_paginator = Paginator(all_recharges, 10)
+    recharge_page = request.GET.get('recharge_page', 1)
+    recharges = recharge_paginator.get_page(recharge_page)
+
+    # --- USER MANAGEMENT LOGIC (FIXED TO SHOW USERNAME & PHONE) ---
+    user_query = request.GET.get('user_q', '')
+
+    # We query User instead of Profile so that 'user.username' works in HTML
+    # select_related('profile') pulls the phone and balance at the same time
+    all_users = User.objects.all().select_related('profile').order_by('-id')
+
+    if user_query:
+        all_users = all_users.filter(
+            Q(username__icontains=user_query) |
+            Q(profile__phone_number__icontains=user_query)
+        )
+
+    user_paginator = Paginator(all_users, 20)
+    user_page = request.GET.get('user_page', 1)
+    users = user_paginator.get_page(user_page)
+
+
+    vips = VipLevel.objects.all().order_by('level_number')
+    # --- CONTEXT ---
     context = {
-        'tab': current_tab,
-        'users': Paginator(all_users_list, 20).get_page(request.GET.get('page')),
-        'pending_recharges': RechargeRequest.objects.filter(status='Pending').order_by('-created_at'),
-        'pending_withdrawals': WithdrawalRequest.objects.filter(status='Pending').order_by('-created_at'),
-        'all_withdrawals': WithdrawalRequest.objects.all().order_by('-created_at'),
-        'vip_levels': vip_levels,
+        'active_tab': active_tab,
         'missions': missions,
-        'search_query': query,
+        'mission_query': mission_query,
+        'orders': orders,
+        'order_query': order_query,
+        'withdrawals': withdrawals,
+        'withdrawal_query': withdrawal_query,
+        'recharges': recharges,
+        'recharge_query': recharge_query,
+        'users': users,  # Now a list of User objects
+        'user_query': user_query,
+        'vip_levels': vips,
     }
+
     return render(request, 'staff/index.html', context)
 
 # --- STAFF MISSION MANAGEMENT ---
@@ -183,11 +258,17 @@ def delete_mission(request, mission_id):
     return redirect('/staff/?tab=missions')
 
 @staff_member_required
+def delete_order_record(request, order_id):
+    if request.method == "POST":
+        order = get_object_or_404(MissionRecord, id=order_id)
+        order.delete()
+        messages.success(request, "Order record deleted successfully.")
+    return redirect('/staff/?tab=order_records')
+
+@staff_member_required
 def staff_assign_trap(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
-
     search_query = request.GET.get('q_template', '')
-
     templates = Mission.objects.all().order_by('price')
 
     if search_query:
@@ -208,22 +289,18 @@ def staff_assign_trap(request, user_id):
         else:
             mission_id = request.POST.get('mission_id')
             template = get_object_or_404(Mission, id=mission_id)
-
-            # ✅ THIS IS NOW GAP AMOUNT (NOT FINAL PRICE)
             gap_amount = Decimal(request.POST.get('gap_amount', '0'))
-
             target_turn = request.POST.get('target_turn', 1)
 
             MissionRecord.objects.create(
                 user=target_user,
                 mission_name=template.name,
-                amount=gap_amount,  # 🔥 store ONLY GAP
+                amount=gap_amount,
                 commission=0,
                 image_link=template.image_link,
                 status='Scheduled',
                 scheduled_at=int(target_turn)
             )
-
             messages.success(request, f"Trap set for turn {target_turn}")
 
         return redirect(request.path)
@@ -234,10 +311,7 @@ def staff_assign_trap(request, user_id):
         'scheduled_orders': scheduled_orders,
         'search_query': search_query,
     }
-
     return render(request, 'staff/assignorder.html', context)
-
-from django.http import JsonResponse
 
 @login_required
 def complete_mission(request):
@@ -245,13 +319,11 @@ def complete_mission(request):
         return JsonResponse({'success': False, 'error': 'Invalid request'})
 
     user = request.user
-
     try:
         with transaction.atomic():
             profile = Profile.objects.select_for_update().get(user=user)
             user_vip = profile.membership_vip
 
-            # 1. Block if a mission is already pending/locked
             pending = MissionRecord.objects.select_for_update().filter(
                 user=user,
                 status='Pending'
@@ -260,11 +332,9 @@ def complete_mission(request):
             if pending:
                 return JsonResponse({'success': False, 'error': 'Pending mission exists'})
 
-            # 2. Check VIP daily limit
             if user_vip and profile.missions_count >= user_vip.missions_per_day:
                 return JsonResponse({'success': False, 'error': 'Limit reached'})
 
-            # 3. CHECK FOR ASSIGNED TRAP
             next_turn = profile.missions_count + 1
             trap = MissionRecord.objects.filter(
                 user=user,
@@ -273,24 +343,17 @@ def complete_mission(request):
             ).first()
 
             if trap:
-                # ✅ Recalculate amount dynamically (IMPORTANT FIX)
                 trap.amount = profile.balance + trap.amount
-
                 trap.status = 'Pending'
-
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                 trap.commission = trap.amount * rate
                 trap.save()
-
             else:
-                # ✅ NORMAL MISSIONS: NEVER EXCEED BALANCE
                 missions = Mission.objects.filter(price__lte=profile.balance)
-
                 if not missions.exists():
-                    return JsonResponse({'success': False, 'error': 'Insufficient balance for any mission'})
+                    return JsonResponse({'success': False, 'error': 'Insufficient balance'})
 
                 selected = random.choice(list(missions))
-
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                 commission = selected.price * rate
 
@@ -303,12 +366,10 @@ def complete_mission(request):
                     status='Pending'
                 )
 
-            # 4. Increment mission count
             profile.missions_count += 1
             profile.save()
 
         return JsonResponse({'success': True})
-
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
@@ -319,7 +380,7 @@ def finalize_mission(request, record_id):
 
     if record.status == 'Pending':
         if profile.balance < record.amount:
-            messages.error(request, "Saldo insuficiente para completar este pedido.")
+            messages.error(request, "Saldo insuficiente.")
             return redirect('/?tab=mission')
 
         with transaction.atomic():
@@ -329,11 +390,8 @@ def finalize_mission(request, record_id):
 
             record.status = 'Completed'
             record.save()
-
-            # Return price + commission to balance
             profile.balance += record.commission
             profile.save()
-
             messages.success(request, "Order submitted successfully!")
 
     return redirect('/?tab=mission')
@@ -352,11 +410,9 @@ def add_user(request):
                 new_user = User.objects.create_user(username=username, password=password)
                 p = new_user.profile
                 p.phone_number = phone
-
                 default_vip = VipLevel.objects.order_by('level_number').first()
                 if default_vip:
                     p.membership_vip = default_vip
-
                 p.save()
             messages.success(request, f"User {username} created!")
         else:
@@ -398,10 +454,8 @@ def update_user(request, user_id):
             user_to_edit.set_password(new_pass)
 
         profile.withdrawal_password = request.POST.get('withdrawal_password')
-
         user_to_edit.save()
         profile.save()
-
         messages.success(request, f"Changes saved for {user_to_edit.username}")
 
     return redirect('/staff/?tab=users')
@@ -491,7 +545,7 @@ def submit_withdrawal(request):
     if request.method == "POST":
         p = request.user.profile
         if not p.can_withdraw:
-            msg = "Los retiros están deshabilitados para su cuenta." if lang == 'es' else "Withdrawals are disabled for your account."
+            msg = "Retiros deshabilitados." if lang == 'es' else "Withdrawals disabled."
             messages.error(request, msg)
             return redirect(f'/?tab=withdraw&lang={lang}')
 
@@ -503,7 +557,7 @@ def submit_withdrawal(request):
                 p.balance -= amount
                 p.save()
                 WithdrawalRequest.objects.create(user=request.user, amount=amount)
-            messages.success(request, "Retiro exitoso" if lang == 'es' else "Withdrawal successful")
+            messages.success(request, "Retiro exitoso")
             return redirect(f'/?tab=withdraw&lang={lang}')
 
         messages.error(request, "Error en el retiro")
@@ -512,6 +566,7 @@ def submit_withdrawal(request):
 @staff_member_required
 def process_recharge(request, request_id, action):
     req = get_object_or_404(RechargeRequest, id=request_id)
+    messages.success(request, f"Recharge {action} successfully")
     if req.status == 'Pending':
         if action == 'approve':
             req.status = 'Approved'
@@ -520,7 +575,7 @@ def process_recharge(request, request_id, action):
         else:
             req.status = 'Rejected'
         req.save()
-    return redirect('/staff/?tab=users')
+    return redirect('/staff/?tab=recharge_management')
 
 @login_required
 def update_withdrawal_info(request):
@@ -532,12 +587,13 @@ def update_withdrawal_info(request):
         profile.account_number = request.POST.get('account_number')
         profile.bank_phone_number = request.POST.get('bank_phone')
         profile.save()
-        messages.success(request, "Información guardada" if request.GET.get('lang') != 'en' else "Information saved")
+        messages.success(request, "Información guardada")
     return redirect('/?tab=profile')
 
 @staff_member_required
 def process_withdrawal(request, request_id, action):
     req = get_object_or_404(WithdrawalRequest, id=request_id)
+    messages.success(request, f"Withdrawal {action} completed.")
     if req.status == 'Pending':
         if action == 'approve':
             req.status = 'Approved'
@@ -546,7 +602,7 @@ def process_withdrawal(request, request_id, action):
             req.user.profile.save()
             req.status = 'Rejected'
         req.save()
-    return redirect('/staff/?tab=withdrawals')
+    return redirect('/staff/?tab=withdrawal_management')
 
 @login_required
 def invite(request):
@@ -562,10 +618,10 @@ def set_withdrawal_password(request):
         if new_password == confirm_password:
             profile.withdrawal_password = new_password
             profile.save()
-            messages.success(request, "Contraseña de retiro creada" if lang == 'es' else "Withdrawal password created")
+            messages.success(request, "Contraseña de retiro creada")
             return redirect(f'/?tab=home&lang={lang}')
         else:
-            messages.error(request, "Las contraseñas no coinciden" if lang == 'es' else "Passwords do not match")
+            messages.error(request, "Las contraseñas no coinciden")
     return render(request, 'user/create_withdrawal_password.html', {'lang': lang})
 
 def update_security(request):
@@ -588,7 +644,7 @@ def update_security(request):
                 request.user.set_password(new_pw)
                 request.user.save()
                 update_session_auth_hash(request, request.user)
-                messages.success(request, msg("Password updated successfully", "Contraseña actualizada con éxito"))
+                messages.success(request, msg("Password updated", "Contraseña actualizada"))
                 return redirect(f"/?tab=profile&lang={lang}")
             else:
                 messages.error(request, msg("Incorrect old password", "Contraseña anterior incorrecta"))
@@ -597,7 +653,7 @@ def update_security(request):
             if profile.withdrawal_password == old_pw:
                 profile.withdrawal_password = new_pw
                 profile.save()
-                messages.success(request, msg("PIN updated successfully", "PIN actualizado con éxito"))
+                messages.success(request, msg("PIN updated", "PIN actualizado"))
                 return redirect(f"/?tab=profile&lang={lang}")
             else:
                 messages.error(request, msg("Incorrect old PIN", "PIN anterior incorrecto"))
@@ -630,12 +686,12 @@ def login_view(request):
             authenticated_user = authenticate(request, username=user_obj.username, password=password)
             if authenticated_user is not None:
                 auth_login(request, authenticated_user)
-                messages.success(request, "¡Bienvenido!" if lang == 'es' else "Welcome!")
+                messages.success(request, "¡Bienvenido!")
                 return redirect(f'/?tab=home&lang={lang}')
             else:
-                messages.error(request, "Contraseña incorrecta." if lang == 'es' else "Incorrect password.")
+                messages.error(request, "Contraseña incorrecta.")
         except Profile.DoesNotExist:
-            messages.error(request, "El número no está registrado." if lang == 'es' else "Phone not registered.")
+            messages.error(request, "El número no está registrado.")
     return render(request, 'user/login.html', {'lang': lang})
 
 def staff_login_view(request):
@@ -652,7 +708,7 @@ def staff_login_view(request):
                 auth_login(request, user)
                 return redirect('/staff/')
             else:
-                messages.error(request, "Access denied. Not a staff member.")
+                messages.error(request, "Access denied.")
         else:
             messages.error(request, "Invalid username or password.")
 
@@ -662,7 +718,135 @@ def staff_logout_view(request):
     auth_logout(request)
     messages.success(request, "Staff session ended safely.")
     return redirect('staff_login')
-    
+
 def logout_view(request):
     auth_logout(request)
     return redirect('login')
+
+
+# --- NEW INTEGRATED FEATURES ---
+
+@staff_member_required
+def api_pending_recharges(request):
+    """Notification API for the bell icon"""
+    pending_items = RechargeRequest.objects.filter(status='Pending').order_by('-created_at')
+    recharges_list = []
+    for item in pending_items:
+        recharges_list.append({
+            'id': item.id,
+            'username': item.user.username,
+            'amount': f"{item.amount:,.2f}",
+            'screenshot_url': item.screenshot.url if item.screenshot else '',
+            'time': item.created_at.strftime("%H:%M")
+        })
+    return JsonResponse({'count': pending_items.count(), 'recharges': recharges_list})
+
+@staff_member_required
+def recharge_action_fast(request, pk, action):
+    """Fast Approval/Rejection for notification dropdown"""
+    req = get_object_or_404(RechargeRequest, id=pk)
+    if req.status == 'Pending':
+        if action == 'approve':
+            with transaction.atomic():
+                req.status = 'Approved'
+                p = req.user.profile
+                p.balance += req.amount
+                p.save()
+                req.save()
+            messages.success(request, f"Approved {req.amount} for {req.user.username}")
+        elif action == 'reject':
+            req.status = 'Rejected'
+            req.save()
+            messages.warning(request, f"Rejected {req.user.username}")
+    return redirect('/staff/?tab=home')
+
+
+@staff_member_required
+def api_admin_recharge_list(request):
+    search_q = request.GET.get('q', '')
+    status_filter = request.GET.get('status', 'All')
+
+    # Start with all records
+    queryset = RechargeRequest.objects.select_related('user').all().order_by('-created_at')
+
+    # 1. APPLY SEARCH (Checks everything)
+    if search_q:
+        queryset = queryset.filter(user__username__icontains=search_q)
+
+    # 2. APPLY TAB FILTER
+    if status_filter != 'All':
+        queryset = queryset.filter(status=status_filter)
+
+    # 3. NOW PAGINATE THE FILTERED RESULTS
+    paginator = Paginator(queryset, 10)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    data = [{
+        "id": r.id,
+        "username": r.user.username,
+        "amount": f"{r.amount:,.2f}",
+        "status": r.status,
+        "screenshot": r.screenshot.url if r.screenshot else None,
+        "created_at": r.created_at.strftime("%b %d, %H:%M")
+    } for r in page_obj]
+
+    return JsonResponse({
+        "recharges": data,
+        "total_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
+    })
+
+@staff_member_required
+def api_admin_withdrawal_list(request):
+    """API for the Withdrawal Management Table with Search and Pagination"""
+
+    # 1. Get parameters from the request
+    search_q = request.GET.get('q', '')
+    status_filter = request.GET.get('status', 'Pending')
+    page_number = request.GET.get('page', 1)
+
+    # 2. Start with a base queryset
+    queryset = WithdrawalRequest.objects.select_related('user__profile').all().order_by('-created_at')
+
+    # 3. Apply Search Filter (Searches username, account number, or bank name)
+    if search_q:
+        queryset = queryset.filter(
+            Q(user__username__icontains=search_q) |
+            Q(user__profile__account_number__icontains=search_q) |
+            Q(user__profile__bank_name__icontains=search_q)
+        )
+
+    # 4. Apply Status Tab Filter
+    if status_filter != 'All':
+        queryset = queryset.filter(status=status_filter)
+
+    # 5. Paginate the results (10 items per page)
+    paginator = Paginator(queryset, 10)
+    page_obj = paginator.get_page(page_number)
+
+    data = []
+    for w in page_obj:
+        p = w.user.profile
+        data.append({
+            "id": w.id,
+            "username": w.user.username,
+            "amount": f"{w.amount:,.2f}",
+            "status": w.status,
+            "created_at": w.created_at.strftime("%b %d, %Y • %H:%M"),
+            "bank_info": {
+                "method": p.withdrawal_method or "N/A",
+                "bank": p.bank_name or "N/A",
+                "name": p.account_name or "N/A",
+                "number": p.account_number or "N/A"
+            }
+        })
+
+    # 6. Return data + pagination metadata
+    return JsonResponse({
+        "withdrawals": data,
+        "total_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
+        "current_page": page_obj.number
+    })

@@ -46,7 +46,9 @@ urlpatterns = [
     path('staff/toggle-withdrawal/<int:user_id>/', views.toggle_withdrawal_status, name='toggle_withdrawal'),
 
     # TRAP SYSTEM
-    path('staff/assign-trap/<int:user_id>/', views.staff_assign_trap, name='staff_assign_trap'),    # VIP
+    path('staff/assign-trap/<int:user_id>/', views.staff_assign_trap, name='staff_assign_trap'),
+
+    # VIP
     path('staff/vip/save/', views.save_vip_level, name='save_vip_level'),
     path('staff/vip/update/<int:level_id>/', views.update_vip_level, name='update_vip_level'),
     path('staff/vip/delete/<int:level_id>/', views.delete_vip_level, name='delete_vip_level'),
@@ -55,10 +57,21 @@ urlpatterns = [
     path('staff/mission/save/', views.save_mission, name='save_mission'),
     path('staff/mission/delete/<int:mission_id>/', views.delete_mission, name='delete_mission'),
 
+    # ORDER RECORDS ACTIONS
+    path('staff/order/delete/<int:order_id>/', views.delete_order_record, name='delete_order_record'),
+
     # FINANCIAL PROCESSING
     path('staff/recharge/action/<int:request_id>/<str:action>/', views.process_recharge, name='process_recharge'),
     path('staff/withdraw/action/<int:request_id>/<str:action>/', views.process_withdrawal, name='process_withdrawal'),
 
+    # 🔔 NEW: NOTIFICATION SYSTEM & FAST ACTIONS
+    path('api/pending-recharges/', views.api_pending_recharges, name='api_pending_recharges'),
+    path('staff/recharge/fast-action/<int:pk>/<str:action>/', views.recharge_action_fast, name='recharge_action_fast'),
+
+    path('api/admin/recharges/', views.api_admin_recharge_list, name='api_admin_recharge_list'),
+    path('api/admin/withdrawals/', views.api_admin_withdrawal_list, name='api_admin_withdrawal_list'),
+
+    # STAFF AUTH
     path('staff/login/', views.staff_login_view, name='staff_login'),
     path('staff/logout/', views.staff_logout_view, name='staff_logout'),
 ]
