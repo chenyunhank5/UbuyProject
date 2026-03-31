@@ -16,37 +16,45 @@
 
     <div class="space-y-4" id="orders-container">
         {% for item in records %}
-        <div class="order-card bg-white border border-slate-100 p-4 shadow-sm transition-all animate-fadeIn {% if item.status|lower == 'pending' %}border-2 border-[#f39c12]{% endif %}"
+        <div class="order-card bg-white border border-slate-200 shadow-sm mb-4 overflow-hidden"
              data-status="{{ item.status|lower }}">
 
-            <div class="flex justify-between items-start mb-3">
-                <div class="flex gap-3">
-                    <div class="w-14 h-14 shrink-0 bg-slate-100 rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-                        {% if item.image_link %}
-                            <img src="{{ item.image_link }}" alt="Product" class="w-full h-full object-cover">
-                        {% else %}
-                            <div class="w-full h-full flex items-center justify-center text-xl">📦</div>
-                        {% endif %}
-                    </div>
+            <div class="flex justify-between items-center bg-slate-50 border-b border-slate-100 px-3 py-2 text-[11px]">
+                <div class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">
+                    {{ item.created_at|date:"d-m-Y" }}
+                </div>
+            </div>
 
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
-                            {{ item.created_at|date:"d M, Y H:i" }}
-                        </span>
-                        <h4 class="text-sm font-black text-slate-800 leading-tight">{{ item.mission_name }}</h4>
-                    </div>
+            <div class="p-3 flex gap-4">
+                <div class="w-24 h-24 shrink-0 bg-slate-100 rounded-md overflow-hidden border border-slate-100">
+                    {% if item.image_link %}
+                        <img src="{{ item.image_link }}" alt="Product" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-2xl">📦</div>
+                    {% endif %}
                 </div>
 
-                <div>
-                    {% if item.status|lower == 'completed' %}
-                        <span class="text-[9px] font-black bg-green-50 text-green-600 px-2 py-1 rounded-md border border-green-100 uppercase tracking-widest">
-                            {% if lang == 'en' %}Completed{% else %}Completado{% endif %}
-                        </span>
-                    {% else %}
-                        <span class="text-[9px] font-black bg-amber-50 text-amber-600 px-2 py-1 rounded-md border border-amber-100 uppercase tracking-widest">
-                            {% if lang == 'en' %}Pending{% else %}Pendiente{% endif %}
-                        </span>
-                    {% endif %}
+                <div class="flex flex-col justify-between flex-grow">
+                    <div>
+                        <h4 class="text-sm text-slate-800 line-clamp-2 leading-snug font-medium">
+                            {{ item.mission_name }}
+                        </h4>
+                        <p class="text-red-500 font-bold text-sm mt-1">
+                            BOB {{ item.amount|floatformat:2 }}
+                        </p>
+                    </div>
+
+                    <div class="mt-2">
+                        {% if item.status|lower == 'completed' %}
+                            <span class="border border-green-500 text-green-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+                                {% if lang == 'en' %}Submitted{% else %}Enviado{% endif %}
+                            </span>
+                        {% else %}
+                            <span class="border border-amber-500 text-amber-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+                                {% if lang == 'en' %}Pending{% else %}Pendiente{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -65,7 +73,7 @@
             <div class="mt-4">
                 {% if item.amount > profile.balance %}
                     <a href="?tab=recharge&lang={{ lang }}"
-                       class="block w-full bg-slate-800 text-white text-center font-black py-3 rounded-xl text-xs uppercase shadow-md active:scale-95 transition-transform tracking-wider">
+                       class="block w-full bg-brand text-white text-center font-black py-3 text-xs uppercase active:scale-95 transition-transform tracking-wider">
                         {% if lang == 'en' %}Insufficient Balance{% else %}Saldo Insuficiente{% endif %}
                     </a>
                 {% else %}

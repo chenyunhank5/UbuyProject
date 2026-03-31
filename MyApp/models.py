@@ -6,7 +6,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
+# ==========================================
 # 1. CUSTOM VALIDATOR
+# ==========================================
 class SpaceUnicodeUsernameValidator(UnicodeUsernameValidator):
     regex = r'^[\w.@+ -]+$'
     message = "Enter a valid username. This value may contain only letters, numbers, spaces, and @/./+/-/_ characters."
@@ -17,7 +19,9 @@ User._meta.get_field('username').validators = [SpaceUnicodeUsernameValidator()]
 def generate_invitation_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
+# ==========================================
 # 2. VIP LEVEL MODEL
+# ==========================================
 class VipLevel(models.Model):
     level_number = models.IntegerField(unique=True)
     name = models.CharField(max_length=50)
@@ -33,7 +37,9 @@ class VipLevel(models.Model):
     def __str__(self):
         return f"{self.name}"
 
-# 3. MISSION MODEL
+# ==========================================
+# 3. MISSION MODELS
+# ==========================================
 class Mission(models.Model):
     name = models.CharField(max_length=255)
     image_link = models.URLField(max_length=500)
@@ -47,7 +53,7 @@ class MissionRecord(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pendiente'),
         ('Completed', 'Completado'),
-        ('Scheduled', 'Programado (Trap)'), # New status for traps
+        ('Scheduled', 'Programado (Trap)'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mission_records')
     mission_name = models.CharField(max_length=255)
@@ -56,20 +62,34 @@ class MissionRecord(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')
     created_at = models.DateTimeField(auto_now_add=True)
     image_link = models.URLField(max_length=500, null=True, blank=True)
-    required_recharge = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0
-    )
-
-    # NEW FIELD: This determines which mission number of the day this record belongs to.
-    # Used for scheduling "traps" by the admin.
+    required_recharge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     scheduled_at = models.IntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
 
-# 4. PROFILE MODEL
+# ==========================================
+# 4. NOTIFICATION / MESSAGE MODEL (NEW)
+# ==========================================
+class UserMessage(models.Model):
+    """
+    Stores individual messages sent by staff to users.
+    Allows for message history.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_messages')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at'] # Newest messages show first
+
+    def __str__(self):
+        return f"Msg to {self.user.username} at {self.created_at}"
+
+# ==========================================
+# 5. PROFILE MODEL
+# ==========================================
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
@@ -80,6 +100,7 @@ class Profile(models.Model):
     withdrawal_password = models.CharField(max_length=100, blank=True, null=True)
     can_withdraw = models.BooleanField(default=True)
     missions_count = models.IntegerField(default=0)
+
     # Bank Details
     withdrawal_method = models.CharField(max_length=50, blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
@@ -92,10 +113,16 @@ class Profile(models.Model):
     recharge_qr = models.ImageField(upload_to='recharge_qrs/', blank=True, null=True)
     referred_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
 
+    # Status Flags
+    system_message = models.TextField(blank=True, null=True) # Keeping for legacy/single notices
+    show_system_message = models.BooleanField(default=False) # Use as a 'New Notification' flag
+
     def __str__(self):
         return f"{self.user.username}"
 
-# 5. REQUEST MODELS
+# ==========================================
+# 6. REQUEST MODELS
+# ==========================================
 class RechargeRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -109,7 +136,9 @@ class WithdrawalRequest(models.Model):
     status = models.CharField(max_length=10, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
-# 6. SIGNALS
+# ==========================================
+# 7. SIGNALS
+# ==========================================
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

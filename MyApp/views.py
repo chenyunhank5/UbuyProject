@@ -5,13 +5,15 @@ from django.contrib import messages
 from decimal import Decimal
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel, Mission, MissionRecord
+from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel, Mission, MissionRecord, UserMessage
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth import update_session_auth_hash
 from django.http import JsonResponse
 import random
+from django.utils import timezone
+from itertools import chain
 
 # --- PUBLIC REGISTRATION VIEW ---
 
@@ -56,8 +58,18 @@ def register_view(request):
 # --- USER DASHBOARD ---
 @login_required
 def index(request):
+    # 1. Get basic parameters
     current_tab = request.GET.get('tab', 'home')
     lang = request.GET.get('lang', 'es')
+
+    # 2. DEFINE PROFILE FIRST (Fixes UnboundLocalError)
+    profile = request.user.profile
+
+    # 3. SYSTEM MESSAGE TAB LOGIC
+    # If the user visits the system messages tab, mark the red dot as seen
+    if current_tab == 'system_messages':
+        profile.show_system_message = False
+        profile.save()
 
     # --- RECHARGES PAGINATION ---
     recharge_queryset = RechargeRequest.objects.filter(user=request.user).order_by('-created_at')
@@ -69,18 +81,38 @@ def index(request):
     withdrawal_paginator = Paginator(withdrawal_queryset, 5)
     withdrawals = withdrawal_paginator.get_page(request.GET.get('withdraw_page'))
 
-    profile = request.user.profile
-    user_vip = profile.membership_vip
+    # --- NEW: NOTIFICATIONS COMBINED LIST ---
+    # We fetch your custom messages here
+    msg_queryset = UserMessage.objects.filter(user=request.user)
 
+    # We combine Messages, Recharges, and Withdrawals into one "notifications" list
+    # and sort them so the newest ones show at the top
+    notifications = sorted(
+        chain(msg_queryset, recharge_queryset, withdrawal_queryset),
+        key=lambda instance: instance.created_at,
+        reverse=True
+    )
+
+    # --- VIP & PROGRESS LOGIC ---
+    user_vip = profile.membership_vip
     progress_percentage = 0
     if user_vip and user_vip.missions_per_day > 0:
         progress_percentage = (profile.missions_count / user_vip.missions_per_day) * 100
 
     vips = VipLevel.objects.all().order_by('level_number')
 
+    # --- UPDATED RECORDS LOGIC (PENDING AT TOP) ---
+    from django.db.models import Case, When, Value, IntegerField
+
     records = MissionRecord.objects.filter(
         user=request.user
-    ).order_by('-created_at')
+    ).annotate(
+        status_priority=Case(
+            When(status__iexact='pending', then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+    ).order_by('status_priority', '-created_at')
 
     # 🔒 GET PENDING MISSION
     pending = MissionRecord.objects.filter(
@@ -112,6 +144,7 @@ def index(request):
             'is_pending_lock': False
         }
 
+    # --- CONTEXT ---
     context = {
         'active_tab': current_tab,
         'profile': profile,
@@ -122,6 +155,7 @@ def index(request):
         'records': records,
         'recharges': recharges,
         'withdrawals': withdrawals,
+        'notifications': notifications,  # <--- ADDED THIS TO CONTEXT
         'progress_percentage': progress_percentage,
     }
 
@@ -552,7 +586,7 @@ def submit_withdrawal(request):
         amount = Decimal(request.POST.get('amount', '0'))
         password = request.POST.get('password')
 
-        if p.withdrawal_password == password and p.balance >= amount and amount >= 50:
+        if p.withdrawal_password == password and p.balance >= amount and amount >= 30:
             with transaction.atomic():
                 p.balance -= amount
                 p.save()
@@ -571,9 +605,14 @@ def process_recharge(request, request_id, action):
         if action == 'approve':
             req.status = 'Approved'
             req.user.profile.balance += req.amount
+            # --- ADD THIS LINE ---
+            req.user.profile.show_system_message = True
             req.user.profile.save()
         else:
             req.status = 'Rejected'
+            # --- ADD THIS LINE ---
+            req.user.profile.show_system_message = True
+            req.user.profile.save()
         req.save()
     return redirect('/staff/?tab=recharge_management')
 
@@ -597,12 +636,17 @@ def process_withdrawal(request, request_id, action):
     if req.status == 'Pending':
         if action == 'approve':
             req.status = 'Approved'
+            # --- ADD THIS LINE ---
+            req.user.profile.show_system_message = True
+            req.user.profile.save()
         else:
             req.user.profile.balance += req.amount
+            req.user.profile.status = 'Rejected'
+            # --- ADD THIS LINE ---
+            req.user.profile.show_system_message = True
             req.user.profile.save()
-            req.status = 'Rejected'
         req.save()
-    return redirect('/staff/?tab=withdrawal_management')
+    return redirect('/staff/?tab=withdrawals')
 
 @login_required
 def invite(request):
@@ -668,6 +712,67 @@ def toggle_withdrawal_status(request, user_id):
     p.save()
     status = "habilitados" if p.can_withdraw else "deshabilitados"
     messages.success(request, f"Retiros {status} para {target_user.username}")
+    return redirect('/staff/?tab=users')
+
+
+@login_required
+def system_message_view(request):
+    # 1. Get basic parameters
+    lang = request.GET.get('lang', 'es')
+    profile = request.user.profile
+
+    # 2. Mark the notification "red dot" as seen when they enter this view
+    if profile.show_system_message:
+        profile.show_system_message = False
+        profile.save()
+
+    # 3. Fetch all three data types for the combined list
+    # We fetch them all so the user sees a full history of their account
+    msg_queryset = UserMessage.objects.filter(user=request.user)
+    recharge_queryset = RechargeRequest.objects.filter(user=request.user)
+    withdrawal_queryset = WithdrawalRequest.objects.filter(user=request.user)
+
+    # 4. Combine and Sort by 'created_at' (Newest first)
+    # This matches the 'notifications' variable your HTML template is looking for
+    notifications = sorted(
+        chain(msg_queryset, recharge_queryset, withdrawal_queryset),
+        key=lambda instance: instance.created_at,
+        reverse=True
+    )
+
+    # 5. Context
+    context = {
+        'profile': profile,
+        'lang': lang,
+        'notifications': notifications,  # <--- This is the key list for the HTML
+    }
+
+    return render(request, 'user/system_message.html', context)
+
+def send_message(request, user_id):
+    if request.method == 'POST':
+        # 1. Get the user
+        target_user = get_object_or_404(User, id=user_id)
+        new_msg_content = request.POST.get('message')
+
+        if new_msg_content:
+            # 2. Create a NEW message record in the history
+            UserMessage.objects.create(
+                user=target_user,
+                content=new_msg_content
+            )
+
+            # 3. Update the profile flag so the user sees a "New" alert
+            profile = target_user.profile
+            profile.show_system_message = True
+            profile.save()
+
+            messages.success(request, f"Message sent to {target_user.username} successfully!")
+        else:
+            messages.error(request, "Message content cannot be empty.")
+
+        return redirect('/staff/?tab=users')
+
     return redirect('/staff/?tab=users')
 
 # --- AUTHENTICATION ---
@@ -751,15 +856,29 @@ def recharge_action_fast(request, pk, action):
                 req.status = 'Approved'
                 p = req.user.profile
                 p.balance += req.amount
+                # --- NEW: Trigger Red Dot ---
+                p.show_system_message = True
                 p.save()
                 req.save()
             messages.success(request, f"Approved {req.amount} for {req.user.username}")
         elif action == 'reject':
             req.status = 'Rejected'
+            # --- NEW: Trigger Red Dot for Rejection ---
+            p = req.user.profile
+            p.show_system_message = True
+            p.save()
             req.save()
             messages.warning(request, f"Rejected {req.user.username}")
     return redirect('/staff/?tab=home')
 
+# ... (all your other views above) ...
+
+@login_required
+def check_notifications_api(request):
+    """API endpoint to check if the red dot should be visible"""
+    return JsonResponse({
+        'show_dot': request.user.profile.show_system_message
+    })
 
 @staff_member_required
 def api_admin_recharge_list(request):

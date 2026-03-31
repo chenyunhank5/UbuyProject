@@ -52,7 +52,7 @@
 
         <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 max-w-md mx-auto">
             <div class="flex items-center gap-2">
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774491621/IMG_2659_fy7qvz.png" alt="Ubuy" class="h-8 w-auto rounded object-contain">
+                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774491621/IMG_2659_fy7qvz.png" alt="Ubuy" class="h-12 w-auto rounded object-contain">
             </div>
 
             <div class="flex items-center gap-3">
@@ -69,12 +69,13 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
                 </button>
 
-                <div class="relative text-slate-400 active:scale-90 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
-                    <span id="recharge-number-badge" class="hidden absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full border-2 border-white flex items-center justify-center font-numeric shadow-sm">
-                        0
-                    </span>
-                </div>
+                <a href="?tab=system_messages&lang={{ lang }}" class="relative text-slate-400 active:scale-90 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+                    </svg>
+                    <span id="notification-dot" class="{% if not profile.show_system_message %}hidden{% endif %} absolute -top-1 -right-1 bg-rose-500 w-2.5 h-2.5 rounded-full border-2 border-white animate-pulse"></span>
+                </a>
 
                 <a href="https://www.global.ubuy.com/contacts" target="_blank" rel="noopener noreferrer" class="text-slate-400 active:scale-90 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
@@ -85,7 +86,7 @@
         <main class="animate-in fade-in duration-500">
             {% if show_security_setup %}
                 <div class="min-h-[70vh] flex flex-col items-center justify-center px-6">
-                    <div class="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
+                    <div class="w-full max-sm bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
                         <div class="text-center mb-8">
                             <div class="w-16 h-16 bg-orange-50 text-brand rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div>
                             <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">
@@ -126,6 +127,8 @@
                     {% include "user/invite.html" %}
                 {% elif active_tab == 'security' %}
                     {% include "user/security_settings.html" %}
+                {% elif active_tab == 'system_messages' %}
+                    {% include "user/system_message.html" %}
                 {% endif %}
             {% endif %}
         </main>
@@ -185,6 +188,26 @@
                 }, 3000);
             });
 
+            // --- NOTIFICATION DOT AUTO-FETCH LOGIC ---
+            const dot = document.getElementById('notification-dot');
+
+            function checkNotifications() {
+                fetch('/api/check-notifications/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.show_dot) {
+                            dot.classList.remove('hidden');
+                        } else {
+                            // Only hide if the user isn't currently looking at the messages tab
+                            const urlParams = new URLSearchParams(window.location.search);
+                            if (urlParams.get('tab') !== 'system_messages') {
+                                dot.classList.add('hidden');
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error checking notifications:', error));
+            }
+
             // --- RECHARGE COUNT FETCHING LOGIC ---
             const badge = document.getElementById('recharge-number-badge');
 
@@ -192,19 +215,26 @@
                 fetch('/api/pending-recharges/')
                     .then(response => response.json())
                     .then(data => {
-                        const count = parseInt(data.count);
-                        if (count > 0) {
-                            badge.textContent = count > 9 ? '9+' : count;
-                            badge.classList.remove('hidden');
-                        } else {
-                            badge.classList.add('hidden');
+                        if (badge) {
+                            const count = parseInt(data.count);
+                            if (count > 0) {
+                                badge.textContent = count > 9 ? '9+' : count;
+                                badge.classList.remove('hidden');
+                            } else {
+                                badge.classList.add('hidden');
+                            }
                         }
                     })
                     .catch(error => console.error('Error fetching count:', error));
             }
 
-            getPendingCount(); // Initial call
-            setInterval(getPendingCount, 15000); // Check every 15 seconds
+            // Initial calls
+            getPendingCount();
+            checkNotifications();
+
+            // Intervals (Check every 10-15 seconds)
+            setInterval(getPendingCount, 15000);
+            setInterval(checkNotifications, 10000);
         });
 
         function copyToClipboard(text) {

@@ -19,18 +19,18 @@
         <div class="mt-4 flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
             <p class="text-white text-[9px] font-bold uppercase">
-                {% if lang == 'en' %}Min: 50.00 BOB{% else %}Mínimo: 50.00 BOB{% endif %}
+                {% if lang == 'en' %}Min: 30.00 BOB{% else %}Mínimo: 30.00 BOB{% endif %}
             </p>
         </div>
     </div>
 
     {% if not profile.account_number %}
-        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm flex items-center justify-between">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 flex items-center justify-between">
             <div>
                 <p class="text-[8px] text-rose-500 uppercase font-black tracking-widest">{% if lang == 'en' %}Status{% else %}Estado{% endif %}</p>
                 <p class="font-bold text-slate-400 text-xs mt-0.5">{% if lang == 'en' %}No bank account added{% else %}Sin cuenta vinculada{% endif %}</p>
             </div>
-            <a href="?tab=withdraw_info&lang={{ lang }}" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">
+            <a href="?tab=withdraw_info&lang={{ lang }}" class="bg-brand text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">
                 {% if lang == 'en' %}Add{% else %}Agregar{% endif %}
             </a>
         </div>
@@ -69,7 +69,7 @@
             </label>
             <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400 text-xs">BOB</span>
-                <input type="number" name="amount" required step="0.01" min="50"
+                <input type="number" name="amount" required step="0.01" min="30"
                     class="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-12 py-2 text-sm font-black focus:outline-none focus:border-amber-500 transition-all shadow-sm"
                     placeholder="0.00">
             </div>
@@ -90,7 +90,7 @@
         </div>
 
         <button type="submit" {% if not profile.account_number %}disabled{% endif %}
-                class="bg-brand w-full text-white drop-shadow-sm font-black py-4 rounded-xl active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 shadow-lg shadow-amber-500/20 disabled:opacity-50">
+                class="bg-brand w-full text-white drop-shadow-sm font-black py-4 active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 shadow-lg shadow-amber-500/20 disabled:opacity-50">
             {% if lang == 'en' %}Confirm Withdrawal{% else %}Confirmar Retiro{% endif %}
         </button>
     </form>

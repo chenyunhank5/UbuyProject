@@ -70,10 +70,14 @@ urlpatterns = [
 
     path('api/admin/recharges/', views.api_admin_recharge_list, name='api_admin_recharge_list'),
     path('api/admin/withdrawals/', views.api_admin_withdrawal_list, name='api_admin_withdrawal_list'),
+    path('api/check-notifications/', views.check_notifications_api, name='check_notifications_api'),
 
     # STAFF AUTH
     path('staff/login/', views.staff_login_view, name='staff_login'),
     path('staff/logout/', views.staff_logout_view, name='staff_logout'),
+
+    path('send-message/<int:user_id>/', views.send_message, name='send_message'),
+    path('staff/send-message/<int:user_id>/', views.send_message, name='send_message'),
 ]
 
 # --- STATIC / MEDIA ---
