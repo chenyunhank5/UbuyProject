@@ -1,7 +1,7 @@
 <div class="p-4 bg-slate-50/50 min-h-[80vh] pt-14">
     <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto text-sm pt-2 scrollbar-hide">
         <button onclick="filterOrders('all', this)"
-                class="tab-btn border-b-2 border-[#f39c12] text-[#f39c12] font-bold whitespace-nowrap pb-2 outline-none transition-all">
+                class="tab-btn border-b-2 border-[#f78522] text-[#f78522] font-bold whitespace-nowrap pb-2 outline-none transition-all">
             {% if lang == 'en' %}All{% else %}Todo{% endif %}
         </button>
         <button onclick="filterOrders('pending', this)"
@@ -65,7 +65,7 @@
                 </div>
                 <div class="text-right flex flex-col">
                     <p class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</p>
-                    <p class="text-sm font-black text-[#f39c12]">+BOB {{ item.commission|floatformat:2 }}</p>
+                    <p class="text-sm font-black text-[#f78522]">+BOB {{ item.commission|floatformat:2 }}</p>
                 </div>
             </div>
 
@@ -73,15 +73,14 @@
             <div class="mt-4">
                 {% if item.amount > profile.balance %}
                     <a href="?tab=recharge&lang={{ lang }}"
-                       class="block w-full bg-brand text-white text-center font-black py-3 text-xs uppercase active:scale-95 transition-transform tracking-wider">
+                       class="block w-full bg-slate-400 text-white text-center font-black py-3 text-xs uppercase active:scale-95 transition-transform tracking-wider">
                         {% if lang == 'en' %}Insufficient Balance{% else %}Saldo Insuficiente{% endif %}
                     </a>
                 {% else %}
                     <form action="{% url 'finalize_mission' item.id %}" method="POST">
                         {% csrf_token %}
                         <button type="submit"
-                                onclick="this.disabled=true;"
-                                class="w-full bg-[#f39c12] text-white font-black py-3 text-sm shadow-md active:scale-95 transition-transform uppercase tracking-wider">
+                                class="w-full bg-[#f78522] text-white font-black py-3 text-sm shadow-md active:scale-95 transition-transform uppercase tracking-wider">
                             {% if lang == 'en' %}Submit Now{% else %}Aplique Ahora{% endif %}
                         </button>
                     </form>
@@ -142,13 +141,12 @@ function filterOrders(status, btn) {
     let visibleCount = 0;
 
     buttons.forEach(b => {
-        b.classList.remove('border-b-2','border-[#f39c12]','text-[#f39c12]','font-bold');
+        b.classList.remove('border-b-2','border-[#f78522]','text-[#f78522]','font-bold');
         b.classList.add('text-gray-400','font-medium');
     });
 
-    btn.classList.add('border-b-2','border-[#f39c12]','text-[#f39c12]','font-bold');
+    btn.classList.add('border-b-2','border-[#f78522]','text-[#f78522]','font-bold');
 
-    // 🔒 Hide pagination on Pending tab
     if (pagination) {
         pagination.style.display = (status === 'pending') ? 'none' : 'flex';
     }
@@ -170,7 +168,6 @@ function filterOrders(status, btn) {
     }
 }
 
-// 🔥 AUTO SWITCH TO PENDING IF EXISTS
 document.addEventListener("DOMContentLoaded", function () {
     const hasPending = document.querySelector('[data-status="pending"]');
     if (hasPending) {

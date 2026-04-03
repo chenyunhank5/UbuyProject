@@ -5,14 +5,15 @@
     <div class="p-4 border-b border-slate-100 bg-slate-50">
         <div class="flex justify-between items-end mb-4">
             <div class="flex items-center gap-3">
-                <div class="relative">
-                    <div class="w-12 h-12 rounded-full border-2 border-[#f39c12] bg-white flex items-center justify-center overflow-hidden shadow-sm">
-                        <img src="{{ mission.product_image }}" alt="VIP" class="w-8 h-8 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6941/6941697.png'">
-                    </div>
-                    <div class="absolute -bottom-1 -right-1 bg-[#f39c12] text-white text-[8px] font-black px-1.5 rounded-full border border-white">
-                        V{{ profile.membership_vip.level }}
-                    </div>
-                </div>
+              <div class="relative">
+                  <div class="w-12 h-12 rounded-full border-2 border-[#c5c6c7] bg-white flex items-center justify-center overflow-hidden shadow-sm">
+
+                      <img src="{% if user.profile.membership_vip.image %}{{ user.profile.membership_vip.image.url }}{% else %}https://cdn-icons-png.flaticon.com/512/6941/6941697.png{% endif %}"
+                           alt="Current VIP"
+                           class="w-full h-full object-cover">
+
+                  </div>
+              </div>
 
                 <div>
                     <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none mb-1">
@@ -37,7 +38,7 @@
         <div class="space-y-1.5">
             <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
                 <span class="text-slate-400">{% if lang == 'en' %}Task Progress{% else %}Progreso de tareas{% endif %}</span>
-                <span class="text-slate-600">{{ profile.missions_count }}/{{ profile.membership_vip.missions_per_day }}</span>
+
             </div>
             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div class="h-full bg-[#f39c12] rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(243,156,18,0.4)]"
@@ -257,7 +258,7 @@
                 <img
                     src="https://uin.uddc.org/i/vip6/2025/11/05/bda30fe25f749b25653204742fff1f86.gif"
                     alt="Background"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-cover rounded-xl"
                 />
             </div>
 
@@ -271,8 +272,7 @@
                     <div class="van-button__content">
                         <span class="van-button__text">
                             <span style="font-weight: 600;">
-                                {% if lang == 'en' %}Start{% else %}Iniciar{% endif %}
-                            </span>
+                                {% if lang == 'en' %}Start{% else %}Iniciar{% endif %}  ({{ profile.missions_count }}/{{ profile.membership_vip.missions_per_day }})
                         </span>
                     </div>
                 </button>
