@@ -1,57 +1,116 @@
-<main class="animate-in fade-in duration-500 bg-slate-50 min-h-screen pt-14 pb-2">
-    <div class="grid grid-cols-2 gap-3 p-3">
-        {% for vip in vip_levels %}
-        <div class="relative bg-white overflow-hidden shadow-sm border border-slate-100 flex flex-col active:scale-95 transition-all">
-
-            <div class="absolute top-0 left-0 z-20 bg-slate-800 text-[#fff] text-[9px] font-black px-3 py-1 rounded-br-xl font-black italic uppercase">
-                {{ vip.name }}
+<div class="bg-white min-h-screen pt-14">
+    <div class="flex justify-between items-center p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-slate-100 rounded-full border border-slate-200 flex items-center justify-center text-xl shadow-sm overflow-hidden">
+                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775096358/photo_rwhzjd.jpg" alt="User" class="w-full h-full object-cover">
             </div>
 
-            {% if user.profile.membership_vip.level_number == vip.level_number %}
-            <div class="absolute top-0 right-0 z-20 bg-[#f78522] text-white text-[8px] font-black px-2 py-1 rounded-bl-lg uppercase tracking-tighter shadow-sm">
-                {% if lang == 'en' %}Current{% else %}Actual{% endif %}
-            </div>
-            {% endif %}
-
-            <div class="w-full aspect-square bg-[#f8fafc] flex items-center justify-center overflow-hidden border-b border-slate-50">
-                <img src="{% if vip.image %}{{ vip.image.url }}{% else %}https://api.dicebear.com/7.x/identicon/svg?seed={{ vip.level_number }}{% endif %}"
-                     class="w-full h-full object-cover"
-                     alt="{{ vip.name }}">
-            </div>
-
-            <div class="p-3 bg-white">
-                <p class="text-[10px] text-slate-400 font-bold uppercase leading-none mb-1">
-                    {% if lang == 'en' %}Min Balance{% else %}Balance mínimo{% endif %}
-                </p>
-                <p class="text-sm font-black text-slate-900">
-                    BOB {{ vip.min_balance }}
-                </p>
-
-                <div class="mt-2 flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase">
-                        {% if lang == 'en' %}Commissions{% else %}Comisión{% endif %}
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                    <h2 class="font-bold text-base text-slate-800 tracking-tight leading-none">
+                        {{ user.profile.phone_number }}
+                    </h2>
+                    <span class="bg-slate-800 text-[#ffa500] text-[9px] font-black px-1.5 py-0.5 shadow-sm">
+                        VIP{{ user.profile.membership_vip.level_number }}
                     </span>
+                </div>
 
-                    {% if user.profile.balance >= vip.min_balance %}
-                        <button class="bg-[#f78522] text-white text-[11px] font-black px-3 py-1.5 rounded-sm">
-                            {{ vip.commission_rate }}%
-                        </button>
-                    {% else %}
-                        <button class="bg-slate-100 text-slate-400 text-[11px] font-black px-3 py-1.5 rounded-sm flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                            {{ vip.commission_rate }}%
-                        </button>
-                    {% endif %}
+                <div class="flex items-center gap-1.5 mt-1.5">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        {% if request.GET.lang == 'en' %} Invitation code: {{ user.profile.invite_code }} {% else %}Código de invitación: {{ user.profile.invite_code }}{% endif %}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <div class="col-span-2 py-20 text-center text-slate-400 font-bold uppercase text-xs">
-            No VIP levels available.
+
+        <div class="relative w-14 h-14 flex items-center justify-center mr-2">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" stroke-width="4"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="#f39c12" stroke-width="4"
+                    stroke-dasharray="{{ user.profile.credit_points|default:'100' }}, 100" stroke-linecap="round"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span class="text-[8px] font-black text-slate-400 uppercase leading-none">{% if request.GET.lang == 'en' %}Credit{% else %}Cuenta{% endif %}</span>
+                <span class="text-[11px] font-black text-slate-800">{{ user.profile.credit_points|default:"100" }}</span>
+            </div>
         </div>
-        {% endfor %}
     </div>
-</main>
+
+    <div class="mx-4 mt-2 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+        <div class="flex justify-between items-center mb-6">
+            <span class="text-xs font-bold text-slate-500 uppercase">{% if request.GET.lang == 'en' %}Account Balance{% else %}Saldo de la cuenta{% endif %}</span>
+            <span class="text-xl font-black text-brand">BOB {{ user.profile.balance }}</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200/50">
+            <div class="flex flex-col items-center text-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase">
+                    {% if request.GET.lang == 'en' %}Available{% else %}Disponible{% endif %}
+                </span>
+                <span class="text-sm font-black text-slate-800">BOB {{ user.profile.balance }}</span>
+            </div>
+
+            <div class="flex flex-col items-center text-center border-l border-slate-100">
+                <span class="text-[9px] font-bold text-slate-400 uppercase">
+                    {% if request.GET.lang == 'en' %}Frozen{% else %}Congelado{% endif %}
+                </span>
+                <span class="text-sm font-black text-slate-800">BOB 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 px-2 space-y-0.5">
+        <a href="?tab=withdraw" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h15"/><line x1="2" y1="10" x2="19" y2="10"/><path d="m20 15 2 2-2 2"/><path d="M15 17h7"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Withdraw{% else %}Retirar{% endif %}</span>
+            <img src="https://img.icons8.com/ios-glyphs/30/71717a/forward.png" alt="" class="w-3 h-3">
+        </a>
+
+        <a href="?tab=team" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Team Reports{% else %}Informes del equipo{% endif %}</span>
+            <img src="https://img.icons8.com/ios-glyphs/30/71717a/forward.png" alt="" class="w-3 h-3">
+        </a>
+
+        <a href="?tab=withdraw_info" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Bank Info{% else %}Información bancaria{% endif %}</span>
+            <img src="https://img.icons8.com/ios-glyphs/30/71717a/forward.png" alt="" class="w-3 h-3">
+        </a>
+
+        <a href="?tab=history&lang={{ request.GET.lang|default:'es' }}" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}History{% else %}Historial{% endif %}</span>
+            <img src="https://img.icons8.com/ios-glyphs/30/71717a/forward.png" alt="" class="w-3 h-3">
+        </a>
+
+        <a href="?tab=security&lang={{ request.GET.lang }}" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.72V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.17a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.72l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Security{% else %}Seguridad{% endif %}</span>
+            <img src="https://img.icons8.com/ios-glyphs/30/71717a/forward.png" alt="" class="w-3 h-3">
+        </a>
+
+        <a href="?tab=system_messages&lang={{ request.GET.lang }}" class="flex items-center gap-4 px-4 py-4 border-b border-slate-50 active:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V8Z"/><path d="M10 12h.01"/><path d="M16 12h.01"/><path d="M22 8v8"/><path d="M2 8v8"/></svg>
+            <span class="flex-1 text-[13px] font-bold text-slate-700">{% if request.GET.lang == 'en' %}Announcement{% else %}Anuncio{% endif %}</span>
+            <img src="https://img.icons8.com/ios-glyphs/30/71717a/forward.png" alt="" class="w-3 h-3">
+        </a>
+    </div>
+
+    <div class="text-center mt-10">
+        <a href="/logout/" class="text-center inline-block px-[30px] py-2 border-red-600 border active:opacity-70 transition-opacity">
+            <div class="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span class="text-[14px] font-medium text-red-600">
+                    {% if request.GET.lang == 'en' %}Sign out{% else %}Cerrar sesión{% endif %}
+                </span>
+            </div>
+        </a>
+    </div>
+
+    <div class="py-[30px] text-center text-slate-400 text-[11px] leading-relaxed">
+        <div class="font-medium">Copyright ©2011-2026</div>
+        <div class="font-medium uppercase tracking-tight">Cencosud Pictures All Rights Reserved</div>
+    </div>
+</div>
