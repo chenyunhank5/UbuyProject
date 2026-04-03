@@ -1,0 +1,78 @@
+{% if active_tab == 'history' %}
+<div class="px-4 py-4 min-h-[calc(100vh-120px)] animate-in fade-in duration-500 pt-16">
+
+  <a href="?tab=profile&lang={{ lang }}" class="flex items-center gap-2 text-slate-400 mb-5 active:opacity-50 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
+      <span class="text-xs font-bold uppercase tracking-tight">{% if lang == 'en' %}Back{% else %}Volver{% endif %}</span>
+  </a>
+
+    <div class="space-y-2">
+        {% for r in history_records %}
+        <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between">
+
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center
+                    {% if r.entry_type == 'withdrawal' %}bg-rose-50 text-rose-500{% else %}bg-emerald-50 text-emerald-500{% endif %}">
+
+                    {% if r.entry_type == 'withdrawal' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M7 7l10 10M17 7v10H7"/></svg>
+                    {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M7 17L17 7M7 7h10v10"/></svg>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <p class="text-[11px] font-black text-slate-800 uppercase tracking-tight">
+                        {% if r.entry_type == 'order' %}
+                            {% if lang == 'en' %}Order Profit{% else %}Ganancia de Pedido{% endif %}
+                        {% elif r.entry_type == 'recharge' %}
+                            {% if lang == 'en' %}Deposit{% else %}Depósito{% endif %}
+                        {% else %}
+                            {% if lang == 'en' %}Withdrawal{% else %}Retiro{% endif %}
+                        {% endif %}
+                    </p>
+                    <p class="text-[9px] text-slate-400 font-bold mt-0.5">{{ r.created_at|date:"d M, H:i" }}</p>
+                </div>
+            </div>
+
+            <div class="text-right">
+                <p class="text-[15px] font-black tracking-tighter
+                    {% if r.entry_type == 'withdrawal' %}text-rose-600{% else %}text-emerald-600{% endif %}">
+
+                    {% if r.entry_type == 'order' %}+{{ r.commission }}
+                    {% elif r.entry_type == 'recharge' %}+{{ r.amount }}
+                    {% else %}-{{ r.amount }}{% endif %}
+                </p>
+                <p class="text-[7px] font-black text-slate-300 uppercase tracking-widest">BOB</p>
+            </div>
+        </div>
+        {% empty %}
+        <div class="py-20 text-center text-slate-300 font-bold text-[10px] uppercase">No Records</div>
+        {% endfor %}
+    </div>
+
+        {% if history_records.has_other_pages %}
+        <div id="history-pagination-controls" class="mt-8 flex justify-center items-center gap-2 pb-10">
+
+            {% if history_records.has_previous %}
+                <a href="?tab=history&lang={{ lang }}&page={{ history_records.previous_page_number }}"
+                   class="px-4 py-2 bg-white border border-slate-200 rounded text-xs font-bold text-slate-600 active:scale-95 transition-transform shadow-sm">
+                    &laquo;
+                </a>
+            {% endif %}
+
+            <span class="px-4 py-2 bg-white border border-slate-200 rounded text-xs font-bold text-slate-400 shadow-sm">
+                {{ history_records.number }} / {{ history_records.paginator.num_pages }}
+            </span>
+
+            {% if history_records.has_next %}
+                <a href="?tab=history&lang={{ lang }}&page={{ history_records.next_page_number }}"
+                   class="px-4 py-2 bg-white border border-slate-200 rounded text-xs font-bold text-slate-600 active:scale-95 transition-transform shadow-sm">
+                    &raquo;
+                </a>
+            {% endif %}
+
+        </div>
+        {% endif %}
+</div>
+{% endif %}

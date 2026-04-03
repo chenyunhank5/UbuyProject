@@ -4,7 +4,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from decimal import Decimal
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField  # <-- Added Case tools here
 from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel, Mission, MissionRecord, UserMessage
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -66,7 +66,6 @@ def index(request):
     profile = request.user.profile
 
     # 3. SYSTEM MESSAGE TAB LOGIC
-    # If the user visits the system messages tab, mark the red dot as seen
     if current_tab == 'system_messages':
         profile.show_system_message = False
         profile.save()
@@ -81,12 +80,23 @@ def index(request):
     withdrawal_paginator = Paginator(withdrawal_queryset, 5)
     withdrawals = withdrawal_paginator.get_page(request.GET.get('withdraw_page'))
 
-    # --- NEW: NOTIFICATIONS COMBINED LIST ---
-    # We fetch your custom messages here
-    msg_queryset = UserMessage.objects.filter(user=request.user)
+    # --- MISSIONS RECORDS PAGINATION (10 per page) ---
+    records_queryset = MissionRecord.objects.filter(
+        user=request.user
+    ).annotate(
+        status_priority=Case(
+            When(status__iexact='pending', then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+    ).order_by('status_priority', '-created_at')
 
-    # We combine Messages, Recharges, and Withdrawals into one "notifications" list
-    # and sort them so the newest ones show at the top
+    paginator = Paginator(records_queryset, 10)
+    page_number = request.GET.get('page')
+    records = paginator.get_page(page_number)
+
+    # --- NOTIFICATIONS COMBINED LIST ---
+    msg_queryset = UserMessage.objects.filter(user=request.user)
     notifications = sorted(
         chain(msg_queryset, recharge_queryset, withdrawal_queryset),
         key=lambda instance: instance.created_at,
@@ -100,19 +110,6 @@ def index(request):
         progress_percentage = (profile.missions_count / user_vip.missions_per_day) * 100
 
     vips = VipLevel.objects.all().order_by('level_number')
-
-    # --- UPDATED RECORDS LOGIC (PENDING AT TOP) ---
-    from django.db.models import Case, When, Value, IntegerField
-
-    records = MissionRecord.objects.filter(
-        user=request.user
-    ).annotate(
-        status_priority=Case(
-            When(status__iexact='pending', then=Value(1)),
-            default=Value(2),
-            output_field=IntegerField(),
-        )
-    ).order_by('status_priority', '-created_at')
 
     # 🔒 GET PENDING MISSION
     pending = MissionRecord.objects.filter(
@@ -139,10 +136,39 @@ def index(request):
         if user_vip and profile.missions_count >= user_vip.missions_per_day:
             limit_reached = True
 
-        # ✅ IMPORTANT: still send safe object
         active_mission = {
             'is_pending_lock': False
         }
+
+    # --- NEW: COMBINED BALANCE HISTORY LOGIC ---
+    # We fetch all records so they show up in the history tab immediately
+
+    # 1. Orders (We label as 'order')
+    h_orders = MissionRecord.objects.filter(user=request.user)
+    for o in h_orders:
+        o.entry_type = 'order'
+
+    # 2. Recharges (We label as 'recharge')
+    h_recharges = RechargeRequest.objects.filter(user=request.user)
+    for r in h_recharges:
+        r.entry_type = 'recharge'
+
+    # 3. Withdrawals (We label as 'withdrawal')
+    h_withdraws = WithdrawalRequest.objects.filter(user=request.user)
+    for w in h_withdraws:
+        w.entry_type = 'withdrawal'
+
+    # Combine all movements into one list
+    history_list = sorted(
+        chain(h_orders, h_recharges, h_withdraws),
+        key=lambda x: x.created_at,
+        reverse=True
+    )
+
+    # Create a separate paginator for the History Tab
+    history_paginator = Paginator(history_list, 10)
+    history_page_num = request.GET.get('page')
+    history_records = history_paginator.get_page(history_page_num)
 
     # --- CONTEXT ---
     context = {
@@ -152,10 +178,11 @@ def index(request):
         'vip_levels': vips,
         'active_mission': active_mission,
         'limit_reached': limit_reached,
-        'records': records,
+        'records': records, # Original mission records
+        'history_records': history_records, # New combined balance history
         'recharges': recharges,
         'withdrawals': withdrawals,
-        'notifications': notifications,  # <--- ADDED THIS TO CONTEXT
+        'notifications': notifications,
         'progress_percentage': progress_percentage,
     }
 

@@ -134,21 +134,23 @@
                 </div>
 
                 <div class="text-right">
-                    <span class="text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border
+                    <span class="text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border inline-block
                         {% if status == 'pending' or status == 'procesando' %}
-                            border-amber-200 text-amber-700 bg-amber-50
+                            border-amber-200 text-amber-600 bg-amber-50/50
                         {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}
-                            border-emerald-200 text-emerald-700 bg-emerald-50
+                            border-emerald-200 text-emerald-600 bg-emerald-50/50
                         {% else %}
-                            border-rose-200 text-rose-700 bg-rose-50
+                            border-rose-200 text-rose-600 bg-rose-50/50
                         {% endif %}">
 
                         {% if lang == 'en' %}
-                            {{ w.status|upper }}
+                            {% if status == 'pending' or status == 'procesando' %}Pending
+                            {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}Success
+                            {% else %}Rejected{% endif %}
                         {% else %}
-                            {% if status == 'pending' or status == 'procesando' %}PENDIENTE
-                            {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}COMPLETADO
-                            {% else %}RECHAZADO{% endif %}
+                            {% if status == 'pending' or status == 'procesando' %}Pendiente
+                            {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}Completado
+                            {% else %}Rechazado{% endif %}
                         {% endif %}
                     </span>
                 </div>
@@ -162,24 +164,22 @@
         </div>
 
         {% if withdrawals.has_other_pages %}
-        <div class="mt-6 flex items-center justify-center gap-2">
+        <div id="withdraw-pagination-controls" class="mt-8 flex justify-center items-center gap-2 pb-10">
             {% if withdrawals.has_previous %}
                 <a href="?tab=withdraw&lang={{ lang }}&withdraw_page={{ withdrawals.previous_page_number }}"
-                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 active:scale-95 transition-all shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-7-7 7-7"/></svg>
+                   class="px-4 py-2 bg-white border border-slate-200 rounded text-xs font-bold text-slate-600 active:scale-95 transition-transform shadow-sm">
+                    &laquo;
                 </a>
             {% endif %}
 
-            <div class="px-4 py-2 bg-slate-900 rounded-xl shadow-lg border border-slate-800">
-                <span class="text-[10px] font-black text-white uppercase tracking-widest">
-                    {{ withdrawals.number }} / {{ withdrawals.paginator.num_pages }}
-                </span>
-            </div>
+            <span class="px-4 py-2 bg-white border border-slate-200 rounded text-xs font-bold text-slate-400 shadow-sm">
+                {{ withdrawals.number }} / {{ withdrawals.paginator.num_pages }}
+            </span>
 
             {% if withdrawals.has_next %}
                 <a href="?tab=withdraw&lang={{ lang }}&withdraw_page={{ withdrawals.next_page_number }}"
-                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 active:scale-95 transition-all shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 7-7-7-7"/></svg>
+                   class="px-4 py-2 bg-white border border-slate-200 rounded text-xs font-bold text-slate-600 active:scale-95 transition-transform shadow-sm">
+                    &raquo;
                 </a>
             {% endif %}
         </div>

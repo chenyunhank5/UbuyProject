@@ -59,9 +59,9 @@
 
                 <a href="?tab={{ active_tab }}&lang={% if lang == 'en' %}es{% else %}en{% endif %}" class="group relative flex items-center active:scale-95 transition-transform">
                     {% if lang == 'en' %}
-                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774547483/Flag_of_the_United_States__DDD-F-416E_specifications.svg_xmiovx.webp" alt="English" class="w-8 h-auto shadow-sm rounded-sm border border-slate-200">
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/en-US_ydtdzp.png" alt="English" class="w-6 h-auto shadow-sm rounded-sm border border-slate-200">
                     {% else %}
-                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774547482/Flag_of_Bolivia.svg_tnyh5g.webp" alt="Español" class="w-8 h-auto shadow-sm rounded-sm border border-slate-200">
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/es-BO_no8wwb.png" alt="Español" class="w-6 h-auto shadow-sm rounded-sm border border-slate-200">
                     {% endif %}
                 </a>
 
@@ -127,6 +127,8 @@
                     {% include "user/invite.html" %}
                 {% elif active_tab == 'security' %}
                     {% include "user/security_settings.html" %}
+                {% elif active_tab == 'history' %}
+                    {% include "user/history.html" %}
                 {% elif active_tab == 'system_messages' %}
                     {% include "user/system_message.html" %}
                 {% endif %}
@@ -134,41 +136,44 @@
         </main>
 
         <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 max-w-md mx-auto">
-            <div class="grid grid-cols-5 px-1 py-3">
+            <div class="grid grid-cols-5 px-1 py-3 items-end">
 
                 <a href="?tab=home&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'home' or not active_tab %}text-brand{% else %}text-slate-300{% endif %}"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'home' or not active_tab %}text-brand{% else %}text-slate-400{% endif %}">
+                    <img src="{% if active_tab == 'home' or not active_tab %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/home-sel_cns7bk.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/home_qbhidz.png{% endif %}"
+                         alt="Home" class="w-6 h-6 object-contain">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'home' or not active_tab %}text-black{% else %}text-slate-400{% endif %}">
                         {% if lang == 'en' %}Home{% else %}Inicio{% endif %}
                     </span>
                 </a>
 
                 <a href="?tab=work&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'work' %}text-brand{% else %}text-slate-300{% endif %}"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'work' %}text-brand{% else %}text-slate-400{% endif %}">
-                        {% if lang == 'en' %}Work{% else %}Trabajo{% endif %}
+                    <img src="{% if active_tab == 'work' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/work-sel_bgop2t.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/work_iglv4j.png{% endif %}"
+                         alt="Work" class="w-6 h-6 object-contain">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'work' %}text-black{% else %}text-slate-400{% endif %}">
+                        {% if lang == 'en' %}Work{% else %}Trabajar{% endif %}
                     </span>
                 </a>
 
                 <div class="flex flex-col items-center justify-center">
-                    <a href="?tab=mission&lang={{ lang }}" class="-mt-12 active:scale-90 transition-transform relative z-10">
-                        <div class="w-16 h-16 rounded-full bg-brand flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-                        </div>
+                    <a href="?tab=mission&lang={{ lang }}" class="-mt-10 active:scale-95 transition-transform relative z-10 flex flex-col items-center">
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/grab_xnbjo1.png"
+                             alt="Missions" class="w-14 h-14 object-contain drop-shadow-md">
                     </a>
                 </div>
 
                 <a href="?tab=order&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'order' %}text-brand{% else %}text-slate-300{% endif %}"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'order' %}text-brand{% else %}text-slate-400{% endif %}">
+                    <img src="{% if active_tab == 'order' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/orders-sel_f5mtvs.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/orders_fu8upc.png{% endif %}"
+                         alt="Orders" class="w-6 h-6 object-contain">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'order' %}text-black{% else %}text-slate-400{% endif %}">
                         {% if lang == 'en' %}Orders{% else %}Orden{% endif %}
                     </span>
                 </a>
 
                 <a href="?tab=profile&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{% if active_tab == 'profile' %}text-brand{% else %}text-slate-300{% endif %}"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span class="text-[9px] font-black uppercase tracking-tighter text-center whitespace-nowrap {% if active_tab == 'profile' %}text-brand{% else %}text-slate-400{% endif %}">
-                        {% if lang == 'en' %}Profile{% else %}Perfil{% endif %}
+                    <img src="{% if active_tab == 'profile' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/mine-sel_sv4jhm.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/mine_urxeyw.png{% endif %}"
+                         alt="Profile" class="w-6 h-6 object-contain">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'profile' %}text-black{% else %}text-slate-400{% endif %}">
+                        {% if lang == 'en' %}Mine{% else %}Mío{% endif %}
                     </span>
                 </a>
 
