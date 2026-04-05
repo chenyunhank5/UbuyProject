@@ -68,17 +68,18 @@
       <div class="flex flex-col gap-2 w-[35%]">
           <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col justify-between">
               <div class="text-[10px] text-gray-400 uppercase tracking-tight">Online Users</div>
-              <div id="val-online" class="text-xl font-bold leading-none">4.489k</div>
+              <div id="val-online" class="text-xl font-bold leading-none">4.49k</div>
               <div class="text-[9px] text-orange-500 whitespace-nowrap font-medium">+ 63% From Last Month</div>
           </div>
 
           <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col relative overflow-hidden">
-              <div class="text-[10px] text-gray-400 uppercase tracking-tight">Order Completion</div>
-              <div id="val-completion" class="text-xl font-bold leading-none">6.616k</div>
-              <div class="text-[9px] text-orange-500 font-medium">21% ↑</div>
-
-              <div class="absolute bottom-0 right-0 w-16 h-10">
-                  <svg viewBox="0 0 100 40" class="w-full h-full">
+              <div class="relative z-10">
+                  <div class="text-[10px] text-gray-400 uppercase tracking-tight">Order Completion</div>
+                  <div id="val-completion" class="text-xl font-bold leading-none">6.61k</div>
+                  <div class="text-[9px] text-orange-500 font-medium">21% ↑</div>
+              </div>
+              <div class="absolute bottom-0 right-0 w-full h-12">
+                  <svg viewBox="0 0 100 40" preserveAspectRatio="none" class="w-full h-full">
                       <path d="M0 40 Q 25 10 50 25 T 100 15 V 40 H 0 Z" fill="rgba(249, 115, 22, 0.1)"></path>
                       <path d="M0 40 Q 25 10 50 25 T 100 15" fill="none" stroke="#f97316" stroke-width="2"></path>
                   </svg>
@@ -87,12 +88,13 @@
       </div>
 
       <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-[32.5%] min-h-[10.625rem] flex flex-col relative overflow-hidden">
-          <div class="text-[10px] text-gray-400 uppercase tracking-tight">Optimize Demand</div>
-          <div id="val-demand" class="text-xl font-bold leading-none py-1">1.736k</div>
-          <div class="text-[9px] text-orange-500 font-medium">+ 119% From Last Month</div>
-
-          <div class="mt-auto h-16 w-full -mx-3">
-              <svg viewBox="0 0 120 40" preserveAspectRatio="none" class="w-full h-full">
+          <div class="relative z-10">
+              <div class="text-[10px] text-gray-400 uppercase tracking-tight">Optimize Demand</div>
+              <div id="val-demand" class="text-xl font-bold leading-none py-1">1.73k</div>
+              <div class="text-[9px] text-orange-500 font-medium leading-tight">+ 119% From Last Month</div>
+          </div>
+          <div class="absolute bottom-0 left-0 w-full h-16">
+              <svg viewBox="0 0 120 40" preserveAspectRatio="none" class="w-full h-full block">
                   <defs>
                       <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                           <stop offset="0%" style="stop-color:#f97316;stop-opacity:0.3" />
@@ -106,12 +108,13 @@
       </div>
 
       <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-[32.5%] min-h-[10.625rem] flex flex-col relative overflow-hidden">
-          <div class="text-[10px] text-gray-400 uppercase tracking-tight">Order Quantity</div>
-          <div id="val-quantity" class="text-xl font-bold leading-none py-1">32.388k</div>
-          <div class="text-[9px] text-orange-500 font-medium">71% ↑</div>
-
-          <div class="mt-auto h-16 w-full -mx-3">
-              <svg viewBox="0 0 120 40" preserveAspectRatio="none" class="w-full h-full">
+          <div class="relative z-10">
+              <div class="text-[10px] text-gray-400 uppercase tracking-tight">Order Quantity</div>
+              <div id="val-quantity" class="text-xl font-bold leading-none py-1">32.38k</div>
+              <div class="text-[9px] text-orange-500 font-medium">71% ↑</div>
+          </div>
+          <div class="absolute bottom-0 left-0 w-full h-16">
+              <svg viewBox="0 0 120 40" preserveAspectRatio="none" class="w-full h-full block">
                   <path d="M0 40 C 30 35, 50 10, 70 20 S 100 30, 120 10 V 40 H 0 Z" fill="url(#orangeGrad)"></path>
                   <path d="M0 40 C 30 35, 50 10, 70 20 S 100 30, 120 10" fill="none" stroke="#f97316" stroke-width="2"></path>
               </svg>
@@ -236,26 +239,27 @@
     setInterval(showNextSlide, 4000); // Change image every 4 seconds
 
     function fluctuateNumbers() {
-        const stats = [
-            { id: 'val-online', base: 4.489 },
-            { id: 'val-completion', base: 6.616 },
-            { id: 'val-demand', base: 1.736 },
-            { id: 'val-quantity', base: 32.388 }
-        ];
+            const stats = [
+                { id: 'val-online', base: 4.48 },
+                { id: 'val-completion', base: 6.61 },
+                { id: 'val-demand', base: 1.73 },
+                { id: 'val-quantity', base: 32.38 }
+            ];
 
-        stats.forEach(stat => {
-            const element = document.getElementById(stat.id);
+            stats.forEach(stat => {
+                const element = document.getElementById(stat.id);
+                if (!element) return; // Safety check
 
-            // Generate a small random fluctuation (+/- 1% of the base value)
-            const change = (Math.random() - 0.5) * (stat.base * 0.02);
-            const newValue = (stat.base + change).toFixed(3);
+                // Smaller fluctuation (+/- 0.5% of the base value)
+                const change = (Math.random() - 0.5) * (stat.base * 0.01);
+                const newValue = (stat.base + change).toFixed(2);
 
-            element.innerText = newValue + 'k';
-        });
-    }
+                element.innerText = newValue + 'k';
+            });
+        }
 
-    // Run every 2 seconds
-    setInterval(fluctuateNumbers, 2000);
+        // Run every 4 seconds (Slower, more natural feel)
+        setInterval(fluctuateNumbers, 4000);
 
     function toggleInviteModal() {
         const modal = document.getElementById('invite-modal');
