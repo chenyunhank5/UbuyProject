@@ -51,9 +51,10 @@
         </div>
 
         <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 max-w-md mx-auto">
-            <div class="flex items-center gap-2">
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774491621/IMG_2659_fy7qvz.png" alt="Ubuy" class="h-12 w-auto rounded object-contain">
-            </div>
+          <div class="flex items-center gap-2">
+              <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775350555/download_13_taaigk.png" alt="Shein" class="h-8 w-auto rounded object-contain">
+              <span class="text-lg font-bold text-slate-800">SHEIN</span>
+          </div>
 
             <div class="flex items-center gap-3">
 
@@ -75,10 +76,6 @@
                         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
                     </svg>
                     <span id="notification-dot" class="{% if not profile.show_system_message %}hidden{% endif %} absolute -top-1 -right-1 bg-rose-500 w-2.5 h-2.5 rounded-full border-2 border-white animate-pulse"></span>
-                </a>
-
-                <a href="https://www.global.ubuy.com/contacts" target="_blank" rel="noopener noreferrer" class="text-slate-400 active:scale-90 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>
                 </a>
             </div>
         </header>
@@ -131,6 +128,12 @@
                     {% include "user/history.html" %}
                 {% elif active_tab == 'system_messages' %}
                     {% include "user/system_message.html" %}
+                {% elif active_tab == 'company_profile' %}
+                    {% include "user/company_profile.html" %}
+                {% elif active_tab == 'faqs' %}
+                    {% include "user/faqs.html" %}
+                {% elif active_tab == 'campaign' %}
+                    {% include "user/campaign.html" %}
                 {% endif %}
             {% endif %}
         </main>
@@ -168,7 +171,7 @@
                              alt="Missions"
                              class="w-[68px] h-[68px] object-contain {% if active_tab == 'mission' %}drop-shadow-[0_4px_6px_rgba(247,133,34,0.4)]{% else %}drop-shadow-none opacity-90{% endif %}">
                     </a>
-                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'mission' %}text-[#f78522]{% else %}text-slate-400{% endif %}"> 
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'mission' %}text-[#f78522]{% else %}text-slate-400{% endif %}">
                           {% if lang == 'en' %}Order{% else %}Orden{% endif %}
                     </span>
                 </div>

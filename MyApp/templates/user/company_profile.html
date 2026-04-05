@@ -1,0 +1,73 @@
+<div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] min-h-screen text-slate-800">
+
+    <div class="relative w-full h-48 bg-slate-900 overflow-hidden shadow-md">
+        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000&auto=format&fit=crop"
+             class="w-full h-full object-cover opacity-50"
+             alt="Company Background">
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-white px-6 text-center">
+            <h1 class="text-2xl font-black tracking-tighter uppercase italic">UBuy Bolivia</h1>
+            <div class="h-1 w-12 bg-orange-500 mt-2 rounded-full"></div>
+            <p class="mt-3 text-[11px] font-medium tracking-wide opacity-90 uppercase">
+                {% if lang == 'en' %}Global E-commerce Optimization{% else %}Optimización de Comercio Global{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="px-4 -mt-8 relative z-10">
+
+        <div class="bg-white rounded-2xl shadow-sm p-5 flex justify-between border border-gray-100 mb-4">
+            <div class="text-center flex-1 border-r border-gray-50">
+                <div class="text-xl font-bold text-slate-800 leading-none">50k+</div>
+                <div class="text-[9px] text-gray-400 uppercase font-bold mt-1 tracking-tighter">Active Users</div>
+            </div>
+            <div class="text-center flex-1 border-r border-gray-50">
+                <div class="text-xl font-bold text-slate-800 leading-none">12</div>
+                <div class="text-[9px] text-gray-400 uppercase font-bold mt-1 tracking-tighter">Regions</div>
+            </div>
+            <div class="text-center flex-1">
+                <div class="text-xl font-bold text-slate-800 leading-none">24/7</div>
+                <div class="text-[9px] text-gray-400 uppercase font-bold mt-1 tracking-tighter">Live Help</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+            <h2 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span class="w-1 h-4 bg-orange-500 rounded-full"></span>
+                {% if lang == 'en' %}Our Expertise{% else %}Nuestra Experiencia{% endif %}
+            </h2>
+            <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                {% if lang == 'en' %}
+                UBuy Bolivia is a premier order optimization platform. We leverage cloud-based logistics to help global merchants improve product rankings and supply chain efficiency.
+                {% else %}
+                UBuy Bolivia es una plataforma líder en optimización de pedidos. Utilizamos logística basada en la nube para ayudar a comerciantes globales a mejorar su posicionamiento.
+                {% endif %}
+            </p>
+
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-[12px] font-bold text-slate-800 uppercase">{% if lang == 'en' %}Verified Security{% else %}Seguridad Verificada{% endif %}</h4>
+                        <p class="text-[10px] text-slate-500">AES-256 Protocol Encryption</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="bg-blue-100 p-2 rounded-lg text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 8v8"/></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-[12px] font-bold text-slate-800 uppercase">{% if lang == 'en' %}Global Logistics{% else %}Logística Global{% endif %}</h4>
+                        <p class="text-[10px] text-slate-500">Tier-1 Carrier Integration</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center pb-10 opacity-40">
+            <p class="text-[9px] font-bold tracking-widest text-slate-500 uppercase italic">Powering the Future of Bolivian Trade</p>
+        </div>
+    </div>
+</div>

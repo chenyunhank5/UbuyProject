@@ -25,17 +25,10 @@
                   </span>
               </a>
 
-              <a href="?tab=service&lang={{ lang }}" class="flex flex-col items-center text-center">
-                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_6_x6blhw.png" class="w-10 h-10 mb-1" alt="Service">
-                  <span class="text-[11px] font-medium leading-tight">
-                      {% if lang == 'en' %}Service{% else %}Servicio{% endif %}
-                  </span>
-              </a>
-
-              <a href="?tab=notice&lang={{ lang }}" class="flex flex-col items-center text-center">
+              <a href="?tab=history&lang={{ request.GET.lang|default:'es' }}" class="flex flex-col items-center text-center">
                   <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_7_exqqzc.png" class="w-10 h-10 mb-1" alt="Notice">
                   <span class="text-[11px] font-medium leading-tight">
-                      {% if lang == 'en' %}Notice{% else %}Aviso{% endif %}
+                      {% if lang == 'en' %}Account History{% else %}Aviso{% endif %}
                   </span>
               </a>
 
@@ -46,10 +39,11 @@
                   </span>
               </a>
 
-              <a href="?tab=illustrate&lang={{ lang }}" class="flex flex-col items-center text-center">
-                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_9_yfakmr.png" class="w-10 h-10 mb-1" alt="Illustrate">
+
+              <a href="javascript:void(0)" onclick="toggleInviteModal()" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_6_x6blhw.png" class="w-10 h-10 mb-1" alt="Service">
                   <span class="text-[11px] font-medium leading-tight">
-                      {% if lang == 'en' %}Help{% else %}Ayuda{% endif %}
+                      {% if lang == 'en' %}Invite{% else %}Servicio{% endif %}
                   </span>
               </a>
 
@@ -60,7 +54,7 @@
                   </span>
               </a>
 
-              <a href="?tab=profile&lang={{ lang }}" class="flex flex-col items-center text-center">
+              <a href="?tab=company_profile&lang={{ lang }}" class="flex flex-col items-center text-center">
                   <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_11_nepxza.png" class="w-10 h-10 mb-1" alt="Company">
                   <span class="text-[11px] font-medium leading-tight">
                       {% if lang == 'en' %}Profile{% else %}Perfil{% endif %}
@@ -70,53 +64,61 @@
           </div>
       </div>
   </div>
+  <div class="flex gap-2 w-full p-2 bg-[#f7f8fa] overflow-hidden">
+      <div class="flex flex-col gap-2 w-[35%]">
+          <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col justify-between">
+              <div class="text-[10px] text-gray-400 uppercase tracking-tight">Online Users</div>
+              <div id="val-online" class="text-xl font-bold leading-none">4.489k</div>
+              <div class="text-[9px] text-orange-500 whitespace-nowrap font-medium">+ 63% From Last Month</div>
+          </div>
 
-    <div class="px-3 py-4">
-        <div class="bg-white rounded-[0.5rem] border-none p-6 shadow-xl shadow-slate-200/50">
+          <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col relative overflow-hidden">
+              <div class="text-[10px] text-gray-400 uppercase tracking-tight">Order Completion</div>
+              <div id="val-completion" class="text-xl font-bold leading-none">6.616k</div>
+              <div class="text-[9px] text-orange-500 font-medium">21% ↑</div>
 
-            <div class="space-y-4 mb-1">
-                <div class="flex justify-between items-center border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-600 uppercase">{% if lang == 'en' %}Username{% else %}Nombre de usuario{% endif %}</span>
-                    <span class="text-sm font-black text-slate-900">{{ user.profile.phone_number }}</span>
-                </div>
-                <div class="flex justify-between items-center border-slate-100">
-                    <span class="text-[11px] font-bold text-slate-600 uppercase">{% if lang == 'en' %}Promo Code{% else %}El código de promoción{% endif %}</span>
-                    <span class="text-sm font-black text-[#ffa500]">{{ user.profile.invite_code }}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-4 pb-3">
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">{% if lang == 'en' %}Account Balance{% else %}Saldo de la cuenta{% endif %}</p>
-                        <p class="text-rose-500 font-black tracking-tight">BOB {{ profile.balance }}</p>
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">{% if lang == 'en' %}Mission Funds{% else %}Fondos de misión{% endif %}</p>
-                        <p class="text-rose-500 font-black tracking-tight">BOB {{ profile.mission_balance }}</p>
-                    </div>
-                </div>
-            </div>
+              <div class="absolute bottom-0 right-0 w-16 h-10">
+                  <svg viewBox="0 0 100 40" class="w-full h-full">
+                      <path d="M0 40 Q 25 10 50 25 T 100 15 V 40 H 0 Z" fill="rgba(249, 115, 22, 0.1)"></path>
+                      <path d="M0 40 Q 25 10 50 25 T 100 15" fill="none" stroke="#f97316" stroke-width="2"></path>
+                  </svg>
+              </div>
+          </div>
+      </div>
 
-            <div class="h-px bg-slate-100 w-full mb-8"></div>
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-[32.5%] min-h-[10.625rem] flex flex-col relative overflow-hidden">
+          <div class="text-[10px] text-gray-400 uppercase tracking-tight">Optimize Demand</div>
+          <div id="val-demand" class="text-xl font-bold leading-none py-1">1.736k</div>
+          <div class="text-[9px] text-orange-500 font-medium">+ 119% From Last Month</div>
 
-            <div class="grid grid-cols-2 gap-y-8">
-                <div class="flex flex-col">
-                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Today's Profit{% else %}Las ganancias de hoy{% endif %}</span>
-                    <span class="text-[10px] font-black text-slate-900">BOB {{ today_profit }}</span>
-                </div>
-                <div class="flex flex-col text-left">
-                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Yesterday{% else %}Ganancias de ayer{% endif %}</span>
-                    <span class="text-[10px] font-black text-slate-900">BOB {{ yesterday_profit }}</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Accumulated{% else %}Ingresos acumulados{% endif %}</span>
-                    <span class="text-[10px] font-black text-slate-900">BOB {{ total_profit }}</span>
-                </div>
-                <div class="flex flex-col text-left">
-                    <span class="text-[10px] font-bold text-slate-600 uppercase mb-1">{% if lang == 'en' %}Team Benefits{% else %}Beneficios del equipo{% endif %}</span>
-                    <span class="text-[10px] font-black text-slate-900">BOB {{ team_profit|default:"0.00" }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
+          <div class="mt-auto h-16 w-full -mx-3">
+              <svg viewBox="0 0 120 40" preserveAspectRatio="none" class="w-full h-full">
+                  <defs>
+                      <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" style="stop-color:#f97316;stop-opacity:0.3" />
+                          <stop offset="100%" style="stop-color:#f97316;stop-opacity:0" />
+                      </linearGradient>
+                  </defs>
+                  <path d="M0 40 C 20 20, 40 10, 60 25 S 100 5, 120 20 V 40 H 0 Z" fill="url(#orangeGrad)"></path>
+                  <path d="M0 40 C 20 20, 40 10, 60 25 S 100 5, 120 20" fill="none" stroke="#f97316" stroke-width="2"></path>
+              </svg>
+          </div>
+      </div>
+
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 w-[32.5%] min-h-[10.625rem] flex flex-col relative overflow-hidden">
+          <div class="text-[10px] text-gray-400 uppercase tracking-tight">Order Quantity</div>
+          <div id="val-quantity" class="text-xl font-bold leading-none py-1">32.388k</div>
+          <div class="text-[9px] text-orange-500 font-medium">71% ↑</div>
+
+          <div class="mt-auto h-16 w-full -mx-3">
+              <svg viewBox="0 0 120 40" preserveAspectRatio="none" class="w-full h-full">
+                  <path d="M0 40 C 30 35, 50 10, 70 20 S 100 30, 120 10 V 40 H 0 Z" fill="url(#orangeGrad)"></path>
+                  <path d="M0 40 C 30 35, 50 10, 70 20 S 100 30, 120 10" fill="none" stroke="#f97316" stroke-width="2"></path>
+              </svg>
+          </div>
+      </div>
+  </div>
+
 
     <div class="u-m-t-20 px-4">
         <div class="u-font-20 font-bold u-m-b-20" style="font-size: 16px; font-weight: 900; margin-bottom: 15px;">
@@ -128,8 +130,40 @@
                 </div>
         </div>
     </div>
-</div>
 
+    <div id="invite-modal" class="fixed inset-0 z-50 hidden flex items-end justify-center bg-black/50 transition-opacity">
+        <div class="bg-white rounded-t-2xl w-full max-w-md p-6 pb-8 animate-in slide-in-from-bottom duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-900">{% if lang == 'en' %}Invite Friends{% else %}Invitar a amigos{% endif %}</h3>
+                <button onclick="toggleInviteModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 mb-4">
+                <button class="flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xl font-bold">W</div>
+                    <span class="text-xs text-gray-600">WhatsApp</span>
+                </button>
+                <button class="flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 rounded-full bg-sky-500 flex items-center justify-center text-white text-xl font-bold">T</div>
+                    <span class="text-xs text-gray-600">Telegram</span>
+                </button>
+                <button class="flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold">F</div>
+                    <span class="text-xs text-gray-600">Facebook</span>
+                </button>
+                <button onclick="copyInviteLink()" class="flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
+                    </div>
+                    <span class="text-xs text-gray-600">{% if lang == 'en' %}Copy Link{% else %}Copiar enlace{% endif %}</span>
+                </button>
+            </div>
+
+            <p id="invite-url" class="text-xs text-gray-400 text-center break-all bg-gray-50 p-2 rounded">https://ubuybolivia77.com/auth?ref=CBCC74E6</p>
+        </div>
+    </div>
 <script>
     // --- Commission Scroll Logic ---
     const swipeTrack = document.getElementById('van-swipe-track');
@@ -200,6 +234,54 @@
     // Initialize Animations
     startCommissionAnimation();
     setInterval(showNextSlide, 4000); // Change image every 4 seconds
+
+    function fluctuateNumbers() {
+        const stats = [
+            { id: 'val-online', base: 4.489 },
+            { id: 'val-completion', base: 6.616 },
+            { id: 'val-demand', base: 1.736 },
+            { id: 'val-quantity', base: 32.388 }
+        ];
+
+        stats.forEach(stat => {
+            const element = document.getElementById(stat.id);
+
+            // Generate a small random fluctuation (+/- 1% of the base value)
+            const change = (Math.random() - 0.5) * (stat.base * 0.02);
+            const newValue = (stat.base + change).toFixed(3);
+
+            element.innerText = newValue + 'k';
+        });
+    }
+
+    // Run every 2 seconds
+    setInterval(fluctuateNumbers, 2000);
+
+    function toggleInviteModal() {
+        const modal = document.getElementById('invite-modal');
+        if (modal.classList.contains('hidden')) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        } else {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function copyInviteLink() {
+        const link = document.getElementById('invite-url').innerText;
+        navigator.clipboard.writeText(link).then(() => {
+            alert("Link copied to clipboard!");
+        });
+    }
+
+    // Close modal if user clicks outside the white card
+    window.onclick = function(event) {
+        const modal = document.getElementById('invite-modal');
+        if (event.target == modal) {
+            toggleInviteModal();
+        }
+    }
 </script>
 
 <style>
