@@ -1,41 +1,75 @@
-<div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] pt-14">
-  <div class="relative w-full h-44 bg-slate-200 overflow-hidden shadow-sm">
-      <div class="absolute inset-0">
-          <img src="https://uin.uddc.org/i/vip6/2025/11/05/bda30fe25f749b25653204742fff1f86.gif"
-               class="w-full h-full object-cover"
-               alt="Featured Content">
+
+  <div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] pt-14 text-slate-800">
+      <div class="relative w-full h-44 bg-slate-200 overflow-hidden shadow-sm">
+          <div class="absolute inset-0">
+              <img src="https://uin.uddc.org/i/vip6/2025/11/05/bda30fe25f749b25653204742fff1f86.gif"
+                   class="w-full h-full object-cover"
+                   alt="Featured Content">
+          </div>
       </div>
 
+      <div class="bg-white p-4 shadow-sm mb-4">
+          <div class="grid grid-cols-4 gap-y-6 gap-x-2">
+
+              <a href="?tab=withdraw&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312902/download_4_ijox13.png" class="w-10 h-10 mb-1" alt="Withdrawal">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Withdrawal{% else %}Retiro{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=recharge&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312902/download_5_flfcf2.png" class="w-10 h-10 mb-1" alt="Deposit">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Deposit{% else %}Depósito{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=service&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_6_x6blhw.png" class="w-10 h-10 mb-1" alt="Service">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Service{% else %}Servicio{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=notice&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_7_exqqzc.png" class="w-10 h-10 mb-1" alt="Notice">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Notice{% else %}Aviso{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=campaign&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_8_uczm9q.png" class="w-10 h-10 mb-1" alt="Campaign">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Campaign{% else %}Campaña{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=illustrate&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_9_yfakmr.png" class="w-10 h-10 mb-1" alt="Illustrate">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Help{% else %}Ayuda{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=faqs&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_10_laivzw.png" class="w-10 h-10 mb-1" alt="FAQs">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}FAQs{% else %}Preguntas{% endif %}
+                  </span>
+              </a>
+
+              <a href="?tab=profile&lang={{ lang }}" class="flex flex-col items-center text-center">
+                  <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775312901/download_11_nepxza.png" class="w-10 h-10 mb-1" alt="Company">
+                  <span class="text-[11px] font-medium leading-tight">
+                      {% if lang == 'en' %}Profile{% else %}Perfil{% endif %}
+                  </span>
+              </a>
+
+          </div>
+      </div>
   </div>
-
-    <div class="grid grid-cols-3 gap-3 px-3 pt-2">
-        <a href="?tab=recharge&lang={{ lang }}" class="bg-[#f39c12] text-white py-4 px-1 flex flex-col items-center justify-between border">
-            <span class="text-[10px] font-black text-center leading-tight">
-                {% if lang == 'en' %}Recharge Now{% else %}Recargar ahora{% endif %}
-            </span>
-            <div class="w-5 h-5">
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774491618/ic_recharge_d7o6tj.png" class="w-full h-full object-contain" alt="recharge">
-            </div>
-        </a>
-
-        <a href="?tab=withdraw&lang={{ lang }}" class="bg-[#f39c12] text-white py-4 px-1 flex flex-col items-center justify-between border">
-            <span class="text-[10px] font-black text-center leading-tight">
-                {% if lang == 'en' %}Quick Withdraw{% else %}Retiro rápido{% endif %}
-            </span>
-            <div class="w-5 h-5 mt-2">
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774491618/ic_withdraw_hnprcl.png" class="w-full h-full object-contain" alt="withdraw">
-            </div>
-        </a>
-
-        <a href="?tab=invite&lang={{ lang }}" class="bg-[#f39c12] text-white py-4 px-1 flex flex-col items-center justify-between border">
-            <span class="text-[10px] font-black text-center leading-tight">
-                {% if lang == 'en' %}Invite Friends{% else %}Invitar a amigos{% endif %}
-            </span>
-            <div class="w-5 h-5">
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1774491618/ic_invite_rk0zoi.png" class="w-full h-full object-contain" alt="invite">
-            </div>
-        </a>
-    </div>
 
     <div class="px-3 py-4">
         <div class="bg-white rounded-[0.5rem] border-none p-6 shadow-xl shadow-slate-200/50">
