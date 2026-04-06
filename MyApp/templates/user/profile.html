@@ -37,23 +37,23 @@
         </div>
     </div>
 
-    <div class="mx-4 mt-2 p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
-        <div class="flex items-center">
+    <div class="w-full mt-2 p-5 bg-slate-50 shadow-sm">
+        <div class="flex items-center justify-between pt-2">
 
             <div class="flex-1 flex flex-col items-center text-center">
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                    {% if request.GET.lang == 'en' %}Available{% else %}Disponible{% endif %}
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                    {% if request.GET.lang == 'en' %}Available Balance{% else %}Saldo Disponible{% endif %}
                 </span>
                 <span class="text-sm font-black text-slate-800">
                     BOB {{ user.profile.balance }}
                 </span>
             </div>
 
-            <div class="h-10 w-px bg-slate-300 mx-2"></div>
+            <div class="h-8 w-[1px] bg-slate-200"></div>
 
             <div class="flex-1 flex flex-col items-center text-center">
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                    {% if request.GET.lang == 'en' %}Frozen{% else %}Congelado{% endif %}
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                    {% if request.GET.lang == 'en' %}Frozen Balance{% else %}Saldo Congelado{% endif %}
                 </span>
                 <span class="text-sm font-black text-slate-800">
                     BOB 0.00
