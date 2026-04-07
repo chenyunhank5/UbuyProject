@@ -1,8 +1,12 @@
 <div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] min-h-screen text-slate-800 pb-24 pt-16">
-  <a href="javascript:history.back()" class="flex items-center gap-2 text-slate-400 mb-5 active:opacity-50 transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
-      <span class="text-xs font-bold uppercase tracking-tight">{% if lang == 'en' %}Back{% else %}Volver{% endif %}</span>
-  </a>
+
+    <div class="px-4">
+        <a href="javascript:history.back()" class="flex items-center gap-2 text-slate-400 mb-5 active:opacity-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
+            <span class="text-xs font-bold uppercase tracking-tight">{% if lang == 'en' %}Back{% else %}Volver{% endif %}</span>
+        </a>
+    </div>
+
     <div class="bg-gradient-to-br from-orange-500 to-orange-600 p-8 text-white relative overflow-hidden">
         <div class="relative z-10">
             <h1 class="text-2xl font-black uppercase tracking-tighter italic">{% if lang == 'en' %}Rewards Center{% else %}Centro de Premios{% endif %}</h1>
@@ -13,54 +17,51 @@
 
     <div class="p-4 -mt-6 relative z-10 space-y-4">
 
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <span class="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Hot Event</span>
-                    <h3 class="text-sm font-black text-slate-800 mt-2">{% if lang == 'en' %}Invite 3 Friends{% else %}Invita a 3 Amigos{% endif %}</h3>
+                    <span class="bg-blue-100 text-blue-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Welcome</span>
+                    <h3 class="text-sm font-black text-slate-800 mt-2">{% if lang == 'en' %}Registration Bonus{% else %}Bono de Registro{% endif %}</h3>
                 </div>
                 <div class="text-right">
-                    <span class="text-orange-500 font-black text-sm">BOB 150.00</span>
+                    <span class="text-blue-500 font-black text-sm">BOB 10.00</span>
                 </div>
             </div>
-
-            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-2">
-                <div class="bg-orange-500 h-full w-[33%] rounded-full"></div>
-            </div>
+            <p class="text-[11px] text-slate-500 mb-4 leading-snug">
+                {% if lang == 'en' %}Get a head start! Registering your account grants you an immediate bonus.{% else %}¡Empieza con ventaja! Registrar tu cuenta te otorga un bono inmediato.{% endif %}
+            </p>
             <div class="flex justify-between items-center">
-                <span class="text-[10px] text-gray-400 font-bold uppercase">Progress: 1 / 3</span>
-                <button onclick="toggleInviteModal()" class="bg-slate-800 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wide">
-                    {% if lang == 'en' %}Invite Now{% else %}Invitar Ahora{% endif %}
-                </button>
+                <span class="text-[10px] text-emerald-500 font-bold uppercase flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                    Claimed
+                </span>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <span class="bg-emerald-100 text-emerald-600 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Growth</span>
-                    <h3 class="text-sm font-black text-slate-800 mt-2">{% if lang == 'en' %}Weekly Optimizer{% else %}Optimizador Semanal{% endif %}</h3>
+                    <span class="bg-emerald-100 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">High Effort</span>
+                    <h3 class="text-sm font-black text-slate-800 mt-2">{% if lang == 'en' %}Daily Triple Set{% else %}Triple Set Diario{% endif %}</h3>
                 </div>
                 <div class="text-right">
-                    <span class="text-emerald-500 font-black text-sm">BOB 50.00</span>
+                    <span class="text-emerald-500 font-black text-sm">BOB 1,000.00</span>
                 </div>
             </div>
-
             <p class="text-[11px] text-slate-500 mb-4 leading-snug">
-                {% if lang == 'en' %}Complete 50 orders this week to unlock the efficiency bonus.{% else %}Completa 50 pedidos esta semana para desbloquear el bono de eficiencia.{% endif %}
+                {% if lang == 'en' %}Complete three full sets of tasks within a single day to unlock this premium reward.{% else %}Completa tres sets completos de tareas en un solo día para desbloquear este premio premium.{% endif %}
             </p>
-
             <div class="flex justify-between items-center">
                 <span class="text-[10px] text-gray-400 font-bold uppercase">Locked 🔒</span>
-                <a href="?tab=home" class="bg-gray-100 text-gray-400 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wide">
-                    {% if lang == 'en' %}Go to Home{% else %}Ir a Inicio{% endif %}
+                <a href="?tab=mission&lang={{ lang }}" class="bg-slate-900 text-white text-[10px] font-black px-5 py-2 rounded-2xl uppercase tracking-wide active:scale-95 transition-transform">
+                    {% if lang == 'en' %}Start Now{% else %}Empezar Ahora{% endif %}
                 </a>
             </div>
         </div>
 
-        <div class="p-4 bg-slate-100 rounded-2xl">
+        <div class="p-5 bg-slate-100/80 rounded-[1.5rem] border border-slate-200">
             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Campaign Rules</h4>
-            <ul class="text-[10px] text-slate-500 space-y-1 list-disc pl-4 leading-relaxed">
+            <ul class="text-[10px] text-slate-500 space-y-1 list-disc pl-4 leading-relaxed font-medium">
                 <li>{% if lang == 'en' %}Rewards are credited instantly after task verification.{% else %}Los premios se acreditan instantáneamente tras la verificación.{% endif %}</li>
                 <li>{% if lang == 'en' %}Users must be VIP 1 or higher to claim invitation bonuses.{% else %}Los usuarios deben ser VIP 1 o superior para reclamar bonos.{% endif %}</li>
             </ul>

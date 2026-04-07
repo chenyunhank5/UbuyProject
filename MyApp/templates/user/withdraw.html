@@ -8,19 +8,23 @@
         </span>
     </a>
 
-    <div class="relative overflow-hidden bg-brand rounded-2xl p-6 text-white mb-5 shadow-xl border border-amber-500/20">
-        <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 blur-[40px] rounded-full"></div>
+    <div class="relative overflow-hidden rounded-2xl p-6 text-white mb-5 shadow-xl border border-white/10"
+         style="background-color: #f78522;">
 
-        <p class="text-white text-[9px] font-black uppercase tracking-[0.2em]">
-            {% if lang == 'en' %}Available Balance{% else %}Saldo disponible{% endif %}
-        </p>
-        <p class="text-3xl font-black mt-1 text-white">BOB {{ profile.balance }}</p>
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-white/20 blur-[40px] rounded-full"></div>
 
-        <div class="mt-4 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
-            <p class="text-white text-[9px] font-bold uppercase">
-                {% if lang == 'en' %}Min: 30.00 BOB{% else %}Mínimo: 30.00 BOB{% endif %}
+        <div class="relative z-10">
+            <p class="text-white/80 text-[9px] font-black uppercase tracking-[0.2em]">
+                {% if lang == 'en' %}Available Balance{% else %}Saldo disponible{% endif %}
             </p>
+            <p class="text-3xl font-black mt-1 text-white">BOB {{ profile.balance }}</p>
+
+            <div class="mt-4 flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]"></span>
+                <p class="text-white/90 text-[9px] font-bold uppercase tracking-wider">
+                    {% if lang == 'en' %}Min: 30.00 BOB{% else %}Mínimo: 30.00 BOB{% endif %}
+                </p>
+            </div>
         </div>
     </div>
 
@@ -90,7 +94,8 @@
         </div>
 
         <button type="submit" {% if not profile.account_number %}disabled{% endif %}
-                class="bg-brand w-full text-white drop-shadow-sm font-black py-4 active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 shadow-lg shadow-amber-500/20 disabled:opacity-50">
+                style="background-color: #f78522;"
+                class="w-full text-white drop-shadow-sm font-black py-4 active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 rounded-[4px] shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.5]">
             {% if lang == 'en' %}Confirm Withdrawal{% else %}Confirmar Retiro{% endif %}
         </button>
     </form>
@@ -114,16 +119,9 @@
             {% with status=w.status|lower %}
             <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center justify-between transition-all active:scale-[0.98]">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center
-                        {% if status == 'pending' or status == 'procesando' %}
-                            bg-amber-100 text-amber-600
-                        {% elif status == 'approved' or status == 'success' or status == 'completed' or status == 'completado' or status == 'aprobado' %}
-                            bg-emerald-100 text-emerald-600
-                        {% else %}
-                            bg-rose-100 text-rose-600
-                        {% endif %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 text-slate-600">
+                        <svg class="w-6 h-6" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                            <path d="M545.2288 0Q431.45216 0 332.31872 49.5616q-96.88064 48.44544-162.21184 134.06208l55.1936 41.6768q54.07744-73.22624 139.12064-115.46624 85.05344-42.24 180.80768-42.24 110.39744 0 206.15168 56.32 93.50144 54.07744 147.57888 147.57888 56.32 95.75424 56.32 206.15168 0 110.39744-56.32 206.15168-54.07744 93.50144-147.57888 147.56864-95.75424 56.33024-206.15168 56.33024-95.75424 0-182.48704-42.81344-84.49024-41.6768-141.94688-114.90304l-50.688 41.68704q67.584 85.6064 164.46464 134.05184 100.25984 49.5616 210.65728 49.5616 129.55648 0 241.08032-65.3312 108.14464-64.21504 172.34944-172.35968Q1024 607.19104 1024 477.6448q0-129.55648-65.34144-239.95392-64.2048-108.14464-172.34944-172.34944Q674.78528 0 545.2288 0z m-50.688 627.46624q-27.0336-13.5168-43.93984-30.4128l-5.632-2.2528q-7.8848-4.5056-14.6432-4.5056-6.7584 0-12.9536 2.816-6.1952 2.816-8.448 7.3216-10.1376 10.1376-10.1376 20.2752 0 7.8848 2.816 13.5168 2.816 5.632 10.7008 13.5168 27.0336 24.79104 61.96224 41.68704 38.2976 12.3904 70.9632 16.896v78.85824h65.34144v-85.61664q59.70944-11.264 92.37504-43.93984 37.1712-39.424 37.1712-82.2272 0-60.83584-30.4128-85.61664-27.0336-27.04384-95.75424-43.93984V299.65312q27.0336 6.7584 40.5504 13.5168 24.79104 14.6432 31.54944 21.4016 6.7584 6.7584 16.896 6.7584 5.632 0 11.8272-2.816 6.1952-2.816 8.448-7.3216 10.1376-10.1376 10.1376-21.4016 0-15.7696-16.896-27.0336-27.0336-20.2752-45.056-27.04384-31.54944-12.3904-57.45664-16.896v-68.7104h-68.72064v65.3312q-56.32 4.5056-99.13344 40.56064-37.1712 37.1712-37.1712 85.61664 0 55.1936 34.36544 84.48 34.36544 29.29664 101.94944 45.056v149.82144q-33.792-6.7584-50.688-13.5168z m116.02944-119.40864q30.4128 10.1376 47.3088 27.0336 18.03264 20.2752 18.03264 41.68704 0 19.1488-18.03264 37.1712-10.1376 10.1376-43.9296 23.6544V508.0576h-3.3792zM491.1616 402.16576q-16.896-16.896-16.896-40.56064t16.896-40.56064q15.7696-13.5168 50.688-24.7808v134.05184l-20.2752-10.1376q-21.4016-11.264-30.4128-18.0224zM129.54624 511.4368h208.40448v-67.59424H129.54624l67.59424-68.7104-47.31904-47.31904L0 477.6448l149.82144 149.82144 47.31904-47.3088-67.59424-68.72064z"></path>
                         </svg>
                     </div>
 
@@ -157,9 +155,9 @@
             </div>
             {% endwith %}
             {% empty %}
-                <p class="text-center text-slate-400 text-[10px] py-10 uppercase font-black tracking-widest">
-                    {% if lang == 'en' %}No withdrawal history{% else %}Sin historial de retiros{% endif %}
-                </p>
+            <p class="text-center text-slate-400 text-[10px] py-10 uppercase font-black tracking-widest">
+                {% if lang == 'en' %}No withdrawal history{% else %}Sin historial de retiros{% endif %}
+            </p>
             {% endfor %}
         </div>
 
