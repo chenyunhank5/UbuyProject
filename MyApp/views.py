@@ -18,6 +18,7 @@ from itertools import chain
 # --- PUBLIC REGISTRATION VIEW ---
 
 def register_view(request):
+    # Get language, default to Spanish
     lang = request.GET.get('lang', 'es')
 
     if request.method == "POST":
@@ -26,27 +27,51 @@ def register_view(request):
         password = request.POST.get('password')
         invite_code = request.POST.get('invite_code')
 
+        # Check if phone exists
         if Profile.objects.filter(phone_number=phone).exists():
             messages.error(request, "Teléfono ya registrado" if lang == 'es' else "Phone already registered")
             return render(request, 'user/register.html', {'lang': lang})
 
         try:
             with transaction.atomic():
+                # 1. Create the User
                 new_user = User.objects.create_user(username=username, password=password)
+
+                # 2. Get the Profile (Signals create this automatically)
                 profile = new_user.profile
                 profile.phone_number = phone
 
-                # Assign default VIP level from Database using membership_vip
+                # 3. Assign the first VIP level by default
                 default_vip = VipLevel.objects.order_by('level_number').first()
                 if default_vip:
                     profile.membership_vip = default_vip
 
-                inviter = Profile.objects.filter(invite_code=invite_code).first()
-                if inviter:
-                    profile.referred_by = inviter.user
+                # 4. Handle Invite Code and Bonus
+                if invite_code:
+                    inviter = Profile.objects.filter(invite_code=invite_code).first()
+                    if inviter:
+                        # Link the referral
+                        profile.referred_by = inviter.user
 
+                        # Add 10 BOB to balance
+                        profile.balance += 10
+
+                        # CREATE NOTIFICATION IN EXISTING UserMessage MODEL
+                        # We use 'content' because that is the field in your model
+                        UserMessage.objects.create(
+                            user=new_user,
+                            content="<b>Bono de Registro:</b> Has recibido 10 BOB por unirte mediante invitación." if lang == 'es' else "<b>Registration Bonus:</b> You received 10 BOB for joining via invitation."
+                        )
+
+                        # Trigger the red dot indicator
+                        profile.show_system_message = True
+                    else:
+                        messages.warning(request, "Código inválido" if lang == 'es' else "Invalid invite code")
+
+                # 5. Save all changes
                 profile.save()
 
+                # 6. Log the user in and redirect to home
                 auth_login(request, new_user)
                 return redirect(f'/?tab=home&lang={lang}')
 
@@ -744,34 +769,42 @@ def toggle_withdrawal_status(request, user_id):
 
 @login_required
 def system_message_view(request):
-    # 1. Get basic parameters
     lang = request.GET.get('lang', 'es')
     profile = request.user.profile
 
-    # 2. Mark the notification "red dot" as seen when they enter this view
+    # 1. Clear the red dot
     if profile.show_system_message:
         profile.show_system_message = False
         profile.save()
 
-    # 3. Fetch all three data types for the combined list
-    # We fetch them all so the user sees a full history of their account
-    msg_queryset = UserMessage.objects.filter(user=request.user)
-    recharge_queryset = RechargeRequest.objects.filter(user=request.user)
-    withdrawal_queryset = WithdrawalRequest.objects.filter(user=request.user)
+    # 2. Get real database records
+    recharge_list = list(RechargeRequest.objects.filter(user=request.user))
+    withdrawal_list = list(WithdrawalRequest.objects.filter(user=request.user))
 
-    # 4. Combine and Sort by 'created_at' (Newest first)
-    # This matches the 'notifications' variable your HTML template is looking for
+    # 3. Create a "Virtual" notification from the Profile field
+    notifications_list = []
+    if profile.system_message:
+        # We create a dictionary that mimics the structure of your model objects
+        virtual_msg = {
+            'id': 'promo', # Static ID for Alpine.js
+            'content': profile.system_message,
+            'created_at': request.user.date_joined, # Use join date for sorting
+            'is_system': True
+        }
+        notifications_list.append(virtual_msg)
+
+    # 4. Combine all lists and sort by date
+    # We use a lambda that checks if it's an object (real) or dict (virtual)
     notifications = sorted(
-        chain(msg_queryset, recharge_queryset, withdrawal_queryset),
-        key=lambda instance: instance.created_at,
+        chain(notifications_list, recharge_list, withdrawal_list),
+        key=lambda x: x.created_at if hasattr(x, 'created_at') else x['created_at'],
         reverse=True
     )
 
-    # 5. Context
     context = {
         'profile': profile,
         'lang': lang,
-        'notifications': notifications,  # <--- This is the key list for the HTML
+        'notifications': notifications,
     }
 
     return render(request, 'user/system_message.html', context)
