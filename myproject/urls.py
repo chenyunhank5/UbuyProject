@@ -5,6 +5,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from MyApp import views
+from django.views.static import serve
+import re
 
 urlpatterns = [
     # --- ADMIN ---
@@ -86,6 +88,12 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+else:
+    # This forces Django to serve media files even when DEBUG is False
+    urlpatterns += [
+        path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
+        path('static/<path:path>', serve, {'document_root': settings.STATIC_ROOT}),
+    ]
 
 def custom_404(request, exception):
     return render(request, '404.html', status=404)
