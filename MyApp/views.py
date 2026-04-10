@@ -199,6 +199,12 @@ def index(request):
     history_page_num = request.GET.get('page')
     history_records = history_paginator.get_page(history_page_num)
 
+    # --- SECURITY SETUP LOGIC ---
+    # Check if the user is on the withdrawal tab but has not set a password yet
+    show_security_setup = False
+    if current_tab == 'withdraw' and not profile.withdrawal_password:
+        show_security_setup = True
+
     # --- CONTEXT ---
     context = {
         'active_tab': current_tab,
@@ -213,6 +219,7 @@ def index(request):
         'withdrawals': withdrawals,
         'notifications': notifications,
         'progress_percentage': progress_percentage,
+        'show_security_setup': show_security_setup, # Pass the lock state to the template
     }
 
     return render(request, 'user/index.html', context)
