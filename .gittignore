@@ -1,0 +1,6 @@
+*.pyc
+__pycache__/
+db.sqlite3
+ubuy_env/
+media/
+.env

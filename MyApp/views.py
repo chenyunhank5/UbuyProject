@@ -20,6 +20,7 @@ from itertools import chain
 def register_view(request):
     # Get language, default to Spanish
     lang = request.GET.get('lang', 'es')
+    url_invite_code = request.GET.get('invite_code', '')
 
     if request.method == "POST":
         username = request.POST.get('username')
@@ -78,7 +79,10 @@ def register_view(request):
         except Exception as e:
             messages.error(request, f"Error: {str(e)}")
 
-    return render(request, 'user/register.html', {'lang': lang})
+    return render(request, 'user/register.html', {
+        'lang': lang,
+        'url_invite_code': url_invite_code # Pass it to the template
+    })
 
 # --- USER DASHBOARD ---
 @login_required

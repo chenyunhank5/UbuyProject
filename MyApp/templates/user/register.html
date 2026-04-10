@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ubuy - Registro</title>
+    <title>Shein - Registro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -34,29 +34,24 @@
 
     <div id="root" x-data="{ showPass: false, showConfirm: false }">
 
-        <div class="fixed top-4 right-4 z-50">
-            <a href="?lang={% if lang == 'en' %}es{% else %}en{% endif %}"
-               class="active:scale-95 transition-transform flex items-center">
-                {% if lang == 'en' %}
-                    <div class="w-7 h-5 bg-[#002868] relative rounded-sm overflow-hidden border border-white/20">
-                        <div class="absolute top-0 left-0 w-1/2 h-1/2 bg-[#002868] z-10 flex flex-wrap p-0.5">
-                            <div class="w-0.5 h-0.5 bg-white rounded-full m-px"></div>
-                            <div class="w-0.5 h-0.5 bg-white rounded-full m-px"></div>
-                        </div>
-                        <div class="flex flex-col h-full w-full">
-                            <div class="h-[14%] bg-[#bf0a30]"></div><div class="h-[14%] bg-white"></div>
-                            <div class="h-[14%] bg-[#bf0a30]"></div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="w-7 h-5 flex flex-col rounded-sm overflow-hidden border border-white/20">
-                        <div class="h-1/3 bg-[#ff0000]"></div>
-                        <div class="h-1/3 bg-[#ffff00]"></div>
-                        <div class="h-1/3 bg-[#007a33]"></div>
-                    </div>
-                {% endif %}
-            </a>
-        </div>
+      <div class="fixed top-4 right-4 z-50">
+        <a href="?lang={% if lang == 'en' %}es{% else %}en{% endif %}"
+           class="active:scale-95 transition-transform flex items-center group"
+           title="Switch to {% if lang == 'en' %}Spanish{% else %}English{% endif %}">
+
+            {% if lang == 'en' %}
+                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/en-US_ydtdzp.png"
+                     width="28"
+                     alt="Español"
+                     class="w-7 h-7 drop-shadow-sm border border-white/10 rounded-full">
+            {% else %}
+                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/es-BO_no8wwb.png"
+                     width="28"
+                     alt="English"
+                     class="w-7 h-7 drop-shadow-sm border border-white/10 rounded-full">
+            {% endif %}
+        </a>
+      </div>
 
         {% if messages %}
         <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[85%] max-w-xs">
@@ -76,9 +71,8 @@
                 <div class="mb-6 text-center">
                     <div class="relative inline-block">
                         <div class="absolute inset-0 bg-white/10 blur-xl rounded-full"></div>
-                        <img src="/static/ubuy-logo.jpg" alt="Ubuy" class="relative h-16 w-16 rounded-2xl shadow-xl border border-white/20 mx-auto object-cover">
                     </div>
-                    <h1 class="text-3xl font-black tracking-tighter uppercase text-white mt-3 italic">Ubuy</h1>
+                    <h1 class="text-3xl font-black tracking-tighter uppercase text-white mt-3 italic">Shein</h1>
                     <p class="text-white/60 text-[10px] font-black uppercase tracking-[0.3em] mt-1">
                         {% if lang == 'en' %}CREATE ACCOUNT{% else %}CREAR CUENTA{% endif %}
                     </p>
@@ -91,7 +85,7 @@
                         <label class="text-[10px] font-black uppercase tracking-[0.2em] ml-2 text-white/80">
                             {% if lang == 'en' %}Username{% else %}Nombre de Usuario{% endif %}
                         </label>
-                        <input type="text" name="username" class="flex h-11 w-full rounded-xl glass-input px-4 font-bold text-base" placeholder="UbuyUser123" required>
+                        <input type="text" name="username" class="flex h-11 w-full rounded-xl glass-input px-4 font-bold text-base" placeholder="{% if lang == 'en' %}Enter your name{% else %}Introduce tu nombre{% endif %}" required>
                     </div>
 
                     <div class="space-y-1">
@@ -109,7 +103,13 @@
                             {% if lang == 'en' %}Invitation Code{% else %}Código de Invitación{% endif %}
                         </label>
                         <div class="relative">
-                            <input type="text" name="invite_code" class="flex h-11 w-full rounded-xl glass-input px-4 font-bold text-base border-dashed border-white/50" placeholder="ABC123" required>
+                            <input type="text"
+                                   name="invite_code"
+                                   class="flex h-11 w-full rounded-xl glass-input px-4 font-bold text-base border-dashed border-white/50"
+                                   placeholder="ABC123"
+                                   value="{{ url_invite_code }}"
+                                   {% if url_invite_code %}readonly{% endif %}
+                                   required>
                         </div>
                     </div>
 

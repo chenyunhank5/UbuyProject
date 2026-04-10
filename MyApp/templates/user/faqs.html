@@ -1,8 +1,9 @@
 <div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] min-h-screen text-slate-800 pt-16">
-  <a href="javascript:history.back()" class="flex items-center gap-2 text-slate-400 mb-5 active:opacity-50 transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
-      <span class="text-xs font-bold uppercase tracking-tight">{% if lang == 'en' %}Back{% else %}Volver{% endif %}</span>
-  </a>
+    <a href="javascript:history.back()" class="flex items-center gap-2 text-slate-400 mb-5 active:opacity-50 transition-colors px-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
+        <span class="text-xs font-bold uppercase tracking-tight">{% if lang == 'en' %}Back{% else %}Volver{% endif %}</span>
+    </a>
+
     <div class="bg-white p-6 pt-12 shadow-sm border-b border-gray-100">
         <h1 class="text-xl font-black text-slate-800 uppercase tracking-tighter">
             {% if lang == 'en' %}Help Center{% else %}Centro de Ayuda{% endif %}
@@ -14,38 +15,68 @@
 
         <div class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
             <button onclick="toggleFaq(1)" class="w-full p-4 text-left flex justify-between items-center">
-                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}How do I start earning?{% else %}¿Cómo empiezo a ganar?{% endif %}</span>
+                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}About Deposits{% else %}Sobre los depósitos{% endif %}</span>
                 <svg id="icon-1" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
             </button>
-            <div id="ans-1" class="hidden px-4 pb-4 text-xs text-slate-500 leading-relaxed border-t border-gray-50 pt-3">
+            <div id="ans-1" class="hidden px-4 pb-4 text-xs text-slate-500 leading-relaxed border-t border-gray-50 pt-3 space-y-2">
                 {% if lang == 'en' %}
-                Simply recharge your account to the required VIP level and click 'Start Optimization' to begin processing orders and earning commissions.
+                <p>Due to the large amount of information available on the platform, users are advised to contact the Customer Service Center to confirm the receiver's bank account or digital banking details before making a deposit.</p>
+                <p>After a successful bank transfer, a screenshot of the transfer receipt is required in order to proceed with the user's deposit.</p>
+                <p>Please make sure that the recipient's bank information and amount match the details provided by support to ensure smooth crediting.</p>
+                <p>If you encounter any problems that cannot be resolved during the deposit procedure, please contact our Customer Service Center.</p>
+                <p class="font-medium text-slate-600">If you have any questions, please contact our online customer service!</p>
                 {% else %}
-                Simplemente recargue su cuenta al nivel VIP requerido y haga clic en 'Iniciar optimización' para comenzar a procesar pedidos y ganar comisiones.
+                <p>Debido a la gran cantidad de información disponible en la plataforma, se aconseja a los usuarios ponerse en contacto con el Centro de Atención al Cliente para confirmar los detalles de la cuenta bancaria o banca digital del receptor antes de realizar un depósito.</p>
+                <p>Tras una transferencia bancaria exitosa, se requiere una captura de pantalla del recibo de transferencia para proceder con el depósito del usuario.</p>
+                <p>Asegúrese de que la información bancaria del destinatario y el importe coinciden con los datos facilitados por el servicio de asistencia para garantizar un abono sin problemas.</p>
+                <p>Si encuentra algún problema que no pueda resolverse durante el procedimiento de depósito, póngase en contacto con nuestro Centro de Atención al Cliente.</p>
+                <p class="font-medium text-slate-600">Si tiene alguna duda, póngase en contacto con nuestro servicio de atención al cliente en línea.</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
             <button onclick="toggleFaq(2)" class="w-full p-4 text-left flex justify-between items-center">
-                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}What is the minimum withdrawal?{% else %}¿Cuál es el retiro mínimo?{% endif %}</span>
+                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}About Products{% else %}Sobre los productos{% endif %}</span>
                 <svg id="icon-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
             </button>
-            <div id="ans-2" class="hidden px-4 pb-4 text-xs text-slate-500 leading-relaxed border-t border-gray-50 pt-3">
+            <div id="ans-2" class="hidden px-4 pb-4 text-xs text-slate-500 leading-relaxed border-t border-gray-50 pt-3 space-y-2">
                 {% if lang == 'en' %}
-                The minimum withdrawal amount is 100 BOB. Withdrawals are processed within 24 hours to your linked bank account or wallet.
+                <p>The price of the product will be adjusted according to the market price.</p>
+                <p>The products will be randomly assigned to the total balance of the user's account.</p>
+                <p>The higher the total balance of the user's account, the higher the amount of the products will be, thus increasing revenue.</p>
+                <p>For users who are worried that the product is too expensive to buy, please don't deposit too much money when you start optimization.</p>
                 {% else %}
-                El monto mínimo de retiro es 100 BOB. Los retiros se procesan dentro de las 24 horas a su cuenta bancaria o billetera vinculada.
+                <p>El precio del producto se ajustará en función del precio de mercado.</p>
+                <p>Los productos se asignarán aleatoriamente al saldo total de la cuenta del usuario.</p>
+                <p>Cuanto mayor sea el saldo total de la cuenta del usuario, mayor será el importe de los productos, aumentando así los ingresos.</p>
+                <p>Para los usuarios que temen que el producto sea demasiado caro, por favor no depositen demasiado dinero cuando inicien la optimización.</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
             <button onclick="toggleFaq(3)" class="w-full p-4 text-left flex justify-between items-center">
-                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}Is my data secure?{% else %}¿Mis datos están seguros?{% endif %}</span>
+                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}Withdrawal Hours{% else %}Horario de Retiro{% endif %}</span>
                 <svg id="icon-3" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div id="ans-3" class="hidden px-4 pb-4 text-xs text-slate-500 leading-relaxed border-t border-gray-50 pt-3">
+                {% if lang == 'en' %}
+                <p>Withdrawal service is available from 08:30 a.m. to 09:00 p.m. daily.</p>
+                <p class="mt-2 text-slate-400">Please ensure your bank information is correctly linked before requesting a withdrawal.</p>
+                {% else %}
+                <p>El servicio de retiro está disponible de 08:30 a.m. a 09:00 p.m. todos los días.</p>
+                <p class="mt-2 text-slate-400">Asegúrese de que su información bancaria está correctamente vinculada antes de solicitar un retiro.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+            <button onclick="toggleFaq(4)" class="w-full p-4 text-left flex justify-between items-center">
+                <span class="text-sm font-bold text-slate-700">{% if lang == 'en' %}Is my data secure?{% else %}¿Mis datos están seguros?{% endif %}</span>
+                <svg id="icon-4" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="ans-4" class="hidden px-4 pb-4 text-xs text-slate-500 leading-relaxed border-t border-gray-50 pt-3">
                 {% if lang == 'en' %}
                 Yes, we use bank-grade SSL encryption to ensure all transactions and personal data are fully protected.
                 {% else %}
@@ -56,7 +87,7 @@
 
     </div>
 
-    <div class="p-4 mt-auto pb-24">
+    <!---<div class="p-4 mt-auto pb-24">
         <div class="bg-slate-800 rounded-2xl p-6 text-center text-white">
             <h3 class="text-sm font-bold uppercase tracking-widest mb-1">{% if lang == 'en' %}Still need help?{% else %}¿Aún necesitas ayuda?{% endif %}</h3>
             <p class="text-[10px] opacity-60 mb-4">{% if lang == 'en' %}Our team is available 24/7{% else %}Nuestro equipo está disponible 24/7{% endif %}</p>
@@ -64,7 +95,7 @@
                 {% if lang == 'en' %}Contact Support{% else %}Contactar Soporte{% endif %}
             </a>
         </div>
-    </div>
+    </div>--->
 </div>
 
 <script>
