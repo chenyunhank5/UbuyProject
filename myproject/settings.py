@@ -3,7 +3,7 @@ import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -57,25 +57,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
+DATABASES = {
+    'default': dj_database_url.parse('postgres://avnadmin:AVNS_Fqf3-7U6nNhAXZbLtHU@pg-12ac4d70-rachelwilson29099-7626.l.aivencloud.com:28390/defaultdb?sslmode=require')
+}
 # --- SMART DATABASE SETTINGS ---
-if os.getenv('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=True  # Changed to True for Aiven Cloud
-        )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'ubuydatabase',
-            'USER': 'postgres',
-            'PASSWORD': '123123',
-            'HOST': '127.0.0.1',
-            'PORT': '5432',
-        }
-    }
+#if os.getenv('DATABASE_URL'):
+#    DATABASES = {
+#        'default': dj_database_url.config(
+#            conn_max_age=600,
+#            ssl_require=True  # Changed to True for Aiven Cloud
+#        )
+#    }
+#else:
+#    DATABASES = {
+#        'default': {
+#            'ENGINE': 'django.db.backends.postgresql',
+#            'NAME': 'ubuydatabase',
+#            'USER': 'postgres',
+#            'PASSWORD': '123123',
+#            'HOST': '127.0.0.1',
+#            'PORT': '5432',
+#        }
+#    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = []
@@ -100,9 +103,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # This fixes the "Origin checking failed" error
 CSRF_TRUSTED_ORIGINS = [
     'https://ubuyproject.up.railway.app',
-    'https://*.railway.app'
+    'https://*.railway.app',
+    'http://202.155.8.168',        # Add this
+    'http://202.155.8.168:8000'   # Add this
 ]
 
 # Tell Django to use secure cookies since Railway uses HTTPS
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
