@@ -7,11 +7,9 @@
             <div class="flex items-center gap-3">
               <div class="relative">
                   <div class="w-12 h-12 rounded-full border-2 border-[#c5c6c7] bg-white flex items-center justify-center overflow-hidden shadow-sm">
-
                       <img src="{% if user.profile.membership_vip.image %}{{ user.profile.membership_vip.image.url }}{% else %}https://cdn-icons-png.flaticon.com/512/6941/6941697.png{% endif %}"
                            alt="Current VIP"
                            class="w-full h-full object-cover">
-
                   </div>
               </div>
 
@@ -38,7 +36,6 @@
         <div class="space-y-1.5">
             <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
                 <span class="text-slate-400">{% if lang == 'en' %}Task Progress{% else %}Progreso de tareas{% endif %}</span>
-
             </div>
             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div class="h-full bg-[#f39c12] rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(243,156,18,0.4)]"
@@ -77,6 +74,10 @@
                                 <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
                             </div>
                             <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
+                                <span class="font-bold text-blue-600">x{{ active_mission.order_count|default:1 }}</span>
+                            </div>
+                            <div class="flex justify-between">
                                 <span class="text-gray-400">{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span>
                                 <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
                             </div>
@@ -97,67 +98,32 @@
             <div class="order-list mt-8">
                 <div class="flex justify-between items-center px-4">
                     <h2 class="text-[14px] font-bold text-slate-800">
-                        {% if lang == 'en' %}
-                            Merchant task records
-                        {% else %}
-                            Registro de tareas del comerciante
-                        {% endif %}
+                        {% if lang == 'en' %}Merchant task records{% else %}Registro de tareas del comerciante{% endif %}
                     </h2>
                 </div>
-
                 {% for record in records %}
                 <div class="order-item-wrapper">
                     <div class="order-item">
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span>
-                            <span>O{{ record.id }}{{ record.created_at|date:"is" }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                            <span class="flex-full text-right u-m-l-20 line-1">{{ record.mission_name }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span>
-                            <span class="font-bold">BOB {{ record.amount|floatformat:2 }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                            <span class="text-[#f39c12] font-bold">BOB {{ record.commission|floatformat:2 }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Operation Hours{% else %}Horas de funcionamiento{% endif %}</span>
-                            <span>{{ record.created_at|date:"Y-m-d H:i:s" }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
-
-                            {# Check for status. Adjust 'completed' to match your DB exactly #}
+                        <div class="flex-between"><span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span><span>O{{ record.id }}{{ record.created_at|date:"is" }}</span></div>
+                        <div class="flex-between"><span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span><span class="flex-full text-right u-m-l-20 line-1">{{ record.mission_name }}</span></div>
+                        <div class="flex-between"><span>{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span><span class="font-bold text-blue-500">x{{ record.order_count }}</span></div>
+                        <div class="flex-between"><span>{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span><span class="font-bold">BOB {{ record.amount|floatformat:2 }}</span></div>
+                        <div class="flex-between"><span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span><span class="text-[#f39c12] font-bold">BOB {{ record.commission|floatformat:2 }}</span></div>
+                        <div class="flex-between"><span>{% if lang == 'en' %}Operation Hours{% else %}Horas de funcionamiento{% endif %}</span><span>{{ record.created_at|date:"Y-m-d H:i:s" }}</span></div>
+                        <div class="flex-between"><span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
                             {% if record.status == 'Completed' or record.status == 'success' %}
-                            <button class="border-radius-5 van-button van-button--success van-button--mini van-button--plain">
-                                <div class="van-button__content">
-                                    <span class="van-button__text">{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span>
-                                </div>
-                            </button>
+                            <button class="border-radius-5 van-button van-button--success van-button--mini van-button--plain"><div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span></div></button>
                             {% else %}
-                            <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain">
-                                <div class="van-button__content">
-                                    <span class="van-button__text">{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span>
-                                </div>
-                            </button>
+                            <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain"><div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span></div></button>
                             {% endif %}
                         </div>
                     </div>
                     <div class="line-divider"></div>
                 </div>
                 {% empty %}
-                <div class="flex flex-col items-center justify-center py-10 opacity-40">
-                    <p class="text-xs uppercase tracking-widest">{% if lang == 'en' %}No records{% else %}Sin registros{% endif %}</p>
-                </div>
+                <div class="flex flex-col items-center justify-center py-10 opacity-40"><p class="text-xs uppercase tracking-widest">{% if lang == 'en' %}No records{% else %}Sin registros{% endif %}</p></div>
                 {% endfor %}
             </div>
-            <a href="?tab=order&lang={{ lang }}" class="text-[12px] text-gray-400 text-right">
-                {% if lang == 'en' %}More >>{% else %}Más >>{% endif %}
-            </a>
         </div>
 
         {% elif profile.missions_count >= profile.membership_vip.missions_per_day %}
@@ -165,125 +131,28 @@
             <div class="mb-6 flex justify-center">
                 <div class="relative">
                     <div class="absolute inset-0 rounded-full bg-slate-100 animate-ping opacity-20"></div>
-
                     <div class="relative w-24 h-24 flex items-center justify-center">
-                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775173616/document-with-checkmark-icon-6486646-512_dojpbt.png"
-                             alt="Success"
-                             class="w-full h-full object-contain">
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775173616/document-with-checkmark-icon-6486646-512_dojpbt.png" alt="Success" class="w-full h-full object-contain">
                     </div>
                 </div>
             </div>
-
-            <h3 class="text-xl font-black text-slate-800 tracking-tight">
-                {% if lang == 'en' %}Daily Tasks Accomplished{% else %}Tareas diarias completadas{% endif %}
-            </h3>
-
-            <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">
-                {% if lang == 'en' %}
-                    You have reached your limit for today. Come back tomorrow!
-                {% else %}
-                    Has alcanzado tu límite por hoy. ¡Vuelve mañana!
-                {% endif %}
-            </p>
-            <div class="order-list mt-8">
-                <div class="flex justify-between items-center px-4">
-                    <h2 class="text-[14px] font-bold text-slate-800">
-                        {% if lang == 'en' %}
-                            Merchant task records
-                        {% else %}
-                            Registro de tareas del comerciante
-                        {% endif %}
-                    </h2>
-                </div>
-
-                {% for record in records %}
-                <div class="order-item-wrapper">
-                    <div class="order-item">
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span>
-                            <span>O{{ record.id }}{{ record.created_at|date:"is" }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                            <span class="flex-full text-right u-m-l-20 line-1">{{ record.mission_name }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span>
-                            <span class="font-bold">BOB {{ record.amount|floatformat:2 }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                            <span class="text-[#f39c12] font-bold">BOB {{ record.commission|floatformat:2 }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Operation Hours{% else %}Horas de funcionamiento{% endif %}</span>
-                            <span>{{ record.created_at|date:"Y-m-d H:i:s" }}</span>
-                        </div>
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
-
-                            {# Check for status. Adjust 'completed' to match your DB exactly #}
-                            {% if record.status == 'Completed' or record.status == 'success' %}
-                            <button class="border-radius-5 van-button van-button--success van-button--mini van-button--plain">
-                                <div class="van-button__content">
-                                    <span class="van-button__text">{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span>
-                                </div>
-                            </button>
-                            {% else %}
-                            <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain">
-                                <div class="van-button__content">
-                                    <span class="van-button__text">{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span>
-                                </div>
-                            </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="line-divider"></div>
-                </div>
-                {% empty %}
-                <div class="flex flex-col items-center justify-center py-10 opacity-40">
-                    <p class="text-xs uppercase tracking-widest">{% if lang == 'en' %}No records{% else %}Sin registros{% endif %}</p>
-                </div>
-                {% endfor %}
-            </div>
-            <a href="?tab=order&lang={{ lang }}" class="text-[12px] text-gray-400 text-right">
-                {% if lang == 'en' %}More >>{% else %}Más >>{% endif %}
-            </a>
+            <h3 class="text-xl font-black text-slate-800 tracking-tight">{% if lang == 'en' %}Daily Tasks Accomplished{% else %}Tareas diarias completadas{% endif %}</h3>
+            <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">{% if lang == 'en' %}You have reached your limit for today. Come back tomorrow!{% else %}Has alcanzado tu límite por hoy. ¡Vuelve mañana!{% endif %}</p>
         </div>
 
         {% else %}
         <div id="start-container" class="w-full flex flex-col items-center">
-
           <div class="w-full overflow-hidden">
-              <video
-                  class="w-full h-full object-cover rounded-xl"
-                  autoplay
-                  loop
-                  muted
-                  playsinline>
+              <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline>
                   <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
-                  Your browser does not support the video tag.
               </video>
           </div>
-
-            <div class="w-full px-4 py-4 max-w-md">
-                <button
-                    id="btn-start-match"
-                    type="button"
-                    class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity"
-                    style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);"
-                >
-                    <div class="van-button__content">
-                        <span class="van-button__text">
-                            <span style="font-weight: 600;">
-                                {% if lang == 'en' %}Start{% else %}Iniciar{% endif %}  ({{ profile.missions_count }}/{{ profile.membership_vip.missions_per_day }})
-                        </span>
-                    </div>
+            <div class="w-full px-4 py-4 max-md">
+                <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
+                    <div class="van-button__content"><span class="van-button__text"><span style="font-weight: 600;">{% if lang == 'en' %}Start{% else %}Iniciar{% endif %} ({{ profile.missions_count }}/{{ profile.membership_vip.missions_per_day }})</span></span></div>
                 </button>
             </div>
-
         </div>
-
         {% endif %}
 
         <div id="animation-steps" class="hidden flex flex-col mt-4">
@@ -300,15 +169,17 @@
             <div id="anim-step-3" class="step-row opacity-20">
                 <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">!</span></div>
                 <div class="flex-1">
-                    <div class="step-text mb-4 text-slate-800 font-black">
-                        {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
-                    </div>
+                    <div class="step-text mb-4 text-slate-800 font-black">{% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}</div>
                     <div id="matched-preview" class="hidden bg-slate-50 border border-slate-100 rounded-[12px] p-4 text-center animate-in fade-in zoom-in duration-500 shadow-sm">
                         <img id="prev-img" src="" class="mx-auto mb-4 rounded-xl object-cover bg-white shadow-sm" width="120" height="120">
                         <div class="text-xs space-y-2">
                             <div class="flex justify-between items-start">
                                 <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
                                 <span id="prev-name" class="text-right font-bold text-slate-700 flex-1 ml-4 line-clamp-2"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span>
+                                <span id="prev-count" class="font-bold text-blue-600"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-400">{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span>
@@ -327,7 +198,7 @@
 </div>
 
 <style>
-/* 📋 EXACT CSS FOR ORDER LIST */
+/* ... Keeping your exact styles ... */
 .order-list { font-size: 13px; color: #323233; padding-bottom: 80px; }
 .order-item { padding: 15px 10px; background: #fff; }
 .flex-between { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; line-height: 1.4; }
@@ -341,14 +212,10 @@
 .border-radius-8 { border-radius: 8px; }
 .border-radius-5 { border-radius: 5px; }
 .line-divider { height: 1px; background-color: #f2f3f5; margin: 0 10px; }
-
-/* Vant Button Styles */
 .van-button--mini { height: 22px; padding: 0 8px; font-size: 10px; }
 .van-button--plain { background: #fff; }
 .van-button--success { color: #07c160; border: 1px solid #07c160; }
 .van-button--primary { color: #1989fa; border: 1px solid #1989fa; }
-
-/* Existing Styles */
 .step-row { display: flex; gap: 12px; margin-bottom: 25px; position: relative; }
 .step-line-vertical { position: absolute; left: 8.5px; top: 18px; bottom: -25px; width: 1.5px; background: #f1f5f9; z-index: 1; }
 .step-icon-box { width: 18px; height: 18px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; z-index: 10; }
@@ -358,10 +225,6 @@
 .finished .step-line-vertical { background: #f39c12; }
 .pulse { animation: pshadow 1.5s infinite; background: #f39c12; }
 @keyframes pshadow { 0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(243, 156, 18, 0); } }
-.spin-ring { position: absolute; border-radius: 50%; border: 2px dashed rgba(243, 156, 18, 0.2); }
-.ring-outer { width: 180px; height: 180px; animation: rot 10s linear infinite; }
-.ring-inner { width: 160px; height: 160px; border-style: dotted; animation: rot 15s linear infinite reverse; }
-@keyframes rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .loader { width: 8px; height: 8px; border: 1.5px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -376,12 +239,19 @@ document.getElementById('btn-start-match')?.addEventListener('click', function()
     .then(res => res.json())
     .then(data => {
         if (!data.success) { alert(data.error); btn.disabled = false; return; }
+
+        // --- DATA BINDING ---
         if(data.mission) {
             document.getElementById('prev-img').src = data.mission.image;
             document.getElementById('prev-name').innerText = data.mission.product_name;
             document.getElementById('prev-price').innerText = "BOB " + data.mission.price;
             document.getElementById('prev-comm').innerText = "BOB " + data.mission.commission;
+
+            // UPDATED LOGIC: Pull directly from the mission object count
+            let countValue = data.mission.order_count;
+            document.getElementById('prev-count').innerText = "x" + countValue;
         }
+
         document.getElementById('start-container').classList.add('hidden');
         document.getElementById('animation-steps').classList.remove('hidden');
 

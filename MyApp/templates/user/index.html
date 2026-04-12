@@ -256,8 +256,8 @@
             checkNotifications();
 
             // Intervals (Check every 10-15 seconds)
-            setInterval(getPendingCount, 15000);
-            setInterval(checkNotifications, 10000);
+            setInterval(getPendingCount, 60000);
+            setInterval(checkNotifications, 120000);
         });
 
         function copyToClipboard(text) {

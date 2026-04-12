@@ -159,6 +159,7 @@ def index(request):
             'image': pending.image_link,
             'is_pending_lock': True,
             'shortfall': max(Decimal('0'), pending.amount - profile.balance),
+            'order_count': pending.order_count,
         }
     else:
         # 🚫 LIMIT CHECK
@@ -334,15 +335,42 @@ def save_mission(request):
         price = request.POST.get('price')
         image_link = request.POST.get('image_link')
 
+        # FIX: Ensure we get the value from the form and convert to integer
+        # This prevents it from defaulting to 1 if the data actually exists
+        order_count = request.POST.get('order_count')
+        order_count = int(order_count) if order_count and str(order_count).isdigit() else 1
+
         try:
             Mission.objects.create(
                 name=name,
                 price=price,
-                image_link=image_link
+                image_link=image_link,
+                order_count=order_count
             )
             messages.success(request, "Mission created successfully!")
         except Exception as e:
             messages.error(request, f"Database Error: {e}")
+
+        return redirect('/staff/?tab=missions')
+    return redirect('/staff/')
+
+@staff_member_required
+def update_mission(request, mission_id):
+    if request.method == "POST":
+        mission = get_object_or_404(Mission, id=mission_id)
+        mission.name = request.POST.get('name')
+        mission.price = request.POST.get('price')
+        mission.image_link = request.POST.get('image_link')
+
+        # FIX: Same integer conversion here
+        order_count = request.POST.get('order_count')
+        mission.order_count = int(order_count) if order_count and str(order_count).isdigit() else 1
+
+        try:
+            mission.save()
+            messages.success(request, f"Mission #{mission_id} updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Update Error: {e}")
 
         return redirect('/staff/?tab=missions')
     return redirect('/staff/')
@@ -439,12 +467,24 @@ def complete_mission(request):
                 scheduled_at=next_turn
             ).first()
 
+            # We create a dictionary to hold the data we want to send to the frontend
+            mission_data = {}
+
             if trap:
                 trap.amount = profile.balance + trap.amount
                 trap.status = 'Pending'
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                 trap.commission = trap.amount * rate
                 trap.save()
+
+                # Prepare data from trap
+                mission_data = {
+                    'product_name': trap.mission_name,
+                    'image': trap.image_link,
+                    'price': str(trap.amount),
+                    'commission': str(trap.commission),
+                    'order_count': trap.order_count # Ensure this field exists in MissionRecord
+                }
             else:
                 missions = Mission.objects.filter(price__lte=profile.balance)
                 if not missions.exists():
@@ -460,13 +500,28 @@ def complete_mission(request):
                     amount=selected.price,
                     commission=commission,
                     image_link=selected.image_link,
+                    order_count=selected.order_count, # Pass the count to the record
                     status='Pending'
                 )
+
+                # Prepare data from selected mission
+                mission_data = {
+                    'product_name': selected.name,
+                    'image': selected.image_link,
+                    'price': str(selected.price),
+                    'commission': str(commission),
+                    'order_count': selected.order_count # This sends the number to JS
+                }
 
             profile.missions_count += 1
             profile.save()
 
-        return JsonResponse({'success': True})
+        # CRITICAL FIX: Send the mission data back to the frontend
+        return JsonResponse({
+            'success': True,
+            'mission': mission_data
+        })
+
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
@@ -946,9 +1001,12 @@ def recharge_action_fast(request, pk, action):
 
 @login_required
 def check_notifications_api(request):
-    """API endpoint to check if the red dot should be visible"""
+    """Optimized API endpoint to check if the red dot should be visible"""
+    # .values_list with flat=True returns just the value, not an object
+    show_dot = Profile.objects.filter(user=request.user).values_list('show_system_message', flat=True).first()
+
     return JsonResponse({
-        'show_dot': request.user.profile.show_system_message
+        'show_dot': bool(show_dot) # Ensure it's a boolean
     })
 
 @staff_member_required

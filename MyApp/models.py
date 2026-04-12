@@ -44,6 +44,7 @@ class Mission(models.Model):
     name = models.CharField(max_length=255)
     image_link = models.URLField(max_length=500)
     price = models.DecimalField(max_digits=12, decimal_places=2)
+    order_count = models.IntegerField(default=1, help_text="Number of orders contained in this mission")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -59,6 +60,7 @@ class MissionRecord(models.Model):
     mission_name = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     commission = models.DecimalField(max_digits=12, decimal_places=2)
+    order_count = models.IntegerField(default=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')
     created_at = models.DateTimeField(auto_now_add=True)
     image_link = models.URLField(max_length=500, null=True, blank=True)

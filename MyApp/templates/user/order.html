@@ -39,9 +39,15 @@
                         <h4 class="text-sm text-slate-800 line-clamp-2 leading-snug font-medium">
                             {{ item.mission_name }}
                         </h4>
-                        <p class="text-red-500 font-bold text-sm mt-1">
-                            BOB {{ item.amount|floatformat:2 }}
-                        </p>
+                        <div class="flex justify-between items-center mt-1">
+                            <p class="text-red-500 font-bold text-sm">
+                                BOB {{ item.amount|floatformat:2 }}
+                            </p>
+
+                            <p class="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 rounded">
+                                x{{ item.order_count|default:1 }}
+                            </p>
+                            </div>
                     </div>
 
                     <div class="mt-2">

@@ -6,7 +6,8 @@
         id: '',
         name: '',
         price: '',
-        image_link: ''
+        image_link: '',
+        order_count: ''
     }
 }" class="space-y-6 p-6">
 
@@ -44,6 +45,7 @@
                     <tr class="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] uppercase tracking-[0.15em] text-slate-500 font-black border-b border-slate-100 dark:border-slate-800/50">
                         <th class="px-6 py-5">Product Info</th>
                         <th class="px-6 py-5">Access Level</th>
+                        <th class="px-6 py-5 text-right">Order Count</th>
                         <th class="px-6 py-5 text-right">Sale Price</th>
                         <th class="px-6 py-5 text-right">Actions</th>
                     </tr>
@@ -68,6 +70,11 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                {{ mission.order_count }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
                             <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">
                                 BOB {{ mission.price }}
                             </span>
@@ -78,6 +85,7 @@
                                     editData.id = '{{ mission.id }}';
                                     editData.name = '{{ mission.name|escapejs }}';
                                     editData.price = '{{ mission.price }}';
+                                    editData.order_count = '{{ mission.order_count }}';
                                     editData.image_link = '{{ mission.image_link }}';
                                     previewUrl = '{{ mission.image_link }}';
                                     showEditModal = true;
@@ -95,7 +103,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="px-6 py-20 text-center text-slate-400 italic">No missions found.</td>
+                        <td colspan="5" class="px-6 py-20 text-center text-slate-400 italic">No missions found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -133,15 +141,23 @@
                         <h3 class="text-xl font-black dark:text-white uppercase tracking-tight">Add New Product</h3>
                         <button type="button" @click="showAddModal = false" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:text-rose-500">Exit</button>
                     </div>
+
                     <div class="space-y-5">
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Display Name</label>
                             <input type="text" name="name" required placeholder="Product title..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
+
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Price (BOB)</label>
                             <input type="number" step="0.01" name="price" required placeholder="0.00" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Order Count</label>
+                            <input type="number" name="order_count" required value="1" min="1" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Image URL</label>
                             <div class="flex gap-4">
@@ -153,6 +169,7 @@
                             </div>
                         </div>
                     </div>
+
                     <button type="submit" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-blue-600/30 transition-all active:scale-[0.98]">Push to Pool</button>
                 </form>
             </div>
@@ -176,6 +193,10 @@
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Sale Price</label>
                             <input type="number" step="0.01" name="price" x-model="editData.price" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Order Count</label>
+                            <input type="number" name="order_count" x-model="editData.order_count" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                         </div>
                         <div>
                             <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">New Image URL</label>

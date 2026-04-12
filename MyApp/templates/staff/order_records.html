@@ -26,7 +26,7 @@
                     <tr class="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] uppercase tracking-[0.15em] text-slate-500 font-black">
                         <th class="px-6 py-5">User</th>
                         <th class="px-6 py-5">Product Name</th>
-                        <th class="px-6 py-5">Amount</th>
+                        <th class="px-6 py-5 text-center">Orders</th> <th class="px-6 py-5">Amount</th>
                         <th class="px-6 py-5">Commission</th>
                         <th class="px-6 py-5">Status</th>
                         <th class="px-6 py-5">Date</th>
@@ -48,6 +48,13 @@
                             <div class="flex items-center gap-3">
                                 <img src="{{ order.image_link }}" class="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800">
                                 <span class="text-sm font-medium text-slate-600 dark:text-slate-300">{{ order.mission_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col items-center">
+                                <span class="text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-lg">
+                                    {{ order.order_count }}
+                                </span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-sm font-mono font-bold text-slate-700 dark:text-slate-200">${{ order.amount }}</td>
@@ -77,13 +84,12 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-20 text-center text-slate-400 italic">No mission records found.</td>
+                        <td colspan="8" class="px-6 py-20 text-center text-slate-400 italic">No mission records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-
         {% if orders.has_other_pages %}
         <div class="px-6 py-5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
             <p class="text-xs text-slate-500 font-medium">

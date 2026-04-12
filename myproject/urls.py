@@ -59,6 +59,7 @@ urlpatterns = [
 
     # MISSIONS
     path('staff/mission/save/', views.save_mission, name='save_mission'),
+    path('staff/mission/update/<int:mission_id>/', views.update_mission, name='update_mission'),
     path('staff/mission/delete/<int:mission_id>/', views.delete_mission, name='delete_mission'),
 
     # ORDER RECORDS ACTIONS
