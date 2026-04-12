@@ -3,9 +3,13 @@ import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+# --- 1. SET UP PATHS ---
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# --- 2. LOAD ENVIRONMENT VARIABLES ---
+# This must come AFTER BASE_DIR is defined so it knows where the .env file is
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-s8l$(311kw#lec+vp)&^@n!677mx#@n(fe3m)s(e$64^t5-ltz'
@@ -57,10 +61,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
+# --- 3. DATABASE SETTINGS ---
+# Using the hardcoded Aiven URI as requested
 DATABASES = {
     'default': dj_database_url.parse('postgres://avnadmin:AVNS_Fqf3-7U6nNhAXZbLtHU@pg-12ac4d70-rachelwilson29099-7626.l.aivencloud.com:28390/defaultdb?sslmode=require')
 }
-# --- SMART DATABASE SETTINGS ---
+
+# --- SMART DATABASE SETTINGS (Keep your original logic as comments) ---
 #if os.getenv('DATABASE_URL'):
 #    DATABASES = {
 #        'default': dj_database_url.config(
@@ -98,16 +105,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# --- ADD THESE LINES BELOW FOR RAILWAY SECURITY ---
+# --- SECURITY SETTINGS ---
 
 # This fixes the "Origin checking failed" error
 CSRF_TRUSTED_ORIGINS = [
     'https://ubuyproject.up.railway.app',
     'https://*.railway.app',
-    'http://202.155.8.168',        # Add this
-    'http://202.155.8.168:8000'   # Add this
+    'http://202.155.8.168',        # Added for VPS IP
+    'http://202.155.8.168:8000'   # Added for VPS IP with Port
 ]
 
-# Tell Django to use secure cookies since Railway uses HTTPS
+# Set to False because you are using an IP address (HTTP) and not a domain (HTTPS)
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
