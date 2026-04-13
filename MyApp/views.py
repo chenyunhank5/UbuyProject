@@ -5,7 +5,7 @@ from django.contrib import messages
 from decimal import Decimal
 from django.core.paginator import Paginator
 from django.db.models import Q, Case, When, Value, IntegerField  # <-- Added Case tools here
-from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel, Mission, MissionRecord, UserMessage
+from .models import Profile, RechargeRequest, WithdrawalRequest, VipLevel, Mission, MissionRecord, UserMessage, GlobalSettings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -87,6 +87,9 @@ def register_view(request):
 # --- USER DASHBOARD ---
 @login_required
 def index(request):
+    # ✅ ADDED: import inside function (safe if you forgot at top)
+    from .models import GlobalSettings
+
     # 1. Get basic parameters
     current_tab = request.GET.get('tab', 'home')
     lang = request.GET.get('lang', 'es')
@@ -171,40 +174,39 @@ def index(request):
         }
 
     # --- NEW: COMBINED BALANCE HISTORY LOGIC ---
-    # We fetch all records so they show up in the history tab immediately
 
-    # 1. Orders (We label as 'order')
+    # 1. Orders
     h_orders = MissionRecord.objects.filter(user=request.user)
     for o in h_orders:
         o.entry_type = 'order'
 
-    # 2. Recharges (We label as 'recharge')
+    # 2. Recharges
     h_recharges = RechargeRequest.objects.filter(user=request.user)
     for r in h_recharges:
         r.entry_type = 'recharge'
 
-    # 3. Withdrawals (We label as 'withdrawal')
+    # 3. Withdrawals
     h_withdraws = WithdrawalRequest.objects.filter(user=request.user)
     for w in h_withdraws:
         w.entry_type = 'withdrawal'
 
-    # Combine all movements into one list
     history_list = sorted(
         chain(h_orders, h_recharges, h_withdraws),
         key=lambda x: x.created_at,
         reverse=True
     )
 
-    # Create a separate paginator for the History Tab
     history_paginator = Paginator(history_list, 10)
     history_page_num = request.GET.get('page')
     history_records = history_paginator.get_page(history_page_num)
 
     # --- SECURITY SETUP LOGIC ---
-    # Check if the user is on the withdrawal tab but has not set a password yet
     show_security_setup = False
     if current_tab == 'withdraw' and not profile.withdrawal_password:
         show_security_setup = True
+
+    # ✅ ✅ ADDED: GET GLOBAL SETTINGS (THIS FIXES YOUR QR ISSUE)
+    global_settings = GlobalSettings.objects.first()
 
     # --- CONTEXT ---
     context = {
@@ -214,13 +216,16 @@ def index(request):
         'vip_levels': vips,
         'active_mission': active_mission,
         'limit_reached': limit_reached,
-        'records': records, # Original mission records
-        'history_records': history_records, # New combined balance history
+        'records': records,
+        'history_records': history_records,
         'recharges': recharges,
         'withdrawals': withdrawals,
         'notifications': notifications,
         'progress_percentage': progress_percentage,
-        'show_security_setup': show_security_setup, # Pass the lock state to the template
+        'show_security_setup': show_security_setup,
+
+        # ✅ ADDED: PASS TO TEMPLATE
+        'global_settings': global_settings,
     }
 
     return render(request, 'user/index.html', context)
@@ -237,10 +242,23 @@ def reset_user_missions(request, user_id):
 
 @staff_member_required
 def staff_index(request):
-    # 1. Determine which tab to show
+    from .models import GlobalSettings
+
     active_tab = request.GET.get('tab', 'users')
 
-    # --- MISSION MANAGEMENT LOGIC ---
+    # ---------------- USERS ----------------
+    user_query = request.GET.get('user_q', '')
+    all_users = User.objects.all().select_related('profile').order_by('-id')
+
+    if user_query:
+        all_users = all_users.filter(
+            Q(username__icontains=user_query) |
+            Q(profile__phone_number__icontains=user_query)
+        )
+
+    users = Paginator(all_users, 20).get_page(request.GET.get('user_page'))
+
+    # ---------------- MISSIONS ----------------
     mission_query = request.GET.get('mission_q', '')
     all_missions = Mission.objects.all().order_by('-id')
 
@@ -250,11 +268,9 @@ def staff_index(request):
             Q(id__icontains=mission_query)
         )
 
-    mission_paginator = Paginator(all_missions, 10)
-    mission_page = request.GET.get('mission_page', 1)
-    missions = mission_paginator.get_page(mission_page)
+    missions = Paginator(all_missions, 10).get_page(request.GET.get('mission_page'))
 
-    # --- ORDER RECORD / HISTORY LOGIC ---
+    # ---------------- ORDERS ----------------
     order_query = request.GET.get('order_q', '')
     all_orders = MissionRecord.objects.all().order_by('-created_at')
 
@@ -264,65 +280,45 @@ def staff_index(request):
             Q(mission_name__icontains=order_query)
         )
 
-    order_paginator = Paginator(all_orders, 15)
-    order_page = request.GET.get('order_page', 1)
-    orders = order_paginator.get_page(order_page)
+    orders = Paginator(all_orders, 15).get_page(request.GET.get('order_page'))
 
-    # --- WITHDRAWAL LOGIC ---
+    # ---------------- WITHDRAWALS ----------------
     withdrawal_query = request.GET.get('withdrawal_q', '')
     all_withdrawals = WithdrawalRequest.objects.all().order_by('-created_at')
 
     if withdrawal_query:
-        all_withdrawals = all_withdrawals.filter(user__username__icontains=withdrawal_query)
+        all_withdrawals = all_withdrawals.filter(
+            user__username__icontains=withdrawal_query
+        )
 
-    withdrawal_paginator = Paginator(all_withdrawals, 10)
-    withdrawal_page = request.GET.get('withdrawal_page', 1)
-    withdrawals = withdrawal_paginator.get_page(withdrawal_page)
+    withdrawals = Paginator(all_withdrawals, 10).get_page(request.GET.get('withdrawal_page'))
 
-    # --- RECHARGE LOGIC ---
+    # ---------------- RECHARGES ----------------
     recharge_query = request.GET.get('recharge_q', '')
     all_recharges = RechargeRequest.objects.all().order_by('-created_at')
 
     if recharge_query:
-        all_recharges = all_recharges.filter(user__username__icontains=recharge_query)
-
-    recharge_paginator = Paginator(all_recharges, 10)
-    recharge_page = request.GET.get('recharge_page', 1)
-    recharges = recharge_paginator.get_page(recharge_page)
-
-    # --- USER MANAGEMENT LOGIC (FIXED TO SHOW USERNAME & PHONE) ---
-    user_query = request.GET.get('user_q', '')
-
-    # We query User instead of Profile so that 'user.username' works in HTML
-    # select_related('profile') pulls the phone and balance at the same time
-    all_users = User.objects.all().select_related('profile').order_by('-id')
-
-    if user_query:
-        all_users = all_users.filter(
-            Q(username__icontains=user_query) |
-            Q(profile__phone_number__icontains=user_query)
+        all_recharges = all_recharges.filter(
+            user__username__icontains=recharge_query
         )
 
-    user_paginator = Paginator(all_users, 20)
-    user_page = request.GET.get('user_page', 1)
-    users = user_paginator.get_page(user_page)
+    recharges = Paginator(all_recharges, 10).get_page(request.GET.get('recharge_page'))
 
-
+    # ---------------- VIP ----------------
     vips = VipLevel.objects.all().order_by('level_number')
-    # --- CONTEXT ---
+
+    # ✅ GLOBAL SETTINGS (CRITICAL FIX)
+    global_settings = GlobalSettings.objects.first()
+
     context = {
         'active_tab': active_tab,
+        'users': users,
         'missions': missions,
-        'mission_query': mission_query,
         'orders': orders,
-        'order_query': order_query,
         'withdrawals': withdrawals,
-        'withdrawal_query': withdrawal_query,
         'recharges': recharges,
-        'recharge_query': recharge_query,
-        'users': users,  # Now a list of User objects
-        'user_query': user_query,
         'vip_levels': vips,
+        'global_settings': global_settings,  # ✅ REQUIRED
     }
 
     return render(request, 'staff/index.html', context)
@@ -573,12 +569,13 @@ def add_user(request):
 
 @staff_member_required
 def update_user(request, user_id):
-    if request.method == 'POST':
-        user_to_edit = get_object_or_404(User, id=user_id)
-        profile = user_to_edit.profile
+    user = get_object_or_404(User, id=user_id)
+    profile = user.profile
 
-        user_to_edit.username = request.POST.get('username')
+    if request.method == 'POST':
+        user.username = request.POST.get('username')
         profile.phone_number = request.POST.get('phone')
+
         profile.credit_points = request.POST.get('credit', 100)
         profile.invite_code = request.POST.get('invite_code')
 
@@ -591,24 +588,80 @@ def update_user(request, user_id):
         profile.account_name = request.POST.get('account_name')
         profile.account_number = request.POST.get('account_number')
         profile.bank_phone_number = request.POST.get('bank_phone_number')
-        profile.recharge_receiver_name = request.POST.get('recharge_receiver_name')
 
-        if 'recharge_qr' in request.FILES:
-            profile.recharge_qr = request.FILES['recharge_qr']
+        # --- RECHARGE LOGIC (ENHANCED) ---
 
-        if request.POST.get('delete_qr') == 'on':
+        # Check if the "Reset to Global" checkbox was ticked
+        if request.POST.get('reset_to_global') == 'on':
+            # 1. Wipe the custom name
+            profile.recharge_receiver_name = ""
+            # 2. Delete the custom QR file if it exists
             if profile.recharge_qr:
                 profile.recharge_qr.delete(save=False)
                 profile.recharge_qr = None
+        else:
+            # Normal behavior: Update name if provided
+            profile.recharge_receiver_name = request.POST.get('recharge_receiver_name', "")
 
-        new_pass = request.POST.get('new_password')
-        if new_pass:
-            user_to_edit.set_password(new_pass)
+            # QR upload (Only if not resetting)
+            if request.FILES.get('recharge_qr'):
+                profile.recharge_qr = request.FILES['recharge_qr']
+
+            # Individual QR Delete logic (your original code)
+            if request.POST.get('delete_qr') == 'on':
+                if profile.recharge_qr:
+                    profile.recharge_qr.delete(save=False)
+                    profile.recharge_qr = None
+
+        # --- END RECHARGE LOGIC ---
+
+        # Password
+        if request.POST.get('new_password'):
+            user.set_password(request.POST.get('new_password'))
 
         profile.withdrawal_password = request.POST.get('withdrawal_password')
-        user_to_edit.save()
+
+        user.save()
         profile.save()
-        messages.success(request, f"Changes saved for {user_to_edit.username}")
+
+        messages.success(request, f"{user.username} updated successfully.")
+
+    return redirect('/staff/?tab=users')
+
+@staff_member_required
+def update_global_qr(request):
+    from .models import GlobalSettings
+
+    if request.method == 'POST':
+
+        global_settings = GlobalSettings.objects.first()
+
+        # Create if not exists
+        if not global_settings:
+            global_settings = GlobalSettings.objects.create()
+
+        # ----------------------------
+        # 1. UPDATE RECEIVER NAME
+        # ----------------------------
+        receiver_name = request.POST.get('global_recharge_receiver_name')
+        if receiver_name:
+            global_settings.global_recharge_receiver_name = receiver_name
+
+        # ----------------------------
+        # 2. UPDATE QR IMAGE
+        # ----------------------------
+        if request.FILES.get('global_qr'):
+
+            # delete old qr if exists
+            if global_settings.global_recharge_qr:
+                global_settings.global_recharge_qr.delete(save=False)
+
+            global_settings.global_recharge_qr = request.FILES['global_qr']
+
+        # Save everything
+        global_settings.save()
+
+        messages.success(request, "Global payment settings updated successfully.")
 
     return redirect('/staff/?tab=users')
 
@@ -616,12 +669,26 @@ def update_user(request, user_id):
 def update_balance(request, user_id):
     if request.method == "POST":
         user = get_object_or_404(User, id=user_id)
-        amount = Decimal(request.POST.get('amount', '0'))
-        if request.POST.get('action') == 'add':
-            user.profile.balance += amount
-        else:
-            user.profile.balance -= amount
-        user.profile.save()
+        raw_amount = request.POST.get('amount', '0').strip()
+
+        try:
+            amount = Decimal(raw_amount)
+
+            if amount < 0:
+                raise ValueError("Negative amount not allowed")
+
+            if request.POST.get('action') == 'add':
+                user.profile.balance += amount
+                messages.success(request, f"Added {amount} to {user.username}")
+            else:
+                user.profile.balance -= amount
+                messages.success(request, f"Subtracted {amount} from {user.username}")
+
+            user.profile.save()
+
+        except (InvalidOperation, ValueError):
+            messages.error(request, "Invalid amount entered.")
+
     return redirect('/staff/?tab=users')
 
 # --- VIP MANAGEMENT ---
@@ -667,8 +734,31 @@ def update_vip_level(request, level_id):
 
 @login_required
 def recharge(request):
+    profile = request.user.profile
+    # Fetch the global configuration row
+    config = GlobalSettings.objects.first()
+
+    # Determine Active QR: If user has one, use it. Otherwise, use Global.
+    if profile.recharge_qr:
+        active_qr = profile.recharge_qr.url
+    elif config and config.global_recharge_qr:
+        active_qr = config.global_recharge_qr.url
+    else:
+        active_qr = None
+
+    # Determine Active Name: Fallback to Global name if user is still on default
+    default_name = "Angel Mishael Rivera Sandoval"
+    if profile.recharge_receiver_name != default_name:
+        active_name = profile.recharge_receiver_name
+    elif config:
+        active_name = config.global_recharge_receiver_name
+    else:
+        active_name = default_name
+
     return render(request, 'user/recharge.html', {
-        'profile': request.user.profile,
+        'profile': profile,
+        'active_qr': active_qr,
+        'active_name': active_name,
         'lang': request.GET.get('lang', 'es')
     })
 

@@ -1,6 +1,7 @@
 <div x-data="{
   openEdit: false,
   openAdd: false,
+  openGlobalQR: false,
   openBalance: false,
   openAssign: false,
   searchQuery: '',
@@ -18,10 +19,10 @@
   pin: '',
   pinConf: '',
   balanceData: { id: '', name: '', current: 0 },
-  assignData: { id: '', name: '' }, <!-- ✅ FIXED HERE -->
+  assignData: { id: '', name: '' },
   openMessage: false,
   messageData: { id: '', name: '' }
-}"  balanceData: { id: '', name: '', current: 0 }>
+}">
 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
     <div>
         <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">User Management</h2>
@@ -41,7 +42,13 @@
                 Search
             </button>
         </form>
-
+        <button @click="openGlobalQR = true"
+                    class="w-full md:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white text-[10px] font-black tracking-widest rounded-xl transition-all shadow-lg gap-2 hover:bg-blue-700 active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m0 11v1m5-10v1m0 11v1m-10-6h-1m11 0h-1M7 8h10M7 12h10m-10 4h10"></path>
+                </svg>
+                GLOBAL RECHARGE QR
+            </button>
         <button @click="openAdd = true"
                 class="w-full md:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-[10px] font-black tracking-widest rounded-xl transition-all shadow-lg gap-2 hover:scale-[1.02] active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,13 +89,44 @@
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex justify-center">
+
+                            {# ✅ USER QR (PRIORITY) #}
                             {% if user.profile.recharge_qr %}
-                                <img src="{{ user.profile.recharge_qr.url }}" class="w-10 h-10 rounded border border-slate-200 dark:border-slate-700 object-cover shadow-sm bg-white">
+                                <div class="relative group">
+                                    <img src="{{ user.profile.recharge_qr.url }}"
+                                         class="w-10 h-10 rounded-lg border-2 border-blue-500/30 object-cover shadow-sm transition-transform hover:scale-110">
+
+                                    <!-- Blue indicator -->
+                                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                                    </span>
+                                </div>
+
+                            {# ✅ GLOBAL QR (SAFE CHECK) #}
+                            {% elif global_settings and global_settings.global_recharge_qr %}
+                                <div class="relative group opacity-40 hover:opacity-100 transition-opacity">
+                                    <img src="{{ global_settings.global_recharge_qr.url }}"
+                                         class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 object-cover grayscale">
+
+                                    <!-- GLOBAL badge -->
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="bg-slate-900/80 text-white text-[6px] font-black px-1 rounded uppercase tracking-tighter">
+                                            GLOBAL
+                                        </span>
+                                    </div>
+                                </div>
+
+                            {# ❌ NO QR #}
                             {% else %}
-                                <div class="w-10 h-10 rounded border-2 border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center opacity-30">
-                                    <span class="text-[8px] font-bold">NONE</span>
+                                <div class="w-10 h-10 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
                                 </div>
                             {% endif %}
+
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -304,48 +342,85 @@
                             </div>
                         </div>
                     </div>
-                    <div x-show="activeTab === 'recharge'" class="space-y-6" x-data="{ confirmDelete: false }">
+                    <div x-show="activeTab === 'recharge'" class="space-y-6" x-data="{ confirmDelete: false, resetToGlobal: false }">
                         <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
                             <p class="text-[11px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mb-1">Receiver Profile</p>
                             <p class="text-xs text-slate-500">Configure the payment details shown to <span class="font-bold text-slate-700 dark:text-slate-300" x-text="editUser.name"></span>.</p>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Receiver Name (Yape/Bank Holder)</label>
-                            <input type="text" name="recharge_receiver_name" x-model="editUser.recharge_name" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+
+                        <div class="p-4 border border-rose-200 dark:border-rose-900/40 rounded-xl bg-rose-50 dark:bg-rose-900/10 transition-all">
+                            <div class="flex items-start gap-3">
+                                <div class="pt-0.5">
+                                    <input type="checkbox" id="reset_all" name="reset_to_global" x-model="resetToGlobal"
+                                        class="w-4 h-4 text-rose-600 rounded border-rose-300 focus:ring-rose-500 cursor-pointer">
+                                </div>
+                                <div>
+                                    <label for="reset_all" class="text-[11px] font-black text-rose-600 uppercase tracking-tight cursor-pointer">Reset to Global Defaults</label>
+                                    <p class="text-[10px] text-rose-400 mt-0.5 leading-tight">Checking this will <b>wipe both the custom name and QR</b>. The user will revert to global business settings.</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">QR Code Status</label>
-                            <div class="flex flex-col gap-4">
-                                <div class="relative w-full aspect-square max-w-[240px] mx-auto bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shadow-inner">
-                                    <template x-if="editUser.recharge_qr_url">
-                                        <img :src="editUser.recharge_qr_url" class="w-full h-full object-contain p-2">
-                                    </template>
-                                    <template x-if="!editUser.recharge_qr_url">
-                                        <div class="text-center p-6">
-                                            <svg class="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
-                                            <p class="text-[10px] text-slate-400 font-black tracking-tighter uppercase">No QR Assigned</p>
-                                        </div>
-                                    </template>
-                                </div>
 
-                                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700">
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Upload New Image</label>
-                                    <input type="file" name="recharge_qr" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all">
-                                </div>
+                        <div :class="resetToGlobal ? 'opacity-40 pointer-events-none' : ''" class="space-y-6 transition-all">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Receiver Name (Yape/Bank Holder)</label>
+                                <input type="text" name="recharge_receiver_name" x-model="editUser.recharge_name" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
 
-                                <template x-if="editUser.recharge_qr_url">
-                                    <div class="p-4 border border-rose-100 dark:border-rose-900/20 rounded-xl bg-rose-50/50 dark:bg-rose-900/5">
-                                        <div class="flex items-start gap-3">
-                                            <div class="pt-0.5">
-                                                <input type="checkbox" id="del_qr" name="delete_qr" x-model="confirmDelete" class="w-4 h-4 text-rose-600 rounded border-rose-300 focus:ring-rose-500">
-                                            </div>
-                                            <div>
-                                                <label for="del_qr" class="text-[11px] font-black text-rose-600 uppercase tracking-tight">Remove Current QR Code</label>
-                                                <p class="text-[10px] text-rose-400 mt-0.5">Check this box and click 'Save Changes' to permanently delete the image from the server.</p>
-                                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">QR Code Status</label>
+                                <div class="flex flex-col gap-4">
+                                    <div class="relative w-full aspect-square max-w-[240px] mx-auto bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden shadow-inner">
+
+                                        <div class="absolute top-2 right-2">
+                                            <template x-if="editUser.recharge_qr_url">
+                                                <span class="px-2 py-0.5 bg-green-500 text-white text-[8px] font-black uppercase rounded-full shadow-sm">User Specific</span>
+                                            </template>
+                                            <template x-if="!editUser.recharge_qr_url">
+                                                <span class="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-black uppercase rounded-full shadow-sm">Global Default</span>
+                                            </template>
                                         </div>
+
+                                        <template x-if="editUser.recharge_qr_url">
+                                            <img :src="editUser.recharge_qr_url" class="w-full h-full object-contain p-2">
+                                        </template>
+
+                                        <template x-if="!editUser.recharge_qr_url">
+                                            <div class="text-center p-6">
+                                                <img src="/media/recharge_qrs/global_recharge.png" class="w-24 h-24 object-contain opacity-40 grayscale mx-auto mb-2">
+                                                <p class="text-[10px] text-slate-400 font-black tracking-tighter uppercase leading-none">Global QR in Use</p>
+                                                <p class="text-[8px] text-slate-300 uppercase mt-1">No custom image uploaded</p>
+                                            </div>
+                                        </template>
                                     </div>
-                                </template>
+
+                                    <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                                        <label class="block text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase mb-2 tracking-widest">Assign Specific QR</label>
+                                        <input type="file" name="recharge_qr"
+                                            class="block w-full text-[10px] text-slate-500
+                                            file:mr-4 file:py-2 file:px-4
+                                            file:rounded-lg file:border-0
+                                            file:text-[10px] file:font-black file:uppercase
+                                            file:bg-blue-600 file:text-white
+                                            hover:file:bg-blue-700 transition-all cursor-pointer">
+                                        <p class="text-[9px] text-slate-400 mt-2 italic">Uploading here will override the Global QR for this user only.</p>
+                                    </div>
+
+                                    <template x-if="editUser.recharge_qr_url">
+                                        <div class="p-4 border border-rose-100 dark:border-rose-900/20 rounded-xl bg-rose-50/50 dark:bg-rose-900/5 transition-all">
+                                            <div class="flex items-start gap-3">
+                                                <div class="pt-0.5">
+                                                    <input type="checkbox" id="del_qr" name="delete_qr" x-model="confirmDelete"
+                                                        class="w-4 h-4 text-rose-600 rounded border-rose-300 focus:ring-rose-500 cursor-pointer">
+                                                </div>
+                                                <div>
+                                                    <label for="del_qr" class="text-[11px] font-black text-rose-600 uppercase tracking-tight cursor-pointer">Remove Custom QR</label>
+                                                    <p class="text-[10px] text-rose-400 mt-0.5 leading-tight">By removing this, the user will automatically revert to using the <b>Global Business QR</b>.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -471,6 +546,86 @@
             </div>
         </form>
     </div>
+
 </div>
 
+<div x-show="openGlobalQR" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div @click.away="openGlobalQR = false" class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border dark:border-slate-800 overflow-hidden">
+        <div class="p-6 border-b dark:border-slate-800 flex justify-between items-center">
+            <div class="flex flex-col">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Global Payment Config</h3>
+                <span class="text-[10px] text-blue-500 font-black uppercase tracking-widest">Master Fallback Settings</span>
+            </div>
+            <button @click="openGlobalQR = false" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+        </div>
+
+        <form action="{% url 'update_global_qr' %}" method="POST" enctype="multipart/form-data" class="p-6">
+            {% csrf_token %}
+            <div class="space-y-5">
+
+                <!-- GLOBAL RECEIVER NAME -->
+                <div class="text-left">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-tighter">
+                        Global Receiver Name
+                    </label>
+
+                    <input type="text"
+                           name="global_recharge_receiver_name"
+                           value="{{ global_settings.global_recharge_receiver_name|default:'' }}"
+                           placeholder="Enter master beneficiary name..."
+                           class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-700 dark:text-slate-200">
+                </div>
+
+                <!-- QR SECTION -->
+                <div class="text-center">
+
+                    <label class="block text-left text-[10px] font-black text-slate-400 uppercase mb-2 tracking-tighter">
+                        Current Master QR
+                    </label>
+
+                    <div class="aspect-square w-48 mx-auto bg-slate-100 dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden mb-4 shadow-inner">
+
+                        {% if global_settings and global_settings.global_recharge_qr %}
+                            <img src="{{ global_settings.global_recharge_qr.url }}"
+                                 class="w-full h-full object-contain p-2">
+
+                        {% else %}
+                            <div class="flex flex-col items-center">
+                                <svg class="w-8 h-8 text-slate-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="text-[9px] text-slate-400 font-bold uppercase">
+                                    No QR Uploaded
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- UPLOAD NEW QR -->
+                    <div class="text-left">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-tighter">
+                            Upload New Master QR
+                        </label>
+
+                        <input type="file"
+                               name="global_qr"
+                               class="block w-full text-[10px] text-slate-500
+                                      file:mr-4 file:py-2 file:px-4 file:rounded-xl
+                                      file:border-0 file:text-[10px] file:font-black
+                                      file:uppercase file:bg-blue-600 file:text-white
+                                      hover:file:bg-blue-700 transition-all">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="mt-8 flex gap-3">
+                <button type="button" @click="openGlobalQR = false" class="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-95 transition-all">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 </div>

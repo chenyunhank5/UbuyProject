@@ -111,7 +111,7 @@ class Profile(models.Model):
     bank_phone_number = models.CharField(max_length=50, blank=True, null=True)
 
     # Recharge Info
-    recharge_receiver_name = models.CharField(max_length=100, default="Angel Mishael Rivera Sandoval")
+    recharge_receiver_name = models.CharField(max_length=100, default="")
     recharge_qr = models.ImageField(upload_to='recharge_qrs/', blank=True, null=True)
     referred_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
 
@@ -150,3 +150,36 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
+
+
+# ==========================================
+# 8. GLOBAL SETTINGS MODEL (NEW)
+# ==========================================
+class GlobalSettings(models.Model):
+    site_name = models.CharField(max_length=100, default="Ubuy Project")
+    # Global Payment Details
+    global_recharge_receiver_name = models.CharField(
+        max_length=100,
+        default=""
+    )
+    global_recharge_qr = models.ImageField(
+        upload_to='recharge_qrs/global/',
+        null=True,
+        blank=True
+    )
+
+    # Add other global toggles here if needed (e.g. maintenance mode)
+    is_maintenance_mode = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Global Settings"
+        verbose_name_plural = "Global Settings"
+
+    def __str__(self):
+        return "System Global Configuration"
+
+    def save(self, *args, **kwargs):
+        # This logic ensures only one GlobalSettings object exists
+        if not self.pk and GlobalSettings.objects.exists():
+            return
+        super(GlobalSettings, self).save(*args, **kwargs)

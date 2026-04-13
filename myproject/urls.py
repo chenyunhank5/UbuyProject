@@ -69,6 +69,9 @@ urlpatterns = [
     path('staff/recharge/action/<int:request_id>/<str:action>/', views.process_recharge, name='process_recharge'),
     path('staff/withdraw/action/<int:request_id>/<str:action>/', views.process_withdrawal, name='process_withdrawal'),
 
+    # NEW: GLOBAL SETTINGS
+    path('staff/global-qr/', views.update_global_qr, name='update_global_qr'),
+
     # 🔔 NEW: NOTIFICATION SYSTEM & FAST ACTIONS
     path('api/pending-recharges/', views.api_pending_recharges, name='api_pending_recharges'),
     path('staff/recharge/fast-action/<int:pk>/<str:action>/', views.recharge_action_fast, name='recharge_action_fast'),
