@@ -18,7 +18,14 @@ SECRET_KEY = 'django-insecure-s8l$(311kw#lec+vp)&^@n!677mx#@n(fe3m)s(e$64^t5-ltz
 DEBUG = True
 
 # --- UPDATED: ALLOWED_HOSTS ---
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '.railway.app']
+ALLOWED_HOSTS = [
+    'sheinshopp.com',
+    'www.sheinshopp.com',
+    'sheinshopp.net',
+    'www.sheinshopp.net',
+    'localhost',
+    '127.0.0.1'
+]
 
 # Application definition
 INSTALLED_APPS = [
