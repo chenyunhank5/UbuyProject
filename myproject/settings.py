@@ -24,7 +24,8 @@ ALLOWED_HOSTS = [
     'sheinshopp.net',
     'www.sheinshopp.net',
     'localhost',
-    '127.0.0.1'
+    '127.0.0.1',
+    '202.155.8.168'   #
 ]
 
 # Application definition
