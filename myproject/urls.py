@@ -10,7 +10,7 @@ import re
 
 urlpatterns = [
     # --- ADMIN ---
-    path('admin/', admin.site.urls),
+    path('adminelias/', admin.site.urls),
 
     # --- AUTH ---
     path('register/', views.register_view, name='register'),
