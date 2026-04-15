@@ -44,6 +44,7 @@ class Mission(models.Model):
     name = models.CharField(max_length=255)
     image_link = models.URLField(max_length=500)
     price = models.DecimalField(max_digits=12, decimal_places=2)
+    order_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, help_text="Price of each individual order")
     order_count = models.IntegerField(default=1, help_text="Number of orders contained in this mission")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -59,6 +60,7 @@ class MissionRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mission_records')
     mission_name = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    order_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     commission = models.DecimalField(max_digits=12, decimal_places=2)
     order_count = models.IntegerField(default=1)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')

@@ -9,145 +9,155 @@
 
     <style>
         :root {
-            --brand-gold: #B8860B;
-            --brand-white: #ffffff;
+            --brand-bg: #ffffff;
+            --brand-text: #000000;
+            --brand-subtle: #f3f4f6;
         }
-        .bg-brand { background-color: var(--brand-gold); }
-        .text-white { color: var(--brand-white); }
+
+        body {
+            background-color: var(--brand-bg);
+            color: var(--brand-text);
+        }
+
         .glass-input {
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
+            background-color: var(--brand-subtle);
+            border: 1px solid #e5e7eb;
+            color: #000000;
+            transition: all 0.2s ease;
         }
+
         .glass-input:focus {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.5);
+            background-color: #ffffff;
+            border-color: #000000;
             outline: none;
+            box-shadow: 0 0 0 1px #000000;
         }
-        ::placeholder { color: rgba(255, 255, 255, 0.4) !important; }
+
+        ::placeholder { color: #9ca3af !important; }
         [x-cloak] { display: none !important; }
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-brand antialiased text-white font-sans fade-in">
+<body class="antialiased font-sans fade-in">
 
     <div id="root" x-data="{ showPass: false, showConfirm: false }">
 
-      <div class="fixed top-4 right-4 z-50">
-        <a href="?lang={% if lang == 'en' %}es{% else %}en{% endif %}"
-           class="active:scale-95 transition-transform flex items-center group"
-           title="Switch to {% if lang == 'en' %}Spanish{% else %}English{% endif %}">
-
-            {% if lang == 'en' %}
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/en-US_ydtdzp.png"
-                     width="28"
-                     alt="Español"
-                     class="w-7 h-7 drop-shadow-sm border border-white/10 rounded-full">
-            {% else %}
-                <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/es-BO_no8wwb.png"
-                     width="28"
-                     alt="English"
-                     class="w-7 h-7 drop-shadow-sm border border-white/10 rounded-full">
-            {% endif %}
-        </a>
-      </div>
+        <div class="fixed top-4 right-4 z-50">
+            <a href="?lang={% if lang == 'en' %}es{% else %}en{% endif %}"
+               class="active:scale-95 transition-transform flex items-center p-1 bg-gray-100 rounded-full border border-gray-200"
+               title="Switch Language">
+                {% if lang == 'en' %}
+                    <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/en-US_ydtdzp.png"
+                         class="w-6 h-6 rounded-full shadow-sm">
+                {% else %}
+                    <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775143665/es-BO_no8wwb.png"
+                         class="w-6 h-6 rounded-full shadow-sm">
+                {% endif %}
+            </a>
+        </div>
 
         {% if messages %}
-        <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[85%] max-w-xs">
+        <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-xs">
             {% for message in messages %}
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3500)"
-                 class="flex items-center justify-between p-3 rounded-xl shadow-xl bg-white text-gray-900 font-bold mb-2 border-l-4 {% if message.tags == 'error' %}border-red-500{% else %}border-emerald-500{% endif %}">
-                <p class="text-xs">{{ message }}</p>
-                <button @click="show = false" class="text-lg">&times;</button>
+                 class="flex items-center justify-between p-4 rounded-lg shadow-2xl bg-black text-white mb-2 border-l-4 {% if message.tags == 'error' %}border-red-500{% else %}border-green-500{% endif %}">
+                <p class="text-xs font-medium">{{ message }}</p>
+                <button @click="show = false" class="ml-2 text-xl">&times;</button>
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <div class="min-h-screen flex flex-col items-center justify-center px-6 py-4">
-            <div class="w-full max-w-[320px] flex flex-col items-center">
+        <div class="min-h-screen flex flex-col items-center justify-center px-6 py-10">
+            <div class="w-full max-w-[340px]">
 
-                <div class="mb-6 text-center">
-                    <div class="relative inline-block">
-                        <div class="absolute inset-0 bg-white/10 blur-xl rounded-full"></div>
-                    </div>
-                    <h1 class="text-3xl font-black tracking-tighter uppercase text-white mt-3 italic">Shein</h1>
-                    <p class="text-white/60 text-[10px] font-black uppercase tracking-[0.3em] mt-1">
-                        {% if lang == 'en' %}CREATE ACCOUNT{% else %}CREAR CUENTA{% endif %}
+                <div class="mb-10 text-center">
+                    <h1 class="text-5xl font-black tracking-tighter uppercase text-black italic">Shein</h1>
+                    <div class="h-1 w-12 bg-black mx-auto mt-2"></div>
+                    <p class="text-black/40 text-[10px] font-bold uppercase tracking-[0.4em] mt-4">
+                        {% if lang == 'en' %}Create your account{% else %}Crea tu cuenta{% endif %}
                     </p>
                 </div>
 
-                <form method="POST" action="{% url 'register' %}?lang={{ lang|default:'es' }}" class="w-full space-y-3">
+                <form method="POST" action="{% url 'register' %}?lang={{ lang|default:'es' }}" class="space-y-5">
                     {% csrf_token %}
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-[0.2em] ml-2 text-white/80">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider ml-1 text-black/60">
                             {% if lang == 'en' %}Username{% else %}Nombre de Usuario{% endif %}
                         </label>
-                        <input type="text" name="username" class="flex h-11 w-full rounded-xl glass-input px-4 font-bold text-base" placeholder="{% if lang == 'en' %}Enter your name{% else %}Introduce tu nombre{% endif %}" required>
+                        <input type="text" name="username" class="flex h-12 w-full rounded-lg glass-input px-4 font-semibold text-sm" placeholder="{% if lang == 'en' %}Full Name{% else %}Nombre Completo{% endif %}" required>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-[0.2em] ml-2 text-white/80">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider ml-1 text-black/60">
                             {% if lang == 'en' %}Phone Number{% else %}Número de Teléfono{% endif %}
                         </label>
-                        <div class="flex group">
-                            <span class="inline-flex items-center px-3 rounded-l-xl bg-white/10 border-y border-l border-white/20 text-white font-black text-xs">+591</span>
-                            <input type="tel" name="phone" class="flex h-11 w-full rounded-r-xl glass-input px-4 font-bold text-base" placeholder="70000000" required>
+                        <div class="flex">
+                            <span class="inline-flex items-center px-4 rounded-l-lg bg-gray-100 border border-r-0 border-gray-200 text-black font-bold text-xs">+591</span>
+                            <input type="tel" name="phone" class="flex h-12 w-full rounded-r-lg glass-input px-4 font-semibold text-sm border-l-0" placeholder="{% if lang == 'en' %}Phone Number{% else %}Número de Teléfono{% endif %}" required>
                         </div>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-[0.2em] ml-2 text-white/80">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider ml-1 text-black/60">
                             {% if lang == 'en' %}Invitation Code{% else %}Código de Invitación{% endif %}
                         </label>
-                        <div class="relative">
-                            <input type="text"
-                                   name="invite_code"
-                                   class="flex h-11 w-full rounded-xl glass-input px-4 font-bold text-base border-dashed border-white/50"
-                                   placeholder="ABC123"
-                                   value="{{ url_invite_code }}"
-                                   {% if url_invite_code %}readonly{% endif %}
-                                   required>
-                        </div>
+                        <input type="text" name="invite_code"
+                               class="flex h-12 w-full rounded-lg glass-input px-4 font-semibold text-sm border-dashed"
+                               placeholder="ABC123"
+                               value="{{ url_invite_code }}"
+                               {% if url_invite_code %}readonly{% endif %} required>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-[0.2em] ml-2 text-white/80">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider ml-1 text-black/60">
                             {% if lang == 'en' %}Password{% else %}Contraseña{% endif %}
                         </label>
                         <div class="relative">
-                            <input :type="showPass ? 'text' : 'password'" name="password" class="flex h-11 w-full rounded-xl glass-input px-4 pr-10 font-bold text-base" placeholder="••••••••" required>
-                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
-                                <svg x-show="!showPass" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                <svg x-show="showPass" x-cloak class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
+                            <input :type="showPass ? 'text' : 'password'" name="password" class="flex h-12 w-full rounded-lg glass-input px-4 pr-10 font-semibold text-sm" placeholder="••••••••" required>
+                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-black/30 hover:text-black">
+                                <svg x-show="!showPass" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                <svg x-show="showPass" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
                             </button>
                         </div>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black uppercase tracking-[0.2em] ml-2 text-white/80">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold uppercase tracking-wider ml-1 text-black/60">
                             {% if lang == 'en' %}Confirm{% else %}Confirmar{% endif %}
                         </label>
                         <div class="relative">
-                            <input :type="showConfirm ? 'text' : 'password'" name="confirm_password" class="flex h-11 w-full rounded-xl glass-input px-4 pr-10 font-bold text-base" placeholder="••••••••" required>
-                            <button type="button" @click="showConfirm = !showConfirm" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
-                                <svg x-show="!showConfirm" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                <svg x-show="showConfirm" x-cloak class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
+                            <input :type="showConfirm ? 'text' : 'password'" name="confirm_password" class="flex h-12 w-full rounded-lg glass-input px-4 pr-10 font-semibold text-sm" placeholder="••••••••" required>
+                            <button type="button" @click="showConfirm = !showConfirm" class="absolute right-3 top-1/2 -translate-y-1/2 text-black/30 hover:text-black">
+                                <svg x-show="!showConfirm" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                <svg x-show="showConfirm" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
                             </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="flex h-14 w-full items-center justify-center rounded-xl bg-white text-[#B8860B] font-black text-base uppercase tracking-[0.25em] hover:scale-[1.01] active:scale-[0.98] transition-all shadow-lg mt-2">
-                        {% if lang == 'en' %}Register{% else %}Registrarse{% endif %}
+                    <button type="submit" class="flex h-14 w-full items-center justify-center rounded-lg bg-black text-white font-black text-sm uppercase tracking-[0.2em] hover:bg-gray-800 active:scale-[0.98] transition-all shadow-xl mt-6">
+                        {% if lang == 'en' %}Register Now{% else %}Registrarse Ahora{% endif %}
                     </button>
                 </form>
 
-                <div class="mt-6 text-center">
-                    <p class="text-[11px] font-black text-white/50 uppercase">
+                <div class="mt-8 text-center">
+                    <p class="text-[12px] font-medium text-black/50">
                         {% if lang == 'en' %}Already have an account?{% else %}¿Ya tienes cuenta?{% endif %}
-                        <a href="{% url 'login' %}?lang={{ lang }}" class="text-white border-b border-white/30 hover:border-white ml-2 transition-all">
+                        <a href="{% url 'login' %}?lang={{ lang }}" class="text-black font-bold border-b-2 border-black ml-1 hover:text-gray-600 transition-colors">
                             {% if lang == 'en' %}Login{% else %}Inicia Sesión{% endif %}
                         </a>
                     </p>

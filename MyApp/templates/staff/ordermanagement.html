@@ -6,6 +6,7 @@
         id: '',
         name: '',
         price: '',
+        order_price: '',
         image_link: '',
         order_count: ''
     }
@@ -44,9 +45,9 @@
                 <thead>
                     <tr class="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] uppercase tracking-[0.15em] text-slate-500 font-black border-b border-slate-100 dark:border-slate-800/50">
                         <th class="px-6 py-5">Product Info</th>
-                        <th class="px-6 py-5">Access Level</th>
                         <th class="px-6 py-5 text-right">Order Count</th>
-                        <th class="px-6 py-5 text-right">Sale Price</th>
+                        <th class="px-6 py-5 text-right">Unit Price</th>
+                        <th class="px-6 py-5 text-right">Total Price</th>
                         <th class="px-6 py-5 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -57,27 +58,19 @@
                             <div class="flex items-center gap-4">
                                 <img src="{{ mission.image_link }}" class="w-12 h-12 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700">
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200 max-w-[250px] truncate">
-                                        {{ mission.name }}
-                                    </span>
+                                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200 max-w-[250px] truncate">{{ mission.name }}</span>
                                     <span class="text-[9px] text-slate-400 font-mono uppercase tracking-wider">ID: #{{ mission.id }}</span>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-tighter">
-                                All VIP Levels
-                            </span>
+                        <td class="px-6 py-4 text-right">
+                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ mission.order_count }}</span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                {{ mission.order_count }}
-                            </span>
+                            <span class="font-mono text-slate-500 dark:text-slate-400 text-xs">BOB {{ mission.order_price }}</span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">
-                                BOB {{ mission.price }}
-                            </span>
+                            <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-sm">BOB {{ mission.price }}</span>
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
@@ -85,17 +78,15 @@
                                     editData.id = '{{ mission.id }}';
                                     editData.name = '{{ mission.name|escapejs }}';
                                     editData.price = '{{ mission.price }}';
+                                    editData.order_price = '{{ mission.order_price }}';
                                     editData.order_count = '{{ mission.order_count }}';
                                     editData.image_link = '{{ mission.image_link }}';
                                     previewUrl = '{{ mission.image_link }}';
                                     showEditModal = true;
-                                " class="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all text-[10px] font-black uppercase tracking-widest">
+                                " class="text-blue-500 hover:text-blue-700 p-2 rounded-lg text-[10px] font-black uppercase tracking-widest">
                                     Edit
                                 </button>
-
-                                <a href="/staff/mission/delete/{{ mission.id }}/"
-                                   onclick="return confirm('Are you sure you want to delete this product?')"
-                                   class="text-rose-500 hover:text-rose-700 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all text-[10px] font-black uppercase tracking-widest">
+                                <a href="/staff/mission/delete/{{ mission.id }}/" onclick="return confirm('Delete product?')" class="text-rose-500 hover:text-rose-700 p-2 rounded-lg text-[10px] font-black uppercase tracking-widest">
                                     Delete
                                 </a>
                             </div>
@@ -134,43 +125,23 @@
 
     <template x-teleport="body">
         <div x-show="showAddModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" x-cloak>
-            <div @click.outside="showAddModal = false" class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            <div @click.outside="showAddModal = false" class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800">
                 <form action="/staff/mission/save/" method="POST" class="p-8">
                     {% csrf_token %}
                     <div class="flex justify-between items-center mb-8">
-                        <h3 class="text-xl font-black dark:text-white uppercase tracking-tight">Add New Product</h3>
-                        <button type="button" @click="showAddModal = false" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:text-rose-500">Exit</button>
+                        <h3 class="text-xl font-black dark:text-white uppercase">Add New Product</h3>
+                        <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-rose-500 text-xs font-bold uppercase">Exit</button>
                     </div>
-
-                    <div class="space-y-5">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Display Name</label>
-                            <input type="text" name="name" required placeholder="Product title..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <div class="space-y-4">
+                        <input type="text" name="name" placeholder="Display Name" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" step="0.01" name="order_price" placeholder="Unit Price (BOB)" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
+                            <input type="number" step="0.01" name="price" placeholder="Total Price (BOB)" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
                         </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Price (BOB)</label>
-                            <input type="number" step="0.01" name="price" required placeholder="0.00" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Order Count</label>
-                            <input type="number" name="order_count" required value="1" min="1" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Image URL</label>
-                            <div class="flex gap-4">
-                                <input type="url" name="image_link" x-model="previewUrl" required placeholder="https://..." class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none">
-                                <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                    <template x-if="previewUrl"><img :src="previewUrl" class="w-full h-full object-cover"></template>
-                                    <template x-if="!previewUrl"><span class="text-[10px] opacity-20 italic">Img</span></template>
-                                </div>
-                            </div>
-                        </div>
+                        <input type="number" name="order_count" value="1" min="1" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
+                        <input type="url" name="image_link" x-model="previewUrl" placeholder="Image URL" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
                     </div>
-
-                    <button type="submit" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl shadow-blue-600/30 transition-all active:scale-[0.98]">Push to Pool</button>
+                    <button type="submit" class="w-full mt-8 bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase tracking-widest">Push to Pool</button>
                 </form>
             </div>
         </div>
@@ -178,37 +149,23 @@
 
     <template x-teleport="body">
         <div x-show="showEditModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" x-cloak>
-            <div @click.outside="showEditModal = false" class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            <div @click.outside="showEditModal = false" class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800">
                 <form :action="'/staff/mission/update/' + editData.id + '/'" method="POST" class="p-8">
                     {% csrf_token %}
                     <div class="flex justify-between items-center mb-8">
-                        <h3 class="text-xl font-black dark:text-white uppercase tracking-tight">Edit Product</h3>
-                        <button type="button" @click="showEditModal = false" class="text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:text-rose-500">Exit</button>
+                        <h3 class="text-xl font-black dark:text-white uppercase">Edit Product</h3>
+                        <button type="button" @click="showEditModal = false" class="text-slate-400 hover:text-rose-500 text-xs font-bold uppercase">Exit</button>
                     </div>
-                    <div class="space-y-5">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Product Name</label>
-                            <input type="text" name="name" x-model="editData.name" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <div class="space-y-4">
+                        <input type="text" name="name" x-model="editData.name" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" step="0.01" name="order_price" x-model="editData.order_price" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
+                            <input type="number" step="0.01" name="price" x-model="editData.price" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Sale Price</label>
-                            <input type="number" step="0.01" name="price" x-model="editData.price" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Order Count</label>
-                            <input type="number" name="order_count" x-model="editData.order_count" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">New Image URL</label>
-                            <div class="flex gap-4">
-                                <input type="url" name="image_link" x-model="editData.image_link" @input="previewUrl = editData.image_link" required class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-sm dark:text-white outline-none">
-                                <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                    <img :src="editData.image_link" class="w-full h-full object-cover">
-                                </div>
-                            </div>
-                        </div>
+                        <input type="number" name="order_count" x-model="editData.order_count" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
+                        <input type="url" name="image_link" x-model="editData.image_link" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3 text-sm dark:text-white outline-none">
                     </div>
-                    <button type="submit" class="w-full mt-10 bg-slate-800 hover:bg-black text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">Update Information</button>
+                    <button type="submit" class="w-full mt-8 bg-slate-800 text-white py-4 rounded-2xl font-bold uppercase tracking-widest">Update Information</button>
                 </form>
             </div>
         </div>

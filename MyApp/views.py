@@ -330,45 +330,68 @@ def save_mission(request):
         name = request.POST.get('name')
         price = request.POST.get('price')
         image_link = request.POST.get('image_link')
-
-        # FIX: Ensure we get the value from the form and convert to integer
-        # This prevents it from defaulting to 1 if the data actually exists
         order_count = request.POST.get('order_count')
-        order_count = int(order_count) if order_count and str(order_count).isdigit() else 1
+
+        # 1. Convert strings to numbers safely
+        try:
+            # Convert price to float/decimal and order_count to int
+            clean_price = float(price) if price else 0.0
+            clean_count = int(order_count) if order_count and str(order_count).isdigit() else 1
+
+            # 2. Calculate Total Price
+            total_price = clean_price * clean_count
+
+        except ValueError:
+            messages.error(request, "Invalid numbers provided for price or count.")
+            return redirect('/staff/?tab=missions')
 
         try:
+            # 3. Save to Database
             Mission.objects.create(
                 name=name,
-                price=price,
+                price=clean_price, # The price of a single unit
                 image_link=image_link,
-                order_count=order_count
+                order_count=clean_count,
+                # Ensure your model has this field, or remove it if you only save unit price
+                total_price=total_price
             )
-            messages.success(request, "Mission created successfully!")
+            messages.success(request, f"Mission created! Total Value: ${total_price}")
         except Exception as e:
             messages.error(request, f"Database Error: {e}")
 
         return redirect('/staff/?tab=missions')
+
     return redirect('/staff/')
 
 @staff_member_required
 def update_mission(request, mission_id):
     if request.method == "POST":
         mission = get_object_or_404(Mission, id=mission_id)
+
+        # Basic fields
         mission.name = request.POST.get('name')
-        mission.price = request.POST.get('price')
         mission.image_link = request.POST.get('image_link')
 
-        # FIX: Same integer conversion here
+        # Prices and Counts
+        price = request.POST.get('price')
+        order_price = request.POST.get('order_price')
         order_count = request.POST.get('order_count')
-        mission.order_count = int(order_count) if order_count and str(order_count).isdigit() else 1
 
+        # Conversion and Validation
         try:
+            mission.price = float(price) if price else 0.0
+            mission.order_price = float(order_price) if order_price else 0.0
+            mission.order_count = int(order_count) if order_count and str(order_count).isdigit() else 1
+
             mission.save()
             messages.success(request, f"Mission #{mission_id} updated successfully!")
+        except ValueError:
+            messages.error(request, "Invalid numeric values provided. Please check prices and counts.")
         except Exception as e:
             messages.error(request, f"Update Error: {e}")
 
         return redirect('/staff/?tab=missions')
+
     return redirect('/staff/')
 
 @staff_member_required
