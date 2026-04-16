@@ -1,90 +1,113 @@
-<div class="px-4 py-4 min-h-[calc(100vh-120px)] animate-in fade-in duration-500 pt-16" style="font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;">
+<div class="px-4 py-4 min-h-[calc(100vh-120px)] animate-in fade-in duration-500 pt-16 font-sans">
 
-    <div class="flex items-center justify-between mb-6">
-        <a href="?tab=profile&lang={{ request.GET.lang }}" class="flex items-center gap-2 text-slate-400 active:opacity-50 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 19-7-7 7-7M19 12H5"></path></svg>
-            <span class="text-xs font-bold uppercase tracking-tight">{% if request.GET.lang == 'en' %}Back{% else %}Volver{% endif %}</span>
-        </a>
-        <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">{% if request.GET.lang == 'en' %}Security{% else %}Seguridad{% endif %}</h2>
-        <div class="w-10"></div>
-    </div>
+  <div class="flex items-center justify-between mb-8 px-2">
+          <a href="?tab=profile&lang={{ request.GET.lang }}" class="flex items-center gap-2 text-slate-400 active:scale-90 transition-all">
+              <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </div>
+              <span class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                  {% if request.GET.lang == 'en' %}Back{% else %}Volver{% endif %}
+              </span>
+          </a>
 
-    <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
-        <button onclick="switchTab('login-tab')" id="btn-login-tab" class="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all bg-white text-slate-800 shadow-sm">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.25em] mr-4">
+              {% if request.GET.lang == 'en' %}Security{% else %}Seguridad{% endif %}
+          </h2>
+
+          <div class="w-12"></div>
+      </div>
+
+    <div class="flex bg-slate-100 p-1 rounded-2xl mb-6">
+        <button onclick="switchTab('login-tab')" id="btn-login-tab" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all bg-white text-slate-800 shadow-sm">
             {% if request.GET.lang == 'en' %}Login{% else %}Acceso{% endif %}
         </button>
-        <button onclick="switchTab('pin-tab')" id="btn-pin-tab" class="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all text-slate-400">
+        <button onclick="switchTab('pin-tab')" id="btn-pin-tab" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all text-slate-400">
             {% if request.GET.lang == 'en' %}Withdrawal PIN{% else %}PIN Retiro{% endif %}
         </button>
     </div>
 
     <div class="space-y-6">
         <div id="login-tab" class="tab-content block animate-in slide-in-from-left-2 duration-300">
-            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-                <form action="{% url 'update_security' %}?lang={{ request.GET.lang }}" method="POST" class="space-y-4" onsubmit="return validatePasswords('login')">
+            <div class="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm">
+                <form action="{% url 'update_security' %}?lang={{ request.GET.lang }}" method="POST" class="space-y-5" onsubmit="return validatePasswords('login')">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="login_password">
 
-                    <div class="relative">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">{% if request.GET.lang == 'en' %}Old Password{% else %}Contraseña Anterior{% endif %}</label>
-                        <div class="relative mt-1.5">
-                            <input type="password" name="old_password" required class="pass-field w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all" placeholder="••••••••">
-                            <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-brand transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-off"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="relative">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">{% if request.GET.lang == 'en' %}New Password{% else %}Nueva Contraseña{% endif %}</label>
-                        <div class="relative mt-1.5">
-                            <input type="password" id="login_new" name="new_password" required class="pass-field w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all" placeholder="••••••••">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">{% if request.GET.lang == 'en' %}Old Password{% else %}Contraseña Anterior{% endif %}</label>
+                        <div class="relative">
+                            <input type="password" name="old_password" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all" placeholder="••••••••">
                             <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">{% if request.GET.lang == 'en' %}Confirm New Password{% else %}Confirmar Nueva Contraseña{% endif %}</label>
-                        <div class="relative mt-1.5">
-                            <input type="password" id="login_confirm" name="confirm_password" required class="pass-field w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all" placeholder="••••••••">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">{% if request.GET.lang == 'en' %}New Password{% else %}Nueva Contraseña{% endif %}</label>
+                        <div class="relative">
+                            <input type="password" id="login_new" name="new_password" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all" placeholder="••••••••">
                             <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-brand text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-orange-100 active:scale-[0.98] transition-all">
-                        {% if request.GET.lang == 'en' %}Update Login{% else %}Actualizar Acceso{% endif %}
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">{% if request.GET.lang == 'en' %}Confirm New{% else %}Confirmar Nueva{% endif %}</label>
+                        <div class="relative">
+                            <input type="password" id="login_confirm" name="confirm_password" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all" placeholder="••••••••">
+                            <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-[#f78522] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-orange-200 active:scale-[0.98] transition-all mt-4">
+                        {% if request.GET.lang == 'en' %}Save Login Changes{% else %}Guardar Cambios Acceso{% endif %}
                     </button>
                 </form>
             </div>
         </div>
 
         <div id="pin-tab" class="tab-content hidden animate-in slide-in-from-right-2 duration-300">
-            <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-                <form action="{% url 'update_security' %}?lang={{ request.GET.lang }}" method="POST" class="space-y-4" onsubmit="return validatePasswords('pin')">
+            <div class="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm">
+                <form action="{% url 'update_security' %}?lang={{ request.GET.lang }}" method="POST" class="space-y-5" onsubmit="return validatePasswords('pin')">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="withdrawal_password">
 
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">{% if request.GET.lang == 'en' %}Old PIN{% else %}PIN Anterior{% endif %}</label>
-                        <input type="password" name="old_password" required maxlength="6" class="w-full mt-1.5 px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all text-center tracking-[1em]" placeholder="••••••">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">{% if request.GET.lang == 'en' %}Old PIN{% else %}PIN Anterior{% endif %}</label>
+                        <div class="relative">
+                            <input type="password" name="old_password" required maxlength="6" inputmode="numeric" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all tracking-[0.5em]" placeholder="••••••">
+                            <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">{% if request.GET.lang == 'en' %}New PIN{% else %}Nuevo PIN{% endif %}</label>
-                        <input type="password" id="pin_new" name="new_password" required maxlength="6" class="w-full mt-1.5 px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all text-center tracking-[1em]" placeholder="••••••">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">{% if request.GET.lang == 'en' %}New PIN{% else %}Nuevo PIN{% endif %}</label>
+                        <div class="relative">
+                            <input type="password" id="pin_new" name="new_password" required maxlength="6" inputmode="numeric" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all tracking-[0.5em]" placeholder="••••••">
+                            <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">{% if request.GET.lang == 'en' %}Confirm New PIN{% else %}Confirmar Nuevo PIN{% endif %}</label>
-                        <input type="password" id="pin_confirm" name="confirm_password" required maxlength="6" class="w-full mt-1.5 px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all text-center tracking-[1em]" placeholder="••••••">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">{% if request.GET.lang == 'en' %}Confirm PIN{% else %}Confirmar PIN{% endif %}</label>
+                        <div class="relative">
+                            <input type="password" id="pin_confirm" name="confirm_password" required maxlength="6" inputmode="numeric" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all tracking-[0.5em]" placeholder="••••••">
+                            <button type="button" onclick="togglePass(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-brand text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-orange-100 active:scale-[0.98] transition-all">
-                        {% if request.GET.lang == 'en' %}Update PIN{% else %}Actualizar PIN{% endif %}
+                    <button type="submit" class="w-full bg-[#f78522] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-orange-200 active:scale-[0.98] transition-all mt-4">
+                        {% if request.GET.lang == 'en' %}Update Secret PIN{% else %}Actualizar PIN Secreto{% endif %}
                     </button>
                 </form>
             </div>
@@ -93,18 +116,14 @@
 </div>
 
 <script>
-    // Toggle Password Visibility
     function togglePass(btn) {
-        const input = btn.previousElementSibling;
-        if (input.type === "password") {
-            input.type = "text";
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
-            btn.classList.add('text-brand');
-        } else {
-            input.type = "password";
-            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-            btn.classList.remove('text-brand');
-        }
+        const input = btn.parentElement.querySelector('input');
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+
+        btn.innerHTML = isPassword
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f78522" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
     }
 
     function switchTab(tabId) {
