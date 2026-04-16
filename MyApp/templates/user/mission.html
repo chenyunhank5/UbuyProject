@@ -48,77 +48,57 @@
     <div class="p-4">
 
         {% if active_mission and active_mission.is_pending_lock %}
-        <div class="text-left w-full max-w-md mx-auto">
+        <div class="van-steps-container flex flex-col mt-4">
+            <div class="step-row finished">
+                <div class="step-line-vertical"></div>
+                <div class="step-icon-box">✓</div>
+                <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
+            </div>
+            <div class="step-row finished">
+                <div class="step-line-vertical"></div>
+                <div class="step-icon-box">✓</div>
+                <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
+            </div>
+            <div class="step-row active">
+                <div class="step-line-vertical"></div>
+                <div class="step-icon-box pulse">!</div>
+                <div class="flex-1">
+                    <div class="step-text mb-4 text-[#f39c12] font-black">
+                        {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
+                    </div>
+                    <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm">
+                        <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200">
+                        <div class="text-xs space-y-2">
+                            <div class="flex justify-between items-start">
+                                <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
+                                <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
+                                <span class="font-bold text-blue-600">
+                                    x{{ active_mission.order_count|default:1 }}
+                                    <span class="text-[10px] text-gray-400 font-normal ml-1">(BOB {{ active_mission.order_price }})</span>
+                                </span>
+                            </div>
 
-          <div class="mb-6">
-              <div class="text-[#f39c12] font-black uppercase tracking-[0.15em] text-[10px] mb-1">
-                  {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
-              </div>
-              <div class="h-1 w-12 bg-[#f39c12] rounded-full"></div>
-          </div>
-
-          <div class="flex items-center gap-5 mb-8">
-              <div class="flex-shrink-0">
-                  <div class="w-24 h-24 bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-2 shadow-sm">
-                      <img src="{{ active_mission.image }}" class="object-contain max-h-full max-w-full">
-                  </div>
-              </div>
-              <div class="flex-1">
-                  <h4 class="text-sm font-bold text-slate-800 leading-snug mb-2 line-clamp-2">
-                      {{ active_mission.product_name }}
-                  </h4>
-                  <div class="text-2xl font-black text-slate-900">
-                      <span class="text-xs font-medium text-slate-400 mr-1 uppercase">BOB</span>{{ active_mission.price|floatformat:2 }}
-                  </div>
-              </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-y-6 gap-x-4 border-t border-slate-100 pt-6">
-
-              <div class="col-span-2">
-                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
-                      {% if lang == 'en' %}Order Items{% else %}Artículos del pedido{% endif %}
-                  </p>
-                  <p class="text-sm font-bold text-blue-600">
-                      BOB {{ active_mission.price }} <span class="text-slate-300 mx-1 font-light">×</span> {{ active_mission.order_count|default:1 }}
-                  </p>
-              </div>
-
-              <div>
-                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
-                      {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
-                  </p>
-                  <p class="text-sm font-bold text-[#f39c12]">
-                      BOB {{ active_mission.commission|floatformat:2 }}
-                  </p>
-              </div>
-
-              <div>
-                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
-                      {% if lang == 'en' %}Membership{% else %}Membresía{% endif %}
-                  </p>
-                  <p class="text-sm font-bold text-slate-700">
-                      {{ profile.membership_vip.name }}
-                  </p>
-              </div>
-
-              <div>
-                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
-                      {% if lang == 'en' %}Daily Progress{% else %}Progreso diario{% endif %}
-                  </p>
-                  <div class="flex items-center gap-2">
-                      <span class="text-sm font-bold text-slate-700">{{ profile.missions_count|add:1 }} / {{ profile.membership_vip.missions_per_day }}</span>
-                  </div>
-              </div>
-          </div>
-
-          <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-10">
-              {% csrf_token %}
-              <button class="w-full bg-slate-900 text-white py-4 rounded-2xl text-xs font-black shadow-xl active:scale-[0.98] transition-all uppercase tracking-[0.2em]">
-                  {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
-              </button>
-          </form>
-      </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
+                                <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                                <span class="font-bold text-[#f39c12]">BOB {{ active_mission.commission|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
+                        {% csrf_token %}
+                        <button class="w-full bg-[#f39c12] text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase">
+                            {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
             <div class="order-list mt-8">
                 <div class="flex justify-between items-center px-4">
                     <h2 class="text-[14px] font-bold text-slate-800">
@@ -128,17 +108,49 @@
                 {% for record in records %}
                 <div class="order-item-wrapper">
                     <div class="order-item">
-                        <div class="flex-between"><span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span><span>O{{ record.id }}{{ record.created_at|date:"is" }}</span></div>
-                        <div class="flex-between"><span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span><span class="flex-full text-right u-m-l-20 line-1">{{ record.mission_name }}</span></div>
-                        <div class="flex-between"><span>{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span><span class="font-bold text-blue-500">x{{ record.order_count }}</span></div>
-                        <div class="flex-between"><span>{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span><span class="font-bold">BOB {{ record.amount|floatformat:2 }}</span></div>
-                        <div class="flex-between"><span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span><span class="text-[#f39c12] font-bold">BOB {{ record.commission|floatformat:2 }}</span></div>
-                        <div class="flex-between"><span>{% if lang == 'en' %}Operation Hours{% else %}Horas de funcionamiento{% endif %}</span><span>{{ record.created_at|date:"Y-m-d H:i:s" }}</span></div>
-                        <div class="flex-between"><span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span>
+                            <span>O{{ record.id }}{{ record.created_at|date:"is" }}</span>
+                        </div>
+
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
+                            <span class="flex-full text-right u-m-l-20 line-1">{{ record.mission_name }}</span>
+                        </div>
+
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span>
+                            <span class="text-blue-500 font-bold">
+                                x{{ record.order_count }}
+                                <span class="text-gray-400 font-normal text-[10px] ml-1">(BOB {{ record.order_price|floatformat:2 }})</span>
+                            </span>
+                        </div>
+
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Total Order Price{% else %}Precio total del pedido{% endif %}</span>
+                            <span class="font-bold">BOB {{ record.amount|floatformat:2 }}</span>
+                        </div>
+
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                            <span class="text-[#f39c12] font-bold">BOB {{ record.commission|floatformat:2 }}</span>
+                        </div>
+
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Operation Hours{% else %}Horas de funcionamiento{% endif %}</span>
+                            <span>{{ record.created_at|date:"Y-m-d H:i:s" }}</span>
+                        </div>
+
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
                             {% if record.status == 'Completed' or record.status == 'success' %}
-                            <button class="border-radius-5 van-button van-button--success van-button--mini van-button--plain"><div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span></div></button>
+                            <button class="border-radius-5 van-button van-button--success van-button--mini van-button--plain">
+                                <div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span></div>
+                            </button>
                             {% else %}
-                            <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain"><div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span></div></button>
+                            <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain">
+                                <div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span></div>
+                            </button>
                             {% endif %}
                         </div>
                     </div>
@@ -201,14 +213,22 @@
                                 <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
                                 <span id="prev-name" class="text-right font-bold text-slate-700 flex-1 ml-4 line-clamp-2"></span>
                             </div>
+
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Unit Price{% else %}Precio unitario{% endif %}</span>
+                                <span id="prev-unit-price" class="font-bold text-slate-500"></span>
+                            </div>
+
                             <div class="flex justify-between">
                                 <span class="text-gray-400">{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span>
                                 <span id="prev-count" class="font-bold text-blue-600"></span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span>
-                                <span id="prev-price" class="font-bold text-slate-700"></span>
+
+                            <div class="flex justify-between border-t border-slate-100 pt-2 mt-2">
+                                <span class="text-gray-400 font-black">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
+                                <span id="prev-price" class="font-black text-slate-800"></span>
                             </div>
+
                             <div class="flex justify-between">
                                 <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
                                 <span id="prev-comm" class="font-bold text-[#f39c12]"></span>
@@ -254,53 +274,100 @@
 </style>
 
 <script>
-document.getElementById('btn-start-match')?.addEventListener('click', function() {
-    const btn = this; btn.disabled = true;
-    fetch("{% url 'complete_mission' %}", {
-        method: "POST",
-        headers: { "X-CSRFToken": document.getElementById('csrf-token').value, "Content-Type": "application/json" }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) { alert(data.error); btn.disabled = false; return; }
+  document.getElementById('btn-start-match')?.addEventListener('click', function() {
+      const btn = this;
+      btn.disabled = true;
 
-        // --- DATA BINDING ---
-        if(data.mission) {
-            document.getElementById('prev-img').src = data.mission.image;
-            document.getElementById('prev-name').innerText = data.mission.product_name;
-            document.getElementById('prev-price').innerText = "BOB " + data.mission.price;
-            document.getElementById('prev-comm').innerText = "BOB " + data.mission.commission;
+      fetch("{% url 'complete_mission' %}", {
+          method: "POST",
+          headers: {
+              "X-CSRFToken": document.getElementById('csrf-token').value,
+              "Content-Type": "application/json"
+          }
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (!data.success) {
+              alert(data.error);
+              btn.disabled = false;
+              return;
+          }
 
-            // UPDATED LOGIC: Pull directly from the mission object count
-            let countValue = data.mission.order_count;
-            document.getElementById('prev-count').innerText = "x" + countValue;
-        }
+          // --- DATA BINDING ---
+          if(data.mission) {
+              // Image and Name
+              document.getElementById('prev-img').src = data.mission.image;
+              document.getElementById('prev-name').innerText = data.mission.product_name;
 
-        document.getElementById('start-container').classList.add('hidden');
-        document.getElementById('animation-steps').classList.remove('hidden');
+              // Item Count
+              let countValue = data.mission.order_count || 1;
+              document.getElementById('prev-count').innerText = "x" + countValue;
 
-        const runStep = (id, time, showCard = false, isMatched = false) => {
-            return new Promise(resolve => {
-                const el = document.getElementById(id);
-                const loader = el.querySelector('.loader');
-                const mark = el.querySelector('.mark');
-                el.classList.remove('opacity-20');
-                loader.classList.remove('hidden');
-                setTimeout(() => {
-                    loader.classList.add('hidden');
-                    mark.classList.remove('hidden');
-                    el.classList.add('anim-done');
-                    if(isMatched) { mark.innerText = "!"; mark.parentElement.classList.add('pulse'); }
-                    if(showCard) document.getElementById('matched-preview').classList.remove('hidden');
-                    resolve();
-                }, time);
-            });
-        };
+              // Unit Price (Each individual item)
+              // Ensure your view is sending 'order_price' in the mission_data dictionary
+              if (document.getElementById('prev-unit-price')) {
+                  document.getElementById('prev-unit-price').innerText = "BOB " + parseFloat(data.mission.order_price).toFixed(2);
+              }
 
-        runStep("anim-step-1", 1200)
-        .then(() => runStep("anim-step-2", 1400))
-        .then(() => runStep("anim-step-3", 1000, true, true))
-        .then(() => setTimeout(() => location.reload(), 3000));
-    });
-});
+              // Total Order Price (The 'price' field)
+              document.getElementById('prev-price').innerText = "BOB " + parseFloat(data.mission.price).toFixed(2);
+
+              // Commission
+              document.getElementById('prev-comm').innerText = "BOB " + parseFloat(data.mission.commission).toFixed(2);
+          }
+
+          // --- UI TRANSITION ---
+          document.getElementById('start-container').classList.add('hidden');
+          document.getElementById('animation-steps').classList.remove('hidden');
+
+          // --- ANIMATION LOGIC ---
+          const runStep = (id, time, showCard = false, isMatched = false) => {
+              return new Promise(resolve => {
+                  const el = document.getElementById(id);
+                  if (!el) { resolve(); return; } // Safety check
+
+                  const loader = el.querySelector('.loader');
+                  const mark = el.querySelector('.mark');
+
+                  // Activate current row
+                  el.classList.remove('opacity-20');
+                  if(loader) loader.classList.remove('hidden');
+
+                  setTimeout(() => {
+                      if(loader) loader.classList.add('hidden');
+                      if(mark) {
+                          mark.classList.remove('hidden');
+                          if(isMatched) {
+                              mark.innerText = "!";
+                              mark.parentElement.classList.add('pulse');
+                          }
+                      }
+
+                      el.classList.add('anim-done');
+
+                      // Show the matched order card at step 3
+                      if(showCard) {
+                          const preview = document.getElementById('matched-preview');
+                          if(preview) preview.classList.remove('hidden');
+                      }
+                      resolve();
+                  }, time);
+              });
+          };
+
+          // --- EXECUTE SEQUENCE ---
+          runStep("anim-step-1", 1200)
+              .then(() => runStep("anim-step-2", 1400))
+              .then(() => runStep("anim-step-3", 1000, true, true))
+              .then(() => {
+                  // Wait 3 seconds after step 3 finishes, then reload to show the Pending mission
+                  setTimeout(() => location.reload(), 3000);
+              });
+      })
+      .catch(err => {
+          console.error("Match Error:", err);
+          alert("System error. Please try again.");
+          btn.disabled = false;
+      });
+  });
 </script>

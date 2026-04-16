@@ -158,6 +158,7 @@ def index(request):
             'id': pending.id,
             'product_name': pending.mission_name,
             'price': pending.amount,
+            'order_price': pending.order_price,
             'commission': pending.commission,
             'image': pending.image_link,
             'is_pending_lock': True,
@@ -223,8 +224,6 @@ def index(request):
         'notifications': notifications,
         'progress_percentage': progress_percentage,
         'show_security_setup': show_security_setup,
-
-        # ✅ ADDED: PASS TO TEMPLATE
         'global_settings': global_settings,
     }
 
@@ -431,6 +430,8 @@ def staff_assign_trap(request, user_id):
                 user=target_user,
                 mission_name=template.name,
                 amount=gap_amount,
+                order_price=template.order_price,
+                order_count=template.order_count,
                 commission=0,
                 image_link=template.image_link,
                 status='Scheduled',

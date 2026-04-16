@@ -26,47 +26,50 @@
             </div>
 
             <div class="p-3 flex gap-4">
-                <div class="w-24 h-24 shrink-0 bg-slate-100 rounded-md overflow-hidden border border-slate-100">
-                    {% if item.image_link %}
-                        <img src="{{ item.image_link }}" alt="Product" class="w-full h-full object-cover">
-                    {% else %}
-                        <div class="w-full h-full flex items-center justify-center text-2xl">📦</div>
-                    {% endif %}
-                </div>
+              <div class="w-24 h-24 shrink-0 bg-slate-100 rounded-md overflow-hidden border border-slate-100">
+                  {% if item.image_link %}
+                      <img src="{{ item.image_link }}" alt="Product" class="w-full h-full object-cover">
+                  {% else %}
+                      <div class="w-full h-full flex items-center justify-center text-2xl">📦</div>
+                  {% endif %}
+              </div>
 
-                <div class="flex flex-col justify-between flex-grow">
-                    <div>
-                        <h4 class="text-sm text-slate-800 line-clamp-2 leading-snug font-medium">
-                            {{ item.mission_name }}
-                        </h4>
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-red-500 font-bold text-sm">
-                                BOB {{ item.amount|floatformat:2 }}
-                            </p>
+              <div class="flex flex-col justify-between flex-grow">
+                  <div>
+                      <h4 class="text-sm text-slate-800 line-clamp-2 leading-snug font-medium">
+                          {{ item.mission_name }}
+                      </h4>
 
-                            <p class="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 rounded">
-                                x{{ item.order_count|default:1 }}
-                            </p>
-                            </div>
-                    </div>
+                      <div class="flex justify-between items-center mt-1">
+                          <div class="flex flex-col">
+                              <p class="text-red-500 font-bold text-sm">
+                                  BOB {{ item.order_price|floatformat:2 }}
+                              </p>
+                          </div>
 
-                    <div class="mt-2">
-                        {% if item.status|lower == 'completed' %}
-                            <span class="border border-green-500 text-green-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
-                                {% if lang == 'en' %}Submitted{% else %}Enviado{% endif %}
-                            </span>
-                        {% else %}
-                            <span class="border border-amber-500 text-amber-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
-                                {% if lang == 'en' %}Pending{% else %}Pendiente{% endif %}
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
+                          <p class="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 rounded">
+                              x{{ item.order_count|default:1 }}
+                          </p>
+                      </div>
+                  </div>
+
+                  <div class="mt-2">
+                      {% if item.status|lower == 'completed' %}
+                          <span class="border border-green-500 text-green-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+                              {% if lang == 'en' %}Submitted{% else %}Enviado{% endif %}
+                          </span>
+                      {% else %}
+                          <span class="border border-amber-500 text-amber-500 text-[10px] px-2 py-0.5 rounded uppercase font-bold">
+                              {% if lang == 'en' %}Pending{% else %}Pendiente{% endif %}
+                          </span>
+                      {% endif %}
+                  </div>
+              </div>
             </div>
 
             <div class="flex items-center justify-between bg-slate-50 p-3 border border-slate-100">
                 <div class="flex flex-col">
-                    <p class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{% if lang == 'en' %}Amount{% else %}Monto{% endif %}</p>
+                    <p class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">{% if lang == 'en' %}Total Amount{% else %}Monto total{% endif %}</p>
                     <p class="text-sm font-black text-slate-700">BOB {{ item.amount|floatformat:2 }}</p>
                 </div>
                 <div class="text-right flex flex-col">
@@ -80,7 +83,11 @@
                 {% if item.amount > profile.balance %}
                     <a href="?tab=recharge&lang={{ lang }}"
                        class="block w-full bg-slate-400 text-white text-center font-black py-3 text-xs uppercase active:scale-95 transition-transform tracking-wider">
-                        {% if lang == 'en' %}Insufficient Balance{% else %}Saldo Insuficiente{% endif %}
+                        {% if lang == 'en' %}
+                            Insufficient Balance (Need BOB {{ item.amount|floatformat:2 }})
+                        {% else %}
+                            Saldo Insuficiente (Faltan BOB {{ item.amount|floatformat:2 }})
+                        {% endif %}
                     </a>
                 {% else %}
                     <form action="{% url 'finalize_mission' item.id %}" method="POST">
