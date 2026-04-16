@@ -48,53 +48,77 @@
     <div class="p-4">
 
         {% if active_mission and active_mission.is_pending_lock %}
-        <div class="van-steps-container flex flex-col mt-4">
-            <div class="step-row finished">
-                <div class="step-line-vertical"></div>
-                <div class="step-icon-box">✓</div>
-                <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
-            </div>
-            <div class="step-row finished">
-                <div class="step-line-vertical"></div>
-                <div class="step-icon-box">✓</div>
-                <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
-            </div>
-            <div class="step-row active">
-                <div class="step-line-vertical"></div>
-                <div class="step-icon-box pulse">!</div>
-                <div class="flex-1">
-                    <div class="step-text mb-4 text-[#f39c12] font-black">
-                        {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
-                    </div>
-                    <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm">
-                        <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200">
-                        <div class="text-xs space-y-2">
-                            <div class="flex justify-between items-start">
-                                <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                                <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
-                                <span class="font-bold text-blue-600">x{{ active_mission.order_count|default:1 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Order Price{% else %}Precio del pedido{% endif %}</span>
-                                <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                                <span class="font-bold text-[#f39c12]">BOB {{ active_mission.commission|floatformat:2 }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
-                        {% csrf_token %}
-                        <button class="w-full bg-[#f39c12] text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase">
-                            {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <div class="text-left w-full max-w-md mx-auto">
+
+          <div class="mb-6">
+              <div class="text-[#f39c12] font-black uppercase tracking-[0.15em] text-[10px] mb-1">
+                  {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
+              </div>
+              <div class="h-1 w-12 bg-[#f39c12] rounded-full"></div>
+          </div>
+
+          <div class="flex items-center gap-5 mb-8">
+              <div class="flex-shrink-0">
+                  <div class="w-24 h-24 bg-white border border-slate-100 rounded-2xl flex items-center justify-center p-2 shadow-sm">
+                      <img src="{{ active_mission.image }}" class="object-contain max-h-full max-w-full">
+                  </div>
+              </div>
+              <div class="flex-1">
+                  <h4 class="text-sm font-bold text-slate-800 leading-snug mb-2 line-clamp-2">
+                      {{ active_mission.product_name }}
+                  </h4>
+                  <div class="text-2xl font-black text-slate-900">
+                      <span class="text-xs font-medium text-slate-400 mr-1 uppercase">BOB</span>{{ active_mission.price|floatformat:2 }}
+                  </div>
+              </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-y-6 gap-x-4 border-t border-slate-100 pt-6">
+
+              <div class="col-span-2">
+                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
+                      {% if lang == 'en' %}Order Items{% else %}Artículos del pedido{% endif %}
+                  </p>
+                  <p class="text-sm font-bold text-blue-600">
+                      BOB {{ active_mission.price }} <span class="text-slate-300 mx-1 font-light">×</span> {{ active_mission.order_count|default:1 }}
+                  </p>
+              </div>
+
+              <div>
+                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
+                      {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
+                  </p>
+                  <p class="text-sm font-bold text-[#f39c12]">
+                      BOB {{ active_mission.commission|floatformat:2 }}
+                  </p>
+              </div>
+
+              <div>
+                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
+                      {% if lang == 'en' %}Membership{% else %}Membresía{% endif %}
+                  </p>
+                  <p class="text-sm font-bold text-slate-700">
+                      {{ profile.membership_vip.name }}
+                  </p>
+              </div>
+
+              <div>
+                  <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">
+                      {% if lang == 'en' %}Daily Progress{% else %}Progreso diario{% endif %}
+                  </p>
+                  <div class="flex items-center gap-2">
+                      <span class="text-sm font-bold text-slate-700">{{ profile.missions_count|add:1 }} / {{ profile.membership_vip.missions_per_day }}</span>
+                  </div>
+              </div>
+          </div>
+
+          <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-10">
+              {% csrf_token %}
+              <button class="w-full bg-slate-900 text-white py-4 rounded-2xl text-xs font-black shadow-xl active:scale-[0.98] transition-all uppercase tracking-[0.2em]">
+                  {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
+              </button>
+          </form>
+      </div>
             <div class="order-list mt-8">
                 <div class="flex justify-between items-center px-4">
                     <h2 class="text-[14px] font-bold text-slate-800">
