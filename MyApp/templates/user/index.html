@@ -53,7 +53,7 @@
         <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 max-w-md mx-auto">
 
           <div class="flex items-center gap-3">
-              <div class="flex items-center justify-start" style="height: 57px; margin-left: -15px;">
+              <div class="flex items-center justify-start" style="height: 56px; margin-left: -16px;">
                   <img
                       src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1776119557/ppp_v5hl1q.png"
                       alt="Logo"
@@ -144,52 +144,44 @@
             <div class="grid grid-cols-5 px-1 py-3 items-end">
 
                 <a href="?tab=home&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <img src="{% if active_tab == 'home' or not active_tab %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243935/download_o2t6x5.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243799/ohome.0cf9ec80_edaksd.png{% endif %}"
+                    <img src="{% if active_tab == 'home' or not active_tab %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/home-sel_cns7bk.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/home_qbhidz.png{% endif %}"
                          alt="Home" class="w-6 h-6 object-contain">
-                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'home' or not active_tab %}text-[#f78522]{% else %}text-slate-400{% endif %}">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'home' or not active_tab %}text-black{% else %}text-slate-400{% endif %}">
                         {% if lang == 'en' %}Home{% else %}Inicio{% endif %}
                     </span>
                 </a>
 
                 <a href="?tab=work&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <svg class="w-6 h-6" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M704.7 738.46H126.6c-35.68 0-64.6-28.92-64.6-64.6v-471.2c0-35.68 28.92-64.6 64.6-64.6h578.1c35.68 0 64.6 28.92 64.6 64.6v471.2c0 35.68-28.92 64.6-64.6 64.6z"
-                              fill="{% if active_tab == 'work' %}#f78522{% else %}#94a3b8{% endif %}"></path>
-                        <path d="M874.52 641.49h-275V473.43c0-75.94 61.56-137.5 137.5-137.5s137.5 61.56 137.5 137.5v168.06z"
-                              fill="{% if active_tab == 'work' %}#FF554D{% else %}#cbd5e1{% endif %}"></path>
-                        <path d="M902 885.93H572c-39.72 0-68.43-38.18-57.75-76.35l22.65-79.19c10.03-34.54 41.57-58.32 77.33-58.32h20.14c16.82 0 32.92 6.63 44.81 18.52l36.32 36.32c0.65 0.65 1.29 1.21 1.94 1.86 11.32 9.46 27.9 9.46 39.15 0 0.73-0.57 1.38-1.21 2.02-1.86l36.24-36.32c11.89-11.89 28.07-18.52 44.81-18.52h20.22c35.75 0 67.21 23.78 77.33 58.32l22.57 79.19c10.65 38.18-18.06 76.35-57.78 76.35z"
-                              fill="{% if active_tab == 'work' %}#B2150A{% else %}#64748b{% endif %}"></path>
-                        <path d="M558.25 282.09L399.8 336.31l47.92 41.82-69.06 78.61-46.4-45.62c-3.92-3.84-9.47-6.03-14.64-5.87-5.47 0.08-10.69 2.36-14.48 6.31L180.78 539.4c-7.81 8.15-7.53 21.09 0.64 28.92 3.96 3.8 9.05 5.67 14.14 5.67 5.37 0 10.77-2.12 14.78-6.31l108.01-112.86 47.04 46.26c4.01 3.96 9.61 5.95 15.08 5.87 5.63-0.2 10.91-2.72 14.62-6.95l83.44-94.99 47.45 41.41 32.27-164.33z"
-                              fill="#FFFFFF"></path>
-                    </svg>
-                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'work' %}text-[#f78522]{% else %}text-slate-400{% endif %}">
+                    <img src="{% if active_tab == 'work' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/work-sel_bgop2t.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/work_iglv4j.png{% endif %}"
+                         alt="Work" class="w-6 h-6 object-contain">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'work' %}text-black{% else %}text-slate-400{% endif %}">
                         {% if lang == 'en' %}Work{% else %}Trabajar{% endif %}
                     </span>
                 </a>
 
                 <div class="flex flex-col items-center justify-center">
                     <a href="?tab=mission&lang={{ lang }}" class="-mt-14 active:scale-90 transition-transform relative z-10 flex flex-col items-center">
-                        <img src="{% if active_tab == 'mission' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243799/startingActive3.f51cf26f_dnesyh.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775245492/ostarting.8b1ceecf_ko8hha.png{% endif %}"
+                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/grab_xnbjo1.png"
                              alt="Missions"
-                             class="w-[68px] h-[68px] object-contain {% if active_tab == 'mission' %}drop-shadow-[0_4px_6px_rgba(247,133,34,0.4)]{% else %}drop-shadow-none opacity-90{% endif %}">
+                             class="w-[68px] h-[68px] object-contain drop-shadow-none">
                     </a>
-                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'mission' %}text-[#f78522]{% else %}text-slate-400{% endif %}">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'mission' %}text-black{% else %}text-slate-400{% endif %}">
                           {% if lang == 'en' %}Order{% else %}Orden{% endif %}
                     </span>
                 </div>
 
                 <a href="?tab=order&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <img src="{% if active_tab == 'order' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243935/download_1_gzqqjd.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243799/orecords.44d9036b_pjxc8m.png{% endif %}"
+                    <img src="{% if active_tab == 'order' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/orders-sel_f5mtvs.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/orders_fu8upc.png{% endif %}"
                          alt="Orders" class="w-6 h-6 object-contain">
-                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'order' %}text-[#f78522]{% else %}text-slate-400{% endif %}">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'order' %}text-black{% else %}text-slate-400{% endif %}">
                         {% if lang == 'en' %}Records{% else %}Archivos{% endif %}
                     </span>
                 </a>
 
                 <a href="?tab=profile&lang={{ lang }}" class="flex flex-col items-center justify-center gap-1">
-                    <img src="{% if active_tab == 'profile' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243934/download_3_gu3ks5.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775243799/oprofile.e21aa036_bkgray.png{% endif %}"
+                    <img src="{% if active_tab == 'profile' %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/mine-sel_sv4jhm.png{% else %}https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775144638/mine_urxeyw.png{% endif %}"
                          alt="Profile" class="w-6 h-6 object-contain">
-                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'profile' %}text-[#f78522]{% else %}text-slate-400{% endif %}">
+                    <span class="text-[10px] font-bold uppercase tracking-tighter {% if active_tab == 'profile' %}text-black{% else %}text-slate-400{% endif %}">
                         {% if lang == 'en' %}Mine{% else %}Mío{% endif %}
                     </span>
                 </a>
