@@ -216,7 +216,6 @@ def index(request):
         'lang': lang,
         'vip_levels': vips,
         'active_mission': active_mission,
-        'order_price': order_price,
         'limit_reached': limit_reached,
         'records': records,
         'history_records': history_records,
