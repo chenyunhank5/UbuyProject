@@ -267,7 +267,7 @@ def staff_index(request):
             Q(id__icontains=mission_query)
         )
 
-    missions = Paginator(all_missions, 10).get_page(request.GET.get('mission_page'))
+    missions = Paginator(all_missions, 30).get_page(request.GET.get('mission_page'))
 
     # ---------------- ORDERS ----------------
     order_query = request.GET.get('order_q', '')
