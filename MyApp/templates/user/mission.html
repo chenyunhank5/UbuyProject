@@ -74,11 +74,15 @@
                                 <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
-                                <span class="font-bold text-blue-600">
-                                    x{{ active_mission.order_count|default:1 }}
-                                    <span class="text-[10px] text-gray-400 font-normal ml-1">(BOB {{ active_mission.order_price }})</span>
-                                </span>
+                              <span class="text-gray-400">
+                                  {% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}
+                              </span>
+                              <span class="font-bold text-blue-600">
+                                  x{{ active_mission.order_count|default:1 }}
+                                  <span class="text-[10px] text-gray-400 font-normal ml-1">
+                                      (BOB {{ active_mission.order_price }})
+                                  </span>
+                              </span>
                             </div>
 
                             <div class="flex justify-between">

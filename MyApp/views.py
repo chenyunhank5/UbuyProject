@@ -153,12 +153,12 @@ def index(request):
     limit_reached = False
 
     if pending:
-        # ✅ LOCKED STATE
+        # ✅ Check if 'pending' (MissionRecord model) actually has order_price
         active_mission = {
             'id': pending.id,
             'product_name': pending.mission_name,
             'price': pending.amount,
-            'order_price': pending.order_price,
+            'order_price': pending.order_price, # <--- Ensure this field exists in MissionRecord model
             'commission': pending.commission,
             'image': pending.image_link,
             'is_pending_lock': True,
@@ -460,43 +460,39 @@ def complete_mission(request):
             profile = Profile.objects.select_for_update().get(user=user)
             user_vip = profile.membership_vip
 
-            pending = MissionRecord.objects.select_for_update().filter(
-                user=user,
-                status='Pending'
-            ).first()
-
+            # Check for existing pending tasks
+            pending = MissionRecord.objects.filter(user=user, status='Pending').first()
             if pending:
                 return JsonResponse({'success': False, 'error': 'Pending mission exists'})
 
-            if user_vip and profile.missions_count >= user_vip.missions_per_day:
-                return JsonResponse({'success': False, 'error': 'Limit reached'})
-
             next_turn = profile.missions_count + 1
+
+            # 1. Check if there is a "Trap" scheduled
             trap = MissionRecord.objects.filter(
                 user=user,
                 status='Scheduled',
                 scheduled_at=next_turn
             ).first()
 
-            # We create a dictionary to hold the data we want to send to the frontend
-            mission_data = {}
-
             if trap:
+                # IMPORTANT: Find the template to get the correct order_price
+                template = Mission.objects.filter(name=trap.mission_name).first()
+
                 trap.amount = profile.balance + trap.amount
                 trap.status = 'Pending'
+
+                # Copy values from template to the Record
+                if template:
+                    trap.order_price = template.order_price
+                    trap.order_count = template.order_count
+
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                 trap.commission = trap.amount * rate
                 trap.save()
 
-                # Prepare data from trap
-                mission_data = {
-                    'product_name': trap.mission_name,
-                    'image': trap.image_link,
-                    'price': str(trap.amount),
-                    'commission': str(trap.commission),
-                    'order_count': trap.order_count # Ensure this field exists in MissionRecord
-                }
+                mission_obj = trap # Use this for the response
             else:
+                # 2. Random Match Logic
                 missions = Mission.objects.filter(price__lte=profile.balance)
                 if not missions.exists():
                     return JsonResponse({'success': False, 'error': 'Insufficient balance'})
@@ -505,33 +501,33 @@ def complete_mission(request):
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                 commission = selected.price * rate
 
-                MissionRecord.objects.create(
+                # Create the record and EXPLICITLY save order_price
+                mission_obj = MissionRecord.objects.create(
                     user=user,
                     mission_name=selected.name,
                     amount=selected.price,
+                    order_price=selected.order_price, # <--- THIS SAVES IT TO DB
                     commission=commission,
                     image_link=selected.image_link,
-                    order_count=selected.order_count, # Pass the count to the record
+                    order_count=selected.order_count,
                     status='Pending'
                 )
-
-                # Prepare data from selected mission
-                mission_data = {
-                    'product_name': selected.name,
-                    'image': selected.image_link,
-                    'price': str(selected.price),
-                    'commission': str(commission),
-                    'order_count': selected.order_count # This sends the number to JS
-                }
 
             profile.missions_count += 1
             profile.save()
 
-        # CRITICAL FIX: Send the mission data back to the frontend
-        return JsonResponse({
-            'success': True,
-            'mission': mission_data
-        })
+            # Return the data to your JavaScript
+            return JsonResponse({
+                'success': True,
+                'mission': {
+                    'product_name': mission_obj.mission_name,
+                    'image': mission_obj.image_link,
+                    'order_price': str(mission_obj.order_price),
+                    'price': str(mission_obj.amount),
+                    'commission': str(mission_obj.commission),
+                    'order_count': mission_obj.order_count
+                }
+            })
 
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
