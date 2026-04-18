@@ -125,5 +125,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Set to False because you are using an IP address (HTTP) and not a domain (HTTPS)
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
