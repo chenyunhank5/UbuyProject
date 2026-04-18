@@ -17,13 +17,12 @@ SECRET_KEY = 'django-insecure-s8l$(311kw#lec+vp)&^@n!677mx#@n(fe3m)s(e$64^t5-ltz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# --- UPDATED: ALLOWED_HOSTS ---
 ALLOWED_HOSTS = [
     'boemp.com',
     'www.boemp.com',
     'localhost',
     '127.0.0.1',
-    '202.155.8.168'   #
+    '202.155.8.168'
 ]
 
 # Application definition
@@ -104,7 +103,6 @@ USE_TZ = True
 LOGIN_URL = '/login/'
 STAFF_LOGIN_URL = '/staff/login/'
 
-
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -116,15 +114,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- SECURITY SETTINGS ---
 
-# This fixes the "Origin checking failed" error
+# Fix "Origin checking failed" error
 CSRF_TRUSTED_ORIGINS = [
-    'https://ubuyproject.up.railway.app',
-    'https://*.railway.app',
+    'https://boemp.com',
+    'https://www.boemp.com',
     'http://202.155.8.168',        # Added for VPS IP
-    'http://202.155.8.168:8000'   # Added for VPS IP with Port
+    'http://202.155.8.168:8000'    # Added for VPS IP with Port
 ]
 
-# Set to False because you are using an IP address (HTTP) and not a domain (HTTPS)
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
+
+# For Nginx reverse proxy with HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
