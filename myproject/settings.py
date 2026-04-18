@@ -19,10 +19,8 @@ DEBUG = True
 
 # --- UPDATED: ALLOWED_HOSTS ---
 ALLOWED_HOSTS = [
-    'sheinshopp.com',
-    'www.sheinshopp.com',
-    'sheinshopp.net',
-    'www.sheinshopp.net',
+    'boemp.com',
+    'www.boemp.com',
     'localhost',
     '127.0.0.1',
     '202.155.8.168'   #
