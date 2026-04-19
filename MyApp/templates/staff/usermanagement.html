@@ -143,14 +143,17 @@
                     <td class="px-6 py-4">
                         <div class="flex flex-col gap-1 min-w-[80px]">
                             <div class="flex justify-between items-end">
-                                <span class="font-black text-xs {% if user.profile.missions_count >= user.profile.membership_vip.missions_per_day %}text-rose-500{% else %}text-slate-700 dark:text-slate-300{% endif %}">
+                                <span class="font-black text-xs {% if user.profile.missions_count >= user.profile.membership_vip.max_tasks %}text-rose-500{% else %}text-slate-700 dark:text-slate-300{% endif %}">
                                     {{ user.profile.missions_count }}
                                 </span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase">Limit: {{ user.profile.membership_vip.missions_per_day|default:"0" }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">
+                                    Maximum: {{ user.profile.membership_vip.max_tasks|default:"0" }}
+                                </span>
                             </div>
                             <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
                                 <div class="bg-blue-500 h-full transition-all"
-                                     style="width: calc(({{ user.profile.missions_count }} / {{ user.profile.membership_vip.missions_per_day|default:1 }}) * 100%)"></div>
+                                     style="width: calc(({{ user.profile.missions_count }} / {{ user.profile.membership_vip.max_tasks|default:1 }}) * 100%)">
+                                </div>
                             </div>
                         </div>
                     </td>
