@@ -6,7 +6,8 @@
 <main x-data="{
         openDetail: false,
         selectedVip: {},
-        currentLevel: {{ user.profile.membership_vip.level_number|default:0 }}
+        currentLevel: {{ user.profile.membership_vip.level_number|default:0 }},
+        profile_balance: {{ profile_balance|default:0 }}
     }"
     class="animate-in fade-in duration-500 bg-slate-50 min-h-screen pt-6 pb-2">
 
@@ -14,15 +15,14 @@
         {% for vip in vip_levels %}
         <div @click="openDetail = true; selectedVip = {
                 level: {{ vip.level_number }},
-                name: '{{ vip.name }}',
+                name: '{{ vip.name|escapejs }}',
                 balance: '{{ vip.min_balance|floatformat:2 }}',
                 commission: '{{ vip.commission_rate }}',
-                daily_limit: '{{ vip.missions_per_day }}',
                 max_tasks: '{{ vip.max_tasks }}'
              }"
-             class="relative bg-white overflow-hidden shadow-sm border border-slate-100 flex flex-col active:scale-95 transition-all rounded-none cursor-pointer">
+             class="relative bg-white overflow-hidden shadow-sm border border-slate-100 flex flex-col active:scale-95 transition-all rounded-none cursor-pointer group">
 
-            <div class="absolute top-0 left-0 z-20 bg-slate-800 text-[#fff] text-[9px] font-black px-3 py-1 rounded-none italic uppercase">
+            <div class="absolute top-0 left-0 z-20 bg-slate-900 text-white text-[9px] font-black px-3 py-1 rounded-none italic uppercase">
                 {{ vip.name }}
             </div>
 
@@ -34,7 +34,7 @@
 
             <div class="w-full aspect-square bg-[#f8fafc] flex items-center justify-center overflow-hidden border-b border-slate-50">
                 <img src="{% if vip.image %}{{ vip.image.url }}{% else %}https://api.dicebear.com/7.x/identicon/svg?seed={{ vip.level_number }}{% endif %}"
-                     class="w-full h-full object-cover"
+                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                      alt="{{ vip.name }}">
             </div>
 
@@ -42,7 +42,7 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <p class="text-[9px] text-slate-400 font-bold uppercase leading-none mb-1">
-                            {% if lang == 'en' %}Requirement{% else %}Requisito{% endif %}
+                            Requirement
                         </p>
                         <p class="text-[12px] font-black text-slate-900">
                             BOB {{ vip.min_balance|floatformat:0 }}
@@ -50,16 +50,17 @@
                     </div>
                     <div class="text-right">
                         <p class="text-[9px] text-slate-400 font-bold uppercase leading-none mb-1">
-                            {% if lang == 'en' %}Daily Tasks{% else %}Tareas{% endif %}
+                            Max Tasks
                         </p>
                         <p class="text-[12px] font-black text-slate-900">
-                            {{ vip.missions_per_day }} </p>
+                            {{ vip.max_tasks }}
+                        </p>
                     </div>
                 </div>
 
                 <div class="pt-2 border-t border-slate-50 flex items-center justify-between">
                     <span class="text-[9px] font-bold text-slate-400 uppercase">
-                        {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
+                        Commission
                     </span>
 
                     <button :class="profile_balance >= {{ vip.min_balance }} ? 'bg-red-600' : 'bg-slate-200 text-slate-400'"
@@ -73,6 +74,7 @@
     </div>
 
     <div x-show="openDetail" x-cloak class="fixed inset-0 z-[100] flex items-end justify-center p-0">
+
         <div x-show="openDetail"
              x-transition:enter="transition opacity ease-out duration-300"
              x-transition:enter-start="opacity-0"
@@ -101,10 +103,6 @@
 
             <div class="grid grid-cols-2 gap-2 mb-8">
                 <div class="bg-slate-50 p-4 rounded-none border border-slate-100">
-                    <p class="text-[9px] uppercase text-slate-400 font-black mb-1">Daily Limit</p>
-                    <p class="text-sm font-black text-slate-800" x-text="selectedVip.daily_limit"></p>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-none border border-slate-100">
                     <p class="text-[9px] uppercase text-slate-400 font-black mb-1">Max Tasks</p>
                     <p class="text-sm font-black text-slate-800" x-text="selectedVip.max_tasks"></p>
                 </div>
@@ -112,9 +110,9 @@
                     <p class="text-[9px] uppercase text-slate-400 font-black mb-1">Min Balance</p>
                     <p class="text-sm font-black text-slate-800" x-text="'BOB ' + selectedVip.balance"></p>
                 </div>
-                <div class="bg-red-50 p-4 rounded-none border border-red-100">
-                    <p class="text-[9px] uppercase text-red-600 font-black mb-1">System</p>
-                    <p class="text-sm font-black text-red-600 italic">Auto-Assign</p>
+                <div class="col-span-2 bg-red-50 p-4 rounded-none border border-red-100 flex justify-between items-center">
+                    <p class="text-[9px] uppercase text-red-600 font-black">System Mode</p>
+                    <p class="text-sm font-black text-red-600 italic">Auto-Assign Active</p>
                 </div>
             </div>
 

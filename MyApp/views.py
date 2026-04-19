@@ -87,8 +87,12 @@ def register_view(request):
 # --- USER DASHBOARD ---
 @login_required
 def index(request):
-    # ✅ ADDED: import inside function (safe if you forgot at top)
-    from .models import GlobalSettings
+    # ✅ Imports required for all sections of the logic
+    from .models import GlobalSettings, VipLevel, MissionRecord, RechargeRequest, WithdrawalRequest, UserMessage
+    from django.core.paginator import Paginator
+    from django.db.models import Case, When, Value, IntegerField
+    from decimal import Decimal
+    from itertools import chain
 
     # 1. Get basic parameters
     current_tab = request.GET.get('tab', 'home')
@@ -136,12 +140,13 @@ def index(request):
     )
 
     # --- VIP & PROGRESS LOGIC ---
+    vips = VipLevel.objects.all().order_by('level_number')
     user_vip = profile.membership_vip
     progress_percentage = 0
+
+    # Calculate progress based on the current user's VIP daily limit
     if user_vip and user_vip.missions_per_day > 0:
         progress_percentage = (profile.missions_count / user_vip.missions_per_day) * 100
-
-    vips = VipLevel.objects.all().order_by('level_number')
 
     # 🔒 GET PENDING MISSION
     pending = MissionRecord.objects.filter(
@@ -153,12 +158,11 @@ def index(request):
     limit_reached = False
 
     if pending:
-        # ✅ Check if 'pending' (MissionRecord model) actually has order_price
         active_mission = {
             'id': pending.id,
             'product_name': pending.mission_name,
             'price': pending.amount,
-            'order_price': pending.order_price, # <--- Ensure this field exists in MissionRecord model
+            'order_price': pending.order_price,
             'commission': pending.commission,
             'image': pending.image_link,
             'is_pending_lock': True,
@@ -174,19 +178,15 @@ def index(request):
             'is_pending_lock': False
         }
 
-    # --- NEW: COMBINED BALANCE HISTORY LOGIC ---
-
-    # 1. Orders
+    # --- BALANCE HISTORY LOGIC (Consolidated) ---
     h_orders = MissionRecord.objects.filter(user=request.user)
     for o in h_orders:
         o.entry_type = 'order'
 
-    # 2. Recharges
     h_recharges = RechargeRequest.objects.filter(user=request.user)
     for r in h_recharges:
         r.entry_type = 'recharge'
 
-    # 3. Withdrawals
     h_withdraws = WithdrawalRequest.objects.filter(user=request.user)
     for w in h_withdraws:
         w.entry_type = 'withdrawal'
@@ -206,15 +206,16 @@ def index(request):
     if current_tab == 'withdraw' and not profile.withdrawal_password:
         show_security_setup = True
 
-    # ✅ ✅ ADDED: GET GLOBAL SETTINGS (THIS FIXES YOUR QR ISSUE)
+    # ✅ GLOBAL SETTINGS (Required for QR/System Config)
     global_settings = GlobalSettings.objects.first()
 
     # --- CONTEXT ---
     context = {
         'active_tab': current_tab,
         'profile': profile,
+        'profile_balance': profile.balance, # ✅ Added for template balance comparisons
         'lang': lang,
-        'vip_levels': vips,
+        'vip_levels': vips, # ✅ All VIP levels for the bundle loop
         'active_mission': active_mission,
         'limit_reached': limit_reached,
         'records': records,
