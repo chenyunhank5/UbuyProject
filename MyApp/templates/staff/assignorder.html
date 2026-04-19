@@ -40,7 +40,7 @@
 
         <div class="flex items-center gap-4">
             <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Completed</span>
+                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block text-right">Completed</span>
                 <span class="text-sm font-mono font-black dark:text-white">{{ target_user.profile.missions_count }} Missions</span>
             </div>
 
@@ -58,17 +58,17 @@
             <div class="flex items-center justify-between">
                 <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Active Queue
+                    Active Trigger Queue
                 </h3>
             </div>
 
-            <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+            <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
                         <tr>
-                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase">Trigger</th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase">Product</th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase text-center">Amount</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase">Turn</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase">Mission & Specs</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase text-center">Recharge Gap</th>
                             <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase text-right">Action</th>
                         </tr>
                     </thead>
@@ -78,11 +78,15 @@
                             <td class="px-6 py-5 font-mono font-bold text-blue-600">#{{ order.scheduled_at }}</td>
                             <td class="px-6 py-5">
                                 <span class="text-sm font-semibold dark:text-slate-200 block truncate w-40">{{ order.mission_name }}</span>
-                                <span class="text-[9px] uppercase font-bold text-slate-400 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">{{ order.status }}</span>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase">{{ order.status }}</span>
+                                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 uppercase">{{ order.order_count }} Units</span>
+                                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase">@ BOB {{ order.order_price }}</span>
+                                </div>
                             </td>
                             <td class="px-6 py-5 text-center font-mono font-black text-emerald-500 text-sm">BOB {{ order.amount }}</td>
                             <td class="px-6 py-5 text-right">
-                                <form method="POST" onsubmit="return confirm('Remove task?');">
+                                <form method="POST" onsubmit="return confirm('Abort deployment?');">
                                     {% csrf_token %}
                                     <input type="hidden" name="order_id" value="{{ order.id }}">
                                     <button type="submit" name="delete_scheduled" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all">
@@ -116,7 +120,7 @@
                     </div>
                 </div>
 
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">02. Select Mission Template</label>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">02. Mission Template</label>
 
                 <form method="GET" class="relative mb-6">
                     <input type="text" name="q_template" value="{{ search_query|default:'' }}" placeholder="Search templates..." class="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-bold outline-none focus:bg-white dark:focus:bg-slate-800 transition-all">
@@ -134,21 +138,36 @@
                             </div>
                             <div class="flex-1">
                                 <h5 class="text-xs font-bold uppercase dark:text-white leading-tight">{{ t.name }}</h5>
-                                <p class="text-[10px] font-bold text-emerald-500 mt-0.5">Base: BOB {{ t.price }}</p>
+                                <p class="text-[10px] font-bold text-slate-400 mt-0.5">Template Default: <span class="text-slate-600 dark:text-slate-300">BOB {{ t.order_price }}</span></p>
                             </div>
                         </div>
 
-                        <form method="POST" class="flex gap-2">
+                        <form method="POST" class="space-y-3">
                             {% csrf_token %}
                             <input type="hidden" name="mission_id" value="{{ t.id }}">
                             <input type="hidden" name="target_turn" :value="targetTurn">
 
-                            <div class="relative flex-1">
-                                <input type="number" name="gap_amount" step="0.01" value="{{ t.price }}" class="w-full pl-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-xs font-mono font-bold outline-none focus:ring-1 focus:ring-blue-500">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="relative">
+                                    <label class="absolute left-3 top-2 text-[7px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Order Units</label>
+                                    <input type="number" name="order_units" value="{{ t.order_count|default:1 }}" min="1" required
+                                           class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-[11px] font-mono font-bold outline-none focus:ring-1 focus:ring-blue-500 dark:text-white">
+                                </div>
+                                <div class="relative">
+                                    <label class="absolute left-3 top-2 text-[7px] font-black text-slate-500 uppercase tracking-widest">Unit Price BOB</label>
+                                    <input type="number" name="unit_price" step="0.01" value="{{ t.order_price }}" required
+                                           class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-[11px] font-mono font-bold outline-none focus:ring-1 focus:ring-slate-500 dark:text-white">
+                                </div>
                             </div>
 
-                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold uppercase rounded-xl transition-all shadow-lg shadow-blue-600/20">
-                                Deploy
+                            <div class="relative">
+                                <label class="absolute left-3 top-2 text-[7px] font-black text-emerald-500 uppercase tracking-widest">Recharge Amount (The Trap)</label>
+                                <input type="number" name="gap_amount" step="0.01" placeholder="Manual Entry" required
+                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-emerald-50/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-[11px] font-mono font-bold outline-none focus:ring-1 focus:ring-emerald-500 dark:text-white">
+                            </div>
+
+                            <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98]">
+                                Deploy Trap
                             </button>
                         </form>
                     </div>

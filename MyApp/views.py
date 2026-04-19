@@ -403,14 +403,16 @@ def delete_order_record(request, order_id):
 def staff_assign_trap(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
     search_query = request.GET.get('q_template', '')
-    templates = Mission.objects.all().order_by('price')
 
+    # Template search logic
+    templates = Mission.objects.all().order_by('price')
     if search_query:
         templates = templates.filter(
             Q(name__icontains=search_query) |
             Q(price__icontains=search_query)
         )
 
+    # Active Queue logic
     scheduled_orders = MissionRecord.objects.filter(
         user=target_user
     ).exclude(status='Completed').order_by('scheduled_at')
@@ -423,15 +425,23 @@ def staff_assign_trap(request, user_id):
         else:
             mission_id = request.POST.get('mission_id')
             template = get_object_or_404(Mission, id=mission_id)
-            gap_amount = Decimal(request.POST.get('gap_amount', '0'))
+
+            # Capture custom trap parameters
             target_turn = request.POST.get('target_turn', 1)
+            gap_amount = Decimal(request.POST.get('gap_amount', '0'))
+            custom_units = request.POST.get('order_units')
+            custom_unit_price = request.POST.get('unit_price')
+
+            # Logic to handle custom values or template fallbacks
+            order_count = int(custom_units) if custom_units else template.order_count
+            order_price = Decimal(custom_unit_price) if custom_unit_price else template.order_price
 
             MissionRecord.objects.create(
                 user=target_user,
                 mission_name=template.name,
-                amount=gap_amount,
-                order_price=template.order_price,
-                order_count=template.order_count,
+                amount=gap_amount,           # Custom Recharge Gap
+                order_price=order_price,     # Custom Unit Price
+                order_count=order_count,     # Custom Units Count
                 commission=0,
                 image_link=template.image_link,
                 status='Scheduled',
