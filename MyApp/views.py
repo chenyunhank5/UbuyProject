@@ -800,12 +800,29 @@ def submit_withdrawal(request):
     lang = request.GET.get('lang', 'es')
     if request.method == "POST":
         p = request.user.profile
-        if not p.can_withdraw:
-            msg = "Retiros deshabilitados." if lang == 'es' else "Withdrawals disabled."
+        vip = p.membership_vip
+        target_tasks = vip.max_tasks if vip else 0
+
+        # ✅ UNIFIED LOCK: Checks if the set is unfinished OR if an order is stuck in Pending
+        has_pending = MissionRecord.objects.filter(user=request.user, status='Pending').exists()
+
+        if p.missions_count < target_tasks or has_pending:
+            if lang == 'es':
+                msg = "Tienes una tarea que completar."
+            else:
+                msg = "You have a task to complete."
+
             messages.error(request, msg)
             return redirect(f'/?tab=withdraw&lang={lang}')
 
-        amount = Decimal(request.POST.get('amount', '0'))
+        # ------------------------------------------
+        # 3. WITHDRAWAL PROCESSING (Fixed 30 BOB)
+        # ------------------------------------------
+        try:
+            amount = Decimal(request.POST.get('amount', '0'))
+        except:
+            amount = Decimal('0')
+
         password = request.POST.get('password')
 
         if p.withdrawal_password == password and p.balance >= amount and amount >= 30:
@@ -813,10 +830,15 @@ def submit_withdrawal(request):
                 p.balance -= amount
                 p.save()
                 WithdrawalRequest.objects.create(user=request.user, amount=amount)
-            messages.success(request, "Retiro exitoso")
+
+            msg = "Solicitud enviada." if lang == 'es' else "Request submitted."
+            messages.success(request, msg)
             return redirect(f'/?tab=withdraw&lang={lang}')
 
-        messages.error(request, "Error en el retiro")
+        # Standard error for password/balance/minimum
+        err_msg = "Error: Contraseña incorrecta o saldo insuficiente." if lang == 'es' else "Error: Incorrect password or insufficient balance."
+        messages.error(request, err_msg)
+
     return redirect(f'/?tab=withdraw&lang={lang}')
 
 @staff_member_required

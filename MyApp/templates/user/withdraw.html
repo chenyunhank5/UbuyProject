@@ -93,9 +93,9 @@
             </div>
         </div>
 
-        <button type="submit" {% if not profile.account_number %}disabled{% endif %}
+        <button type="submit"
                 style="background-color: #f78522;"
-                class="w-full text-white drop-shadow-sm font-black py-4 active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 rounded-[4px] shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-[0.5]">
+                class="w-full text-white drop-shadow-sm font-black py-4 active:scale-[0.98] transition-all uppercase text-[10px] tracking-[0.2em] mt-2 rounded-[4px] shadow-lg shadow-black/10">
             {% if lang == 'en' %}Confirm Withdrawal{% else %}Confirmar Retiro{% endif %}
         </button>
     </form>
