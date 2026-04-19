@@ -36,7 +36,7 @@
             <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
                 <span class="text-slate-400">{% if lang == 'en' %}Task Progress{% else %}Progreso de tareas{% endif %}</span>
                 <span class="text-[#f78522]" style="color: #f78522;">
-                    {% if lang == 'en' %}Task{% else %}Tarea{% endif %} {{ profile.missions_count|add:1 }} / {{ profile.membership_vip.max_tasks }}
+                    {% if lang == 'en' %}Task{% else %}Tarea{% endif %} {{ profile.missions_count }} / {{ profile.membership_vip.max_tasks }}
                 </span>
             </div>
             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -228,7 +228,7 @@
                     <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
                         <div class="van-button__content">
                             <span class="van-button__text">
-                                <span style="font-weight: 600;">{% if lang == 'en' %}Start Task{% else %}Iniciar Tarea{% endif %} {{ profile.missions_count|add:1 }}</span>
+                                <span style="font-weight: 600;">{% if lang == 'en' %}Start Task{% else %}Iniciar Tarea{% endif %} {{ profile.missions_count }}</span>
                             </span>
                         </div>
                     </button>
