@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.validators import UnicodeUsernameValidator
-
+from django.db.models import Sum
 # ==========================================
 # 1. CUSTOM VALIDATOR
 # ==========================================
@@ -120,6 +120,18 @@ class Profile(models.Model):
     # Status Flags
     system_message = models.TextField(blank=True, null=True) # Keeping for legacy/single notices
     show_system_message = models.BooleanField(default=False) # Use as a 'New Notification' flag
+
+    @property
+    def today_profit(self):
+        """Calculates profit from completed missions for the current day."""
+        today = timezone.now().date()
+        # We use 'mission_records' because that is the related_name in your MissionRecord model
+        total = self.user.mission_records.filter(
+            status__iexact='Completed',
+            created_at__date=today
+        ).aggregate(total_sum=Sum('commission'))['total_sum']
+
+        return total or 0.00
 
     def __str__(self):
         return f"{self.user.username}"

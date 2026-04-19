@@ -24,10 +24,10 @@
 
             <div class="text-right">
                 <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">
-                    {% if lang == 'en' %}Today's Profit{% else %}Ganancia hoy{% endif %}
+                    {% if lang == 'en' %}Today's Profit{% else %}Ganancia de hoy{% endif %}
                 </p>
                 <p class="text-[#f78522] font-black text-lg leading-none" style="color: #f78522;">
-                    +{{ profile.today_profit|default:"0.00" }}
+                    +{{ profile.today_profit|floatformat:2 }}
                 </p>
             </div>
         </div>
@@ -163,7 +163,7 @@
                     {% if lang == 'en' %}Max Limit Accomplished{% else %}Límite máximo completado{% endif %}
                 </h3>
                 <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">
-                    {% if lang == 'en' %}You have reached your maximum task limit for today. Come back tomorrow!{% else %}Has alcanzado tu límite máximo por hoy. ¡Vuelve mañana!{% endif %}
+                    {% if lang == 'en' %}Request a reset for more orders!{% else %}¡Solicita un reinicio para obtener más pedidos!{% endif %}
                 </p>
             </div>
             <div class="order-list mt-8">
