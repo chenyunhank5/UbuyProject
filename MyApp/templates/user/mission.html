@@ -1,8 +1,8 @@
-<div class="bg-white min-h-[80vh] relative font-sans text-slate-800 pt-6">
+<div class="bg-white min-h-[80vh] relative font-sans text-slate-800 pt-6" style="background-color: #ffffff !important; color: #1e293b !important;">
 
     <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
 
-    <div class="p-4 border-b border-slate-100 bg-slate-50">
+    <div class="p-4 border-b border-slate-100 bg-slate-50" style="background-color: #f8fafc; border-bottom: 1px solid #f1f5f9;">
         <div class="flex justify-between items-end mb-4">
             <div class="flex items-center gap-3">
                  <div class="relative">
@@ -16,7 +16,7 @@
                      <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none mb-1">
                          {% if lang == 'en' %}Balance{% else %}Saldo{% endif %}
                      </p>
-                     <p class="font-black text-xl text-slate-800 leading-none">
+                     <p class="font-black text-xl text-slate-800 leading-none" style="color: #1e293b;">
                          BOB {{ profile.balance|floatformat:2 }}
                      </p>
                  </div>
@@ -26,7 +26,7 @@
                 <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">
                     {% if lang == 'en' %}Today's Profit{% else %}Ganancia hoy{% endif %}
                 </p>
-                <p class="text-[#f78522] font-black text-lg leading-none">
+                <p class="text-[#f78522] font-black text-lg leading-none" style="color: #f78522;">
                     +{{ profile.today_profit|default:"0.00" }}
                 </p>
             </div>
@@ -35,195 +35,98 @@
         <div class="space-y-1.5">
             <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
                 <span class="text-slate-400">{% if lang == 'en' %}Task Progress{% else %}Progreso de tareas{% endif %}</span>
-                <span class="text-[#f78522]">
+                <span class="text-[#f78522]" style="color: #f78522;">
                     {% if lang == 'en' %}Task{% else %}Tarea{% endif %} {{ profile.missions_count|add:1 }} / {{ profile.membership_vip.max_tasks }}
                 </span>
             </div>
             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div class="h-full bg-[#f78522] rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(247,133,34,0.4)]"
-                     style="width: calc(({{ profile.missions_count }} / {{ profile.membership_vip.max_tasks }}) * 100%)">
+                     style="width: calc(({{ profile.missions_count }} / {{ profile.membership_vip.max_tasks }}) * 100%); background-color: #f78522;">
                 </div>
             </div>
         </div>
     </div>
 
     <div class="p-4">
-        {% if active_mission and active_mission.is_pending_lock %}
-            {% elif profile.missions_count >= profile.membership_vip.max_tasks %}
-            <div class="text-center py-16 px-6">
-                <div class="mb-6 flex justify-center">
-                    <div class="relative">
-                        <div class="absolute inset-0 rounded-full bg-slate-100 animate-ping opacity-20"></div>
-                        <div class="relative w-24 h-24 flex items-center justify-center">
-                            <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775173616/document-with-checkmark-icon-6486646-512_dojpbt.png" alt="Success" class="w-full h-full object-contain">
-                        </div>
-                    </div>
-                </div>
-                <h3 class="text-xl font-black text-slate-800 tracking-tight">{% if lang == 'en' %}Daily Tasks Accomplished{% else %}Tareas diarias completadas{% endif %}</h3>
-                <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">{% if lang == 'en' %}You have reached your limit for today.{% else %}Has alcanzado tu límite por hoy.{% endif %}</p>
-            </div>
-
-        {% else %}
-            <div id="start-container" class="w-full flex flex-col items-center">
-              <div class="w-full overflow-hidden">
-                  <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline>
-                      <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
-                  </video>
-              </div>
-                <div class="w-full px-4 py-4 max-md">
-                    <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
-                        <div class="van-button__content">
-                            <span class="van-button__text">
-                                <span style="font-weight: 600;">
-                                    {% if lang == 'en' %}Start Task{% else %}Iniciar Tarea{% endif %} {{ profile.missions_count|add:1 }}
-                                </span>
-                            </span>
-                        </div>
-                    </button>
-                    <p class="text-center text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">
-                        {{ profile.missions_count }} / {{ profile.membership_vip.max_tasks }} {% if lang == 'en' %}Completed{% else %}Completado{% endif %}
-                    </p>
-                </div>
-            </div>
-        {% endif %}
-    </div>
-
-    <div class="p-4">
-        {% if active_mission and active_mission.is_pending_lock %}
-            {% elif profile.missions_count >= profile.membership_vip.max_tasks %}
-            <div class="text-center py-16 px-6">
-                <div class="mb-6 flex justify-center">
-                    <div class="relative">
-                        <div class="absolute inset-0 rounded-full bg-slate-100 animate-ping opacity-20"></div>
-                        <div class="relative w-24 h-24 flex items-center justify-center">
-                            <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775173616/document-with-checkmark-icon-6486646-512_dojpbt.png" alt="Success" class="w-full h-full object-contain">
-                        </div>
-                    </div>
-                </div>
-                <h3 class="text-xl font-black text-slate-800 tracking-tight">{% if lang == 'en' %}Daily Tasks Accomplished{% else %}Tareas diarias completadas{% endif %}</h3>
-                <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">{% if lang == 'en' %}You have reached your limit for today. Come back tomorrow!{% else %}Has alcanzado tu límite por hoy. ¡Vuelve mañana!{% endif %}</p>
-            </div>
-
-        {% else %}
-            <div id="start-container" class="w-full flex flex-col items-center">
-              <div class="w-full overflow-hidden">
-                  <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline>
-                      <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
-                  </video>
-              </div>
-                <div class="w-full px-4 py-4 max-md">
-                    <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
-                        <div class="van-button__content">
-                            <span class="van-button__text">
-                                <span style="font-weight: 600;">{% if lang == 'en' %}Start{% else %}Iniciar{% endif %} ({{ profile.missions_count }}/{{ profile.membership_vip.max_tasks }})</span>
-                            </span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        {% endif %}
-        </div>
-
-    <div class="p-4">
 
         {% if active_mission and active_mission.is_pending_lock %}
-        <div class="van-steps-container flex flex-col mt-4">
-            <div class="step-row finished">
-                <div class="step-line-vertical"></div>
-                <div class="step-icon-box">✓</div>
-                <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
-            </div>
-            <div class="step-row finished">
-                <div class="step-line-vertical"></div>
-                <div class="step-icon-box">✓</div>
-                <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
-            </div>
-            <div class="step-row active">
-                <div class="step-line-vertical"></div>
-                <div class="step-icon-box pulse">!</div>
-                <div class="flex-1">
-                    <div class="step-text mb-4 text-[#f78522] font-black">
-                        {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
-                    </div>
-                    <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm">
-                        <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200">
-                        <div class="text-xs space-y-2">
-                            <div class="flex justify-between items-start">
-                                <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                                <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                              <span class="text-gray-400">
-                                  {% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}
-                              </span>
-                              <span class="font-bold text-blue-600">
-                                  x{{ active_mission.order_count|default:1 }}
-                                  <span class="text-[10px] text-gray-400 font-normal ml-1">
-                                      (BOB {{ active_mission.order_price }})
-                                  </span>
-                              </span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
-                                <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                                <span class="font-black text-slate-700">BOB {{ active_mission.commission|floatformat:2 }}</span>
+            <div class="van-steps-container flex flex-col mt-4">
+                <div class="step-row finished">
+                    <div class="step-line-vertical"></div>
+                    <div class="step-icon-box">✓</div>
+                    <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
+                </div>
+                <div class="step-row finished">
+                    <div class="step-line-vertical"></div>
+                    <div class="step-icon-box">✓</div>
+                    <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
+                </div>
+                <div class="step-row active">
+                    <div class="step-line-vertical"></div>
+                    <div class="step-icon-box pulse">!</div>
+                    <div class="flex-1">
+                        <div class="step-text mb-4 text-[#f78522] font-black" style="color: #f78522;">
+                            {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
+                        </div>
+                        <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm" style="background-color: #f8fafc; color: #1e293b;">
+                            <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200" style="border-radius: 12px;">
+                            <div class="text-xs space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
+                                    <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                  <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
+                                  <span class="font-bold text-blue-600">x{{ active_mission.order_count|default:1 }} <span class="text-[10px] text-gray-400 font-normal ml-1">(BOB {{ active_mission.order_price }})</span></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
+                                    <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                                    <span class="font-black text-slate-700">BOB {{ active_mission.commission|floatformat:2 }}</span>
+                                </div>
                             </div>
                         </div>
+                        <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
+                            {% csrf_token %}
+                            <button class="w-full text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase" style="background: rgb(247, 133, 34); border-radius: 4px;">
+                                {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
+                            </button>
+                        </form>
                     </div>
-                    <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
-                        {% csrf_token %}
-                        <button class="w-full text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase" style="background: rgb(247, 133, 34); border-radius: 4px;">
-                            {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
-                        </button>
-                    </form>
                 </div>
             </div>
             <div class="order-list mt-8">
-                <div class="flex justify-between items-center px-4">
+                <div class="flex justify-between items-center px-4 mb-4">
                     <h2 class="text-[14px] font-bold text-slate-700">
                         {% if lang == 'en' %}Merchant task records{% else %}Registro de tareas del comerciante{% endif %}
                     </h2>
                 </div>
                 {% for record in records %}
-                <div class="order-item-wrapper">
+                <div class="order-item-wrapper" style="background-color: #ffffff;">
                     <div class="order-item">
                         <div class="flex-between">
                             <span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span>
-                            <span>O{{ record.id }}{{ record.created_at|date:"is" }}</span>
+                            <span style="color: #1e293b;">O{{ record.id }}{{ record.created_at|date:"is" }}</span>
                         </div>
-
                         <div class="flex-between">
                             <span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                            <span class="flex-full text-right u-m-l-20 line-1">{{ record.mission_name }}</span>
+                            <span class="flex-full text-right u-m-l-20 line-1" style="color: #1e293b;">{{ record.mission_name }}</span>
                         </div>
-
                         <div class="flex-between">
                             <span>{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span>
-                            <span class="text-blue-500 font-bold">
-                                x{{ record.order_count }}
-                                <span class="text-gray-400 font-normal text-[10px] ml-1">(BOB {{ record.order_price|floatformat:2 }})</span>
-                            </span>
+                            <span class="text-blue-500 font-bold">x{{ record.order_count }} <span class="text-gray-400 font-normal text-[10px] ml-1">(BOB {{ record.order_price|floatformat:2 }})</span></span>
                         </div>
-
                         <div class="flex-between">
                             <span>{% if lang == 'en' %}Total Order Price{% else %}Precio total del pedido{% endif %}</span>
-                            <span class="font-bold">BOB {{ record.amount|floatformat:2 }}</span>
+                            <span class="font-bold" style="color: #1e293b;">BOB {{ record.amount|floatformat:2 }}</span>
                         </div>
-
                         <div class="flex-between">
                             <span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                            <span class="text-slate-700 font-black">BOB {{ record.commission|floatformat:2 }}</span>
+                            <span class="text-slate-700 font-black" style="color: #1e293b;">BOB {{ record.commission|floatformat:2 }}</span>
                         </div>
-
-                        <div class="flex-between">
-                            <span>{% if lang == 'en' %}Operation Hours{% else %}Horas de funcionamiento{% endif %}</span>
-                            <span>{{ record.created_at|date:"Y-m-d H:i:s" }}</span>
-                        </div>
-
                         <div class="flex-between">
                             <span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
                             {% if record.status == 'Completed' or record.status == 'success' %}
@@ -240,91 +143,142 @@
                     <div class="line-divider"></div>
                 </div>
                 {% empty %}
-                <div class="flex flex-col items-center justify-center py-10 opacity-40"><p class="text-xs uppercase tracking-widest">{% if lang == 'en' %}No records{% else %}Sin registros{% endif %}</p></div>
+                <div class="flex flex-col items-center justify-center py-10 opacity-40">
+                    <p class="text-xs uppercase tracking-widest">{% if lang == 'en' %}No records{% else %}Sin registros{% endif %}</p>
+                </div>
                 {% endfor %}
             </div>
-        </div>
 
-        {% elif profile.missions_count >= profile.membership_vip.missions_per_day %}
-        <div class="text-center py-16 px-6">
-            <div class="mb-6 flex justify-center">
-                <div class="relative">
-                    <div class="absolute inset-0 rounded-full bg-slate-100 animate-ping opacity-20"></div>
-                    <div class="relative w-24 h-24 flex items-center justify-center">
-                        <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775173616/document-with-checkmark-icon-6486646-512_dojpbt.png" alt="Success" class="w-full h-full object-contain">
+        {% elif profile.missions_count >= profile.membership_vip.max_tasks %}
+            <div class="text-center py-16 px-6 bg-white" style="background-color: #ffffff;">
+                <div class="mb-6 flex justify-center">
+                    <div class="relative">
+                        <div class="absolute inset-0 rounded-full bg-slate-100 animate-ping opacity-20"></div>
+                        <div class="relative w-24 h-24 flex items-center justify-center">
+                            <img src="https://res.cloudinary.com/dkwg2x7qd/image/upload/v1775173616/document-with-checkmark-icon-6486646-512_dojpbt.png" alt="Success" class="w-full h-full object-contain">
+                        </div>
                     </div>
                 </div>
+                <h3 class="text-xl font-black text-slate-800 tracking-tight" style="color: #1e293b;">
+                    {% if lang == 'en' %}Max Limit Accomplished{% else %}Límite máximo completado{% endif %}
+                </h3>
+                <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">
+                    {% if lang == 'en' %}You have reached your maximum task limit for today. Come back tomorrow!{% else %}Has alcanzado tu límite máximo por hoy. ¡Vuelve mañana!{% endif %}
+                </p>
             </div>
-            <h3 class="text-xl font-black text-slate-800 tracking-tight">{% if lang == 'en' %}Daily Tasks Accomplished{% else %}Tareas diarias completadas{% endif %}</h3>
-            <p class="mt-2 text-sm font-medium text-slate-500 max-w-[220px] mx-auto">{% if lang == 'en' %}You have reached your limit for today. Come back tomorrow!{% else %}Has alcanzado tu límite por hoy. ¡Vuelve mañana!{% endif %}</p>
-        </div>
+            <div class="order-list mt-8">
+                <div class="flex justify-between items-center px-4 mb-4">
+                    <h2 class="text-[14px] font-bold text-slate-700">
+                        {% if lang == 'en' %}Merchant task records{% else %}Registro de tareas del comerciante{% endif %}
+                    </h2>
+                </div>
+                {% for record in records %}
+                <div class="order-item-wrapper" style="background-color: #ffffff;">
+                    <div class="order-item">
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}</span>
+                            <span style="color: #1e293b;">O{{ record.id }}{{ record.created_at|date:"is" }}</span>
+                        </div>
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
+                            <span class="flex-full text-right u-m-l-20 line-1" style="color: #1e293b;">{{ record.mission_name }}</span>
+                        </div>
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span>
+                            <span class="text-blue-500 font-bold">x{{ record.order_count }} <span class="text-gray-400 font-normal text-[10px] ml-1">(BOB {{ record.order_price|floatformat:2 }})</span></span>
+                        </div>
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Total Order Price{% else %}Precio total del pedido{% endif %}</span>
+                            <span class="font-bold" style="color: #1e293b;">BOB {{ record.amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                            <span class="text-slate-700 font-black" style="color: #1e293b;">BOB {{ record.commission|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex-between">
+                            <span>{% if lang == 'en' %}Status{% else %}Estado{% endif %}</span>
+                            {% if record.status == 'Completed' or record.status == 'success' %}
+                            <button class="border-radius-5 van-button van-button--mini van-button--plain" style="color: rgb(34, 197, 94); border: 1px solid rgb(34, 197, 94);">
+                                <div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span></div>
+                            </button>
+                            {% else %}
+                            <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain">
+                                <div class="van-button__content"><span class="van-button__text">{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span></div>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="line-divider"></div>
+                </div>
+                {% empty %}
+                <div class="flex flex-col items-center justify-center py-10 opacity-40">
+                    <p class="text-xs uppercase tracking-widest">{% if lang == 'en' %}No records{% else %}Sin registros{% endif %}</p>
+                </div>
+                {% endfor %}
+            </div>
 
         {% else %}
-        <div id="start-container" class="w-full flex flex-col items-center">
-          <div class="w-full overflow-hidden">
-              <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline>
-                  <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
-              </video>
-          </div>
-            <div class="w-full px-4 py-4 max-md">
-                <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
-                    <div class="van-button__content"><span class="van-button__text"><span style="font-weight: 600;">{% if lang == 'en' %}Start{% else %}Iniciar{% endif %} ({{ profile.missions_count }}/{{ profile.membership_vip.missions_per_day }})</span></span></div>
-                </button>
+            <div id="start-container" class="w-full flex flex-col items-center">
+              <div class="w-full overflow-hidden">
+                  <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline style="border-radius: 12px;">
+                      <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
+                  </video>
+              </div>
+                <div class="w-full px-4 py-4 max-md">
+                    <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
+                        <div class="van-button__content">
+                            <span class="van-button__text">
+                                <span style="font-weight: 600;">{% if lang == 'en' %}Start Task{% else %}Iniciar Tarea{% endif %} {{ profile.missions_count|add:1 }}</span>
+                            </span>
+                        </div>
+                    </button>
+                </div>
             </div>
-        </div>
-        {% endif %}
 
-        <div id="animation-steps" class="hidden flex flex-col mt-4">
-            <div id="anim-step-1" class="step-row opacity-20">
-                <div class="step-line-vertical anim-line"></div>
-                <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">✓</span></div>
-                <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
-            </div>
-            <div id="anim-step-2" class="step-row opacity-20">
-                <div class="step-line-vertical anim-line"></div>
-                <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">✓</span></div>
-                <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
-            </div>
-            <div id="anim-step-3" class="step-row opacity-20">
-                <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">!</span></div>
-                <div class="flex-1">
-                    <div class="step-text mb-4 text-slate-800 font-black">{% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}</div>
-                    <div id="matched-preview" class="hidden bg-slate-50 border border-slate-100 rounded-[12px] p-4 text-center animate-in fade-in zoom-in duration-500 shadow-sm">
-                        <img id="prev-img" src="" class="mx-auto mb-4 rounded-xl object-cover bg-white shadow-sm" width="120" height="120">
-                        <div class="text-xs space-y-2">
-                            <div class="flex justify-between items-start">
-                                <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                                <span id="prev-name" class="text-right font-bold text-slate-700 flex-1 ml-4 line-clamp-2"></span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Unit Price{% else %}Precio unitario{% endif %}</span>
-                                <span id="prev-unit-price" class="font-bold text-slate-500"></span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Items{% else %}Artículos{% endif %}</span>
-                                <span id="prev-count" class="font-bold text-blue-600"></span>
-                            </div>
-
-                            <div class="flex justify-between border-t border-slate-100 pt-2 mt-2">
-                                <span class="text-gray-400 font-black">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
-                                <span id="prev-price" class="font-black text-slate-700"></span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                                <span id="prev-comm" class="font-black text-slate-700"></span>
+            <div id="animation-steps" class="hidden flex flex-col mt-4">
+                <div id="anim-step-1" class="step-row opacity-20">
+                    <div class="step-line-vertical anim-line"></div>
+                    <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">✓</span></div>
+                    <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
+                </div>
+                <div id="anim-step-2" class="step-row opacity-20">
+                    <div class="step-line-vertical anim-line"></div>
+                    <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">✓</span></div>
+                    <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
+                </div>
+                <div id="anim-step-3" class="step-row opacity-20">
+                    <div class="step-icon-box"><div class="loader hidden"></div><span class="mark hidden">!</span></div>
+                    <div class="flex-1">
+                        <div class="step-text mb-4 text-slate-800 font-black">{% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}</div>
+                        <div id="matched-preview" class="hidden bg-slate-50 border border-slate-100 rounded-[12px] p-4 text-center animate-in fade-in zoom-in duration-500 shadow-sm" style="background-color: #f8fafc;">
+                            <img id="prev-img" src="" class="mx-auto mb-4 rounded-xl object-cover bg-white shadow-sm" width="120" height="120">
+                            <div class="text-xs space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
+                                    <span id="prev-name" class="text-right font-bold text-slate-700 flex-1 ml-4 line-clamp-2"></span>
+                                </div>
+                                <div class="flex justify-between border-t border-slate-100 pt-2 mt-2">
+                                    <span class="text-gray-400 font-black">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
+                                    <span id="prev-price" class="font-black text-slate-700"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                                    <span id="prev-comm" class="font-black text-slate-700"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
+
     </div>
 </div>
 
 <style>
+/* Ensure base styles don't force a dark background */
+body { background-color: #f1f5f9 !important; }
+
 .order-list { font-size: 13px; color: #323233; padding-bottom: 80px; }
 .order-item { padding: 15px 10px; background: #fff; }
 .flex-between { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; line-height: 1.4; }
@@ -333,10 +287,6 @@
 .text-right { text-align: right; }
 .u-m-l-20 { margin-left: 20px; }
 .line-1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.border { border: 1px solid #ebedf0; }
-.u-p-lr-10 { padding-left: 10px; padding-right: 10px; }
-.border-radius-8 { border-radius: 8px; }
-.border-radius-5 { border-radius: 5px; }
 .line-divider { height: 1px; background-color: #f2f3f5; margin: 0 10px; }
 .van-button--mini { height: 22px; padding: 0 8px; font-size: 10px; }
 .van-button--plain { background: #fff; }
@@ -377,12 +327,6 @@
           if(data.mission) {
               document.getElementById('prev-img').src = data.mission.image;
               document.getElementById('prev-name').innerText = data.mission.product_name;
-              let countValue = data.mission.order_count || 1;
-              document.getElementById('prev-count').innerText = "x" + countValue;
-
-              if (document.getElementById('prev-unit-price')) {
-                  document.getElementById('prev-unit-price').innerText = "BOB " + parseFloat(data.mission.order_price).toFixed(2);
-              }
               document.getElementById('prev-price').innerText = "BOB " + parseFloat(data.mission.price).toFixed(2);
               document.getElementById('prev-comm').innerText = "BOB " + parseFloat(data.mission.commission).toFixed(2);
           }
@@ -394,10 +338,8 @@
               return new Promise(resolve => {
                   const el = document.getElementById(id);
                   if (!el) { resolve(); return; }
-
                   const loader = el.querySelector('.loader');
                   const mark = el.querySelector('.mark');
-
                   el.classList.remove('opacity-20');
                   if(loader) loader.classList.remove('hidden');
 
@@ -405,16 +347,10 @@
                       if(loader) loader.classList.add('hidden');
                       if(mark) {
                           mark.classList.remove('hidden');
-                          if(isMatched) {
-                              mark.innerText = "!";
-                              mark.parentElement.classList.add('pulse');
-                          }
+                          if(isMatched) mark.parentElement.classList.add('pulse');
                       }
                       el.classList.add('anim-done');
-                      if(showCard) {
-                          const preview = document.getElementById('matched-preview');
-                          if(preview) preview.classList.remove('hidden');
-                      }
+                      if(showCard) document.getElementById('matched-preview')?.classList.remove('hidden');
                       resolve();
                   }, time);
               });
@@ -428,7 +364,6 @@
               });
       })
       .catch(err => {
-          console.error("Match Error:", err);
           alert("System error. Please try again.");
           btn.disabled = false;
       });
