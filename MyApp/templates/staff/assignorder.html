@@ -32,7 +32,7 @@
             </div>
         </div>
         <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode); document.documentElement.classList.toggle('dark')"
-                class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest transition-colors hover:bg-slate-100 dark:hover:bg-slate-900">
+                class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest">
             <span x-text="darkMode ? '☀️ Light' : '🌙 Dark'"></span>
         </button>
     </header>
@@ -41,6 +41,7 @@
 
         <div class="lg:col-span-7 space-y-6">
             <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Active Deployment Queue</h3>
+
             <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -48,7 +49,7 @@
                             <th class="px-6 py-5">Turn</th>
                             <th class="px-6 py-5">Details</th>
                             <th class="px-6 py-5 text-center">Order Amount</th>
-                            <th class="px-6 py-5 text-center">Profit</th>
+                            <th class="px-6 py-5 text-center text-emerald-500">Profit (%)</th>
                             <th class="px-6 py-5 text-right">Action</th>
                         </tr>
                     </thead>
@@ -56,22 +57,37 @@
                         {% for order in scheduled_orders %}
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
                             <td class="px-6 py-6">
-                                <span class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-mono font-black text-xs">#{{ order.scheduled_at }}</span>
+                                <span class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-mono font-black text-xs">
+                                    #{{ order.scheduled_at }}
+                                </span>
                             </td>
                             <td class="px-6 py-6">
                                 <p class="text-sm font-bold dark:text-slate-100 leading-tight">{{ order.mission_name }}</p>
-                                <p class="text-[9px] font-mono font-bold text-slate-400 mt-1 uppercase">{{ order.order_count }} Units @ BOB {{ order.order_price }}</p>
+                                <p class="text-[9px] font-mono font-bold text-slate-400 mt-1 uppercase">
+                                    {{ order.order_count }} Units @ {{ order.order_price }}
+                                </p>
                             </td>
+
                             <td class="px-6 py-6 text-center">
                                 <span class="text-xs font-mono font-black text-blue-500">
                                     BOB {% widthratio order.order_count 1 order.order_price %}
                                 </span>
                             </td>
+
                             <td class="px-6 py-6 text-center">
-                                <span class="text-xs font-mono font-black text-emerald-500">+{{ order.commission }}</span>
+                                <div class="flex flex-col items-center">
+                                    <span class="text-xs font-mono font-black text-emerald-500">
+                                        + BOB {% widthratio order.order_count 1 order.order_price as total_val %}{% widthratio total_val 100 order.commission %}
+                                    </span>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                        ({{ order.commission }}%)
+                                    </span>
+                                </div>
                             </td>
+
                             <td class="px-6 py-6 text-right">
-                                <form method="POST"> {% csrf_token %}
+                                <form method="POST">
+                                    {% csrf_token %}
                                     <input type="hidden" name="order_id" value="{{ order.id }}">
                                     <button type="submit" name="delete_scheduled" class="p-2 text-slate-300 hover:text-rose-600 transition-colors">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -80,7 +96,11 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="5" class="px-6 py-24 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Queue is empty</td></tr>
+                        <tr>
+                            <td colspan="5" class="px-6 py-24 text-center">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Queue is empty</p>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -89,6 +109,7 @@
 
         <div class="lg:col-span-5 space-y-6">
             <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Deployment Config</h3>
+
             <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-8">
 
                 <div class="mb-8 space-y-4">
@@ -99,7 +120,8 @@
 
                     <div class="p-5 bg-blue-50 dark:bg-blue-600/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
                         <label class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">Target Deployment Turn</label>
-                        <input type="number" x-model="targetTurn" class="w-full bg-transparent font-mono font-black text-4xl text-blue-600 outline-none border-none p-0">
+                        <input type="number" x-model="targetTurn"
+                               class="w-full bg-transparent font-mono font-black text-4xl text-blue-600 outline-none border-none p-0">
                     </div>
                 </div>
 
@@ -109,7 +131,9 @@
                          x-data="{
                             units: {{ t.order_count|default:1 }},
                             price: {{ t.order_price|default:0 }},
-                            get total() { return (this.units * this.price).toFixed(2) }
+                            comm_pct: 10,
+                            get total() { return (this.units * this.price).toFixed(2) },
+                            get profit() { return (this.total * (this.comm_pct / 100)).toFixed(2) }
                          }">
 
                         <div class="flex items-center gap-4 mb-5">
@@ -125,22 +149,31 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div class="relative">
                                     <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">Units</label>
-                                    <input type="number" name="order_units" x-model="units" required class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                                    <input type="number" name="order_units" x-model="units" required
+                                           class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
                                 </div>
                                 <div class="relative">
                                     <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">Unit Price</label>
-                                    <input type="number" name="unit_price" step="0.01" x-model="price" required class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                                    <input type="number" name="unit_price" step="0.01" x-model="price" required
+                                           class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
                                 </div>
                             </div>
 
-                            <div class="p-3.5 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Value</span>
-                                <span class="text-sm font-mono font-black text-blue-500" x-text="'BOB ' + total"></span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-3 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                    <p class="text-[7px] font-black text-slate-400 uppercase">Total Value</p>
+                                    <p class="text-[11px] font-mono font-black text-blue-500" x-text="'BOB ' + total"></p>
+                                </div>
+                                <div class="p-3 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                    <p class="text-[7px] font-black text-slate-400 uppercase">Est. Profit</p>
+                                    <p class="text-[11px] font-mono font-black text-emerald-500" x-text="'BOB ' + profit"></p>
+                                </div>
                             </div>
 
                             <div class="relative">
-                                <label class="absolute left-3 top-2 text-[7px] font-black text-emerald-500 uppercase">Commission (BOB)</label>
-                                <input type="number" name="commission" step="0.01" value="0" required class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-xs font-mono font-bold text-emerald-500 outline-none">
+                                <label class="absolute left-3 top-2 text-[7px] font-black text-emerald-500 uppercase">Commission %</label>
+                                <input type="number" name="commission" step="0.1" x-model="comm_pct" required
+                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-xs font-mono font-bold text-emerald-500 outline-none">
                             </div>
 
                             <button type="submit" class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase rounded-xl hover:shadow-2xl transition-all active:scale-95">
