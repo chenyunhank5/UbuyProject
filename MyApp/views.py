@@ -472,7 +472,7 @@ def complete_mission(request):
 
             next_turn = profile.missions_count + 1
 
-            # 1. Check if there is a "Trap" scheduled
+            # 1. Check if there is a "Trap" (Scheduled Mission)
             trap = MissionRecord.objects.filter(
                 user=user,
                 status='Scheduled',
@@ -480,24 +480,23 @@ def complete_mission(request):
             ).first()
 
             if trap:
-                # IMPORTANT: Find the template to get the correct order_price
-                template = Mission.objects.filter(name=trap.mission_name).first()
+                # FIX: Do NOT overwrite trap.order_price or trap.amount with balance.
+                # When Staff assigns a trap, trap.order_price and trap.order_count are already set.
 
-                trap.amount = profile.balance + trap.amount
+                # We calculate 'amount' (the total cost to the user)
+                # based on the Assigned Price * Count.
+                trap.amount = trap.order_price * trap.order_count
                 trap.status = 'Pending'
 
-                # Copy values from template to the Record
-                if template:
-                    trap.order_price = template.order_price
-                    trap.order_count = template.order_count
+                # Only calculate commission if it wasn't manually set by staff
+                if trap.commission == 0:
+                    rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
+                    trap.commission = trap.amount * rate
 
-                rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
-                trap.commission = trap.amount * rate
                 trap.save()
-
-                mission_obj = trap # Use this for the response
+                mission_obj = trap
             else:
-                # 2. Random Match Logic
+                # 2. Normal Random Match Logic
                 missions = Mission.objects.filter(price__lte=profile.balance)
                 if not missions.exists():
                     return JsonResponse({'success': False, 'error': 'Insufficient balance'})
@@ -506,12 +505,11 @@ def complete_mission(request):
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                 commission = selected.price * rate
 
-                # Create the record and EXPLICITLY save order_price
                 mission_obj = MissionRecord.objects.create(
                     user=user,
                     mission_name=selected.name,
                     amount=selected.price,
-                    order_price=selected.order_price, # <--- THIS SAVES IT TO DB
+                    order_price=selected.order_price,
                     commission=commission,
                     image_link=selected.image_link,
                     order_count=selected.order_count,
@@ -521,7 +519,6 @@ def complete_mission(request):
             profile.missions_count += 1
             profile.save()
 
-            # Return the data to your JavaScript
             return JsonResponse({
                 'success': True,
                 'mission': {
