@@ -42,10 +42,8 @@ def register_view(request):
                 profile = new_user.profile
                 profile.phone_number = phone
 
-                # 3. Assign the first VIP level by default
-                default_vip = VipLevel.objects.order_by('level_number').first()
-                if default_vip:
-                    profile.membership_vip = default_vip
+                # 3. SET VIP TO NULL (Removed the default_vip assignment)
+                profile.membership_vip = None
 
                 # 4. Handle Invite Code and Bonus
                 if invite_code:
@@ -57,8 +55,7 @@ def register_view(request):
                         # Add 10 BOB to balance
                         profile.balance += 10
 
-                        # CREATE NOTIFICATION IN EXISTING UserMessage MODEL
-                        # We use 'content' because that is the field in your model
+                        # CREATE NOTIFICATION
                         UserMessage.objects.create(
                             user=new_user,
                             content="<b>Bono de Registro:</b> Has recibido 10 BOB por unirte mediante invitación." if lang == 'es' else "<b>Registration Bonus:</b> You received 10 BOB for joining via invitation."
@@ -81,7 +78,7 @@ def register_view(request):
 
     return render(request, 'user/register.html', {
         'lang': lang,
-        'url_invite_code': url_invite_code # Pass it to the template
+        'url_invite_code': url_invite_code
     })
 
 # --- USER DASHBOARD ---
@@ -587,24 +584,29 @@ def update_user(request, user_id):
     profile = user.profile
 
     if request.method == 'POST':
+        # --- BASIC INFO ---
         user.username = request.POST.get('username')
         profile.phone_number = request.POST.get('phone')
-
         profile.credit_points = request.POST.get('credit', 100)
         profile.invite_code = request.POST.get('invite_code')
 
+        # --- VIP LOGIC (FIXED TO ALLOW NULL) ---
         vip_id = request.POST.get('vip')
-        if vip_id:
+        if vip_id and vip_id.strip() != "":
+            # If an ID is provided, fetch and assign that VIP level
             profile.membership_vip = VipLevel.objects.filter(id=vip_id).first()
+        else:
+            # If the value is empty ("No VIP" selected), set it to None/Null
+            profile.membership_vip = None
 
+        # --- BANK & WITHDRAWAL INFO ---
         profile.withdrawal_method = request.POST.get('withdrawal_method')
         profile.bank_name = request.POST.get('bank_name')
         profile.account_name = request.POST.get('account_name')
         profile.account_number = request.POST.get('account_number')
         profile.bank_phone_number = request.POST.get('bank_phone_number')
 
-        # --- RECHARGE LOGIC (ENHANCED) ---
-
+        # --- RECHARGE LOGIC (ENHANCED - PRESERVED) ---
         # Check if the "Reset to Global" checkbox was ticked
         if request.POST.get('reset_to_global') == 'on':
             # 1. Wipe the custom name
@@ -627,19 +629,20 @@ def update_user(request, user_id):
                     profile.recharge_qr.delete(save=False)
                     profile.recharge_qr = None
 
-        # --- END RECHARGE LOGIC ---
-
-        # Password
+        # --- SECURITY ---
         if request.POST.get('new_password'):
             user.set_password(request.POST.get('new_password'))
 
         profile.withdrawal_password = request.POST.get('withdrawal_password')
 
+        # --- SAVE & FINISH ---
         user.save()
         profile.save()
 
         messages.success(request, f"{user.username} updated successfully.")
+        return redirect('/staff/?tab=users')
 
+    # Fallback redirect if not a POST request
     return redirect('/staff/?tab=users')
 
 @staff_member_required

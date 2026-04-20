@@ -11,7 +11,7 @@
                         {{ user.profile.phone_number }}
                     </h2>
                     <span class="bg-slate-800 text-[#fff] text-[9px] font-black px-1.5 py-0.5 shadow-sm">
-                        VIP{{ user.profile.membership_vip.level_number }}
+                        VIP{% if user.profile.membership_vip %} {{ user.profile.membership_vip.level_number }}{% endif %}
                     </span>
                 </div>
 

@@ -112,7 +112,7 @@
                 </div>
             </div>
             <div class="text-[10px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">
-                VIP {{ user.profile.membership_vip.level_number }}
+                VIP{% if user.profile.membership_vip %} {{ user.profile.membership_vip.level_number }}{% endif %}
             </div>
         </div>
     </div>
