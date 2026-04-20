@@ -252,22 +252,27 @@
             </div>
 
         {% else %}
-            <div id="start-container" class="w-full flex flex-col items-center">
-              <div class="w-full overflow-hidden">
-                  <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline style="border-radius: 12px;">
-                      <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
-                  </video>
-              </div>
-                <div class="w-full px-4 py-4 max-md">
-                    <button id="btn-start-match" type="button" class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity" style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
-                        <div class="van-button__content">
-                            <span class="van-button__text">
-                                <span style="font-weight: 600;">{% if lang == 'en' %}Start Task{% else %}Iniciar Tarea{% endif %} {{ profile.missions_count }}</span>
-                            </span>
-                        </div>
-                    </button>
-                </div>
+        <div id="start-container" class="w-full flex flex-col items-center">
+            <div class="w-full overflow-hidden">
+                <video class="w-full h-full object-cover rounded-xl" autoplay loop muted playsinline style="border-radius: 12px;">
+                    <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775584370/animation111_k1qks9.mp4" type="video/mp4">
+                </video>
             </div>
+            <div class="w-full px-4 py-4 max-md">
+              <button id="btn-start-match"
+                      type="button"
+                      class="van-button van-button--default van-button--normal active:opacity-80 transition-opacity"
+                      style="color: white; background: rgb(247, 133, 34); border-color: rgb(247, 133, 34); width: 100%; border-radius: 4px; height: 44px; border: 1px solid rgb(247, 133, 34);">
+                  <div class="van-button__content">
+                      <span class="van-button__text">
+                          <span style="font-weight: 600;">
+                              {% if lang == 'en' %}Start Task{% else %}Iniciar Tarea{% endif %}
+                          </span>
+                      </span>
+                  </div>
+              </button>
+            </div>
+        </div>
 
             <div id="animation-steps" class="hidden flex flex-col mt-4">
                 <div id="anim-step-1" class="step-row opacity-20">
@@ -353,7 +358,8 @@ body { background-color: #f1f5f9 !important; }
       .then(res => res.json())
       .then(data => {
           if (!data.success) {
-              alert(data.error);
+              // ✅ Alert removed and replaced with reload to show Django system messages
+              location.reload();
               btn.disabled = false;
               return;
           }
@@ -398,7 +404,8 @@ body { background-color: #f1f5f9 !important; }
               });
       })
       .catch(err => {
-          alert("System error. Please try again.");
+          // ✅ Silent reload on system error
+          location.reload();
           btn.disabled = false;
       });
   });

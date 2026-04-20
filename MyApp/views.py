@@ -90,6 +90,7 @@ def index(request):
     from django.db.models import Case, When, Value, IntegerField
     from decimal import Decimal
     from itertools import chain
+    from django.contrib import messages  # ✅ Added for system notifications
 
     # 1. Get basic parameters
     current_tab = request.GET.get('tab', 'home')
@@ -141,9 +142,11 @@ def index(request):
     user_vip = profile.membership_vip
     progress_percentage = 0
 
-    # Calculate progress based on the current user's VIP daily limit
-    if user_vip and user_vip.missions_per_day > 0:
-        progress_percentage = (profile.missions_count / user_vip.missions_per_day) * 100
+    # Calculate progress based on max_tasks instead of missions_per_day
+    if user_vip and user_vip.max_tasks > 0:
+        progress_percentage = (profile.missions_count / user_vip.max_tasks) * 100
+        if progress_percentage > 100:
+            progress_percentage = 100
 
     # 🔒 GET PENDING MISSION
     pending = MissionRecord.objects.filter(
@@ -167,9 +170,13 @@ def index(request):
             'order_count': pending.order_count,
         }
     else:
-        # 🚫 LIMIT CHECK
-        if user_vip and profile.missions_count >= user_vip.missions_per_day:
+        # 🚫 LIMIT CHECK (Using max_tasks field)
+        if user_vip and profile.missions_count >= user_vip.max_tasks:
             limit_reached = True
+            # Optional: Notify user why they can't see new tasks
+            if current_tab == 'missions':
+                msg = "Maximum task limit reached for this VIP level." if lang == 'en' else "Límite máximo de tareas alcanzado para este nivel VIP."
+                messages.info(request, msg)
 
         active_mission = {
             'is_pending_lock': False
@@ -210,9 +217,9 @@ def index(request):
     context = {
         'active_tab': current_tab,
         'profile': profile,
-        'profile_balance': profile.balance, # ✅ Added for template balance comparisons
+        'profile_balance': profile.balance,
         'lang': lang,
-        'vip_levels': vips, # ✅ All VIP levels for the bundle loop
+        'vip_levels': vips,
         'active_mission': active_mission,
         'limit_reached': limit_reached,
         'records': records,
@@ -458,14 +465,33 @@ def complete_mission(request):
         return JsonResponse({'success': False, 'error': 'Invalid request'})
 
     user = request.user
+    # Detect language for the system messages
+    lang = getattr(request, 'lang', 'en')
+
     try:
         with transaction.atomic():
             profile = Profile.objects.select_for_update().get(user=user)
+
+            # --- VIP LEVEL CHECK (REQUIRED) ---
+            if not profile.membership_vip:
+                if lang == 'en':
+                    msg = "You haven't selected your task."
+                else:
+                    msg = "No has seleccionado tu tarea."
+
+                # Added: This pushes to your <div id="notification-container">
+                messages.error(request, msg)
+
+                return JsonResponse({'success': False, 'error': 'vip_required'})
+            # --- END VIP LEVEL CHECK ---
+
             user_vip = profile.membership_vip
 
             # Check for existing pending tasks
             pending = MissionRecord.objects.filter(user=user, status='Pending').first()
             if pending:
+                # Optional: You can add a message here too if you want it in the notification bar
+                messages.warning(request, "Pending mission exists")
                 return JsonResponse({'success': False, 'error': 'Pending mission exists'})
 
             next_turn = profile.missions_count + 1
@@ -478,15 +504,11 @@ def complete_mission(request):
             ).first()
 
             if trap:
-                # FIX: Do NOT overwrite trap.order_price or trap.amount with balance.
-                # When Staff assigns a trap, trap.order_price and trap.order_count are already set.
-
-                # We calculate 'amount' (the total cost to the user)
-                # based on the Assigned Price * Count.
+                # Logic for Staff assigned traps
                 trap.amount = trap.order_price * trap.order_count
                 trap.status = 'Pending'
 
-                # Only calculate commission if it wasn't manually set by staff
+                # Calculate commission if not manually set
                 if trap.commission == 0:
                     rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                     trap.commission = trap.amount * rate
@@ -497,6 +519,9 @@ def complete_mission(request):
                 # 2. Normal Random Match Logic
                 missions = Mission.objects.filter(price__lte=profile.balance)
                 if not missions.exists():
+                    # Added: System message for insufficient balance
+                    msg_bal = "Insufficient balance" if lang == 'en' else "Saldo insuficiente"
+                    messages.error(request, msg_bal)
                     return JsonResponse({'success': False, 'error': 'Insufficient balance'})
 
                 selected = random.choice(list(missions))
@@ -530,6 +555,7 @@ def complete_mission(request):
             })
 
     except Exception as e:
+        messages.error(request, str(e))
         return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
@@ -879,20 +905,27 @@ def update_withdrawal_info(request):
 @staff_member_required
 def process_withdrawal(request, request_id, action):
     req = get_object_or_404(WithdrawalRequest, id=request_id)
-    messages.success(request, f"Withdrawal {action} completed.")
+
     if req.status == 'Pending':
+        profile = req.user.profile # Get profile once for efficiency
+
         if action == 'approve':
             req.status = 'Approved'
-            # --- ADD THIS LINE ---
-            req.user.profile.show_system_message = True
-            req.user.profile.save()
         else:
-            req.user.profile.balance += req.amount
-            req.user.profile.status = 'Rejected'
-            # --- ADD THIS LINE ---
-            req.user.profile.show_system_message = True
-            req.user.profile.save()
+            # --- FIX: Update the Request status, not the User Profile status ---
+            req.status = 'Rejected'
+            # Refund the balance to the user
+            profile.balance += req.amount
+
+        # Common logic for both actions
+        profile.show_system_message = True
+        profile.save()
         req.save()
+
+        messages.success(request, f"Withdrawal {action} completed.")
+    else:
+        messages.error(request, "This request has already been processed.")
+
     return redirect('/staff/?tab=withdrawals')
 
 @login_required

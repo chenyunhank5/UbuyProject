@@ -342,10 +342,40 @@
         }
     }
 
+    // --- Updated Copy Logic with Fallback ---
     function copyInviteLink() {
-        navigator.clipboard.writeText(fullInviteLink).then(() => {
-            alert(currentLang === 'en' ? "Link copied to clipboard!" : "¡Enlace copiado al portapapeles!");
-        });
+        const textToCopy = fullInviteLink;
+        const successMsg = currentLang === 'en' ? "Link copied to clipboard!" : "¡Enlace copiado al portapapeles!";
+        const failMsg = currentLang === 'en' ? "Failed to copy. Please copy manually." : "No se pudo copiar. Copie manualmente.";
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert(successMsg);
+            }).catch(() => {
+                fallbackCopyText(textToCopy, successMsg, failMsg);
+            });
+        } else {
+            fallbackCopyText(textToCopy, successMsg, failMsg);
+        }
+    }
+
+    function fallbackCopyText(text, success, fail) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) alert(success);
+            else alert(fail);
+        } catch (err) {
+            alert(fail);
+        }
+        document.body.removeChild(textArea);
     }
 
     window.onclick = function(event) {
