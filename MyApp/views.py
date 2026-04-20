@@ -238,11 +238,32 @@ def index(request):
 @staff_member_required
 def reset_user_missions(request, user_id):
     if request.method == "POST":
-        user_profile = get_object_or_404(Profile, user_id=user_id)
-        user_profile.missions_count = 0
-        user_profile.save()
-        messages.success(request, f"Missions reset for {user_profile.user.username}")
-    return redirect('/staff/?tab=users')
+        # Get the profile
+        profile = get_object_or_404(Profile, user_id=user_id)
+
+        # Check if the user has a 'stuck' order before resetting
+        from .models import MissionRecord
+        has_pending = MissionRecord.objects.filter(user_id=user_id, status='Pending').exists()
+
+        # Reset the count
+        profile.missions_count = 0
+        profile.save()
+
+        if has_pending:
+            # Warning message if they had a pending task
+            messages.warning(
+                request,
+                f"Missions reset for {profile.user.username}, but they still have a PENDING order in the system."
+            )
+        else:
+            # Clean success message
+            messages.success(
+                request,
+                f"Missions reset successfully for {profile.user.username}."
+            )
+
+    # Use HTTP_REFERER to stay on the same page/search result
+    return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
 @staff_member_required
 def staff_index(request):
@@ -317,7 +338,9 @@ def staff_index(request):
     context = {
         'active_tab': active_tab,
         'users': users,
+        'user_q': user_query,        # Pass this back!
         'missions': missions,
+        'mission_q': mission_query,
         'orders': orders,
         'withdrawals': withdrawals,
         'recharges': recharges,
@@ -666,10 +689,10 @@ def update_user(request, user_id):
         profile.save()
 
         messages.success(request, f"{user.username} updated successfully.")
-        return redirect('/staff/?tab=users')
+        return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
     # Fallback redirect if not a POST request
-    return redirect('/staff/?tab=users')
+    return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
 @staff_member_required
 def update_global_qr(request):
@@ -732,7 +755,7 @@ def update_balance(request, user_id):
         except (InvalidOperation, ValueError):
             messages.error(request, "Invalid amount entered.")
 
-    return redirect('/staff/?tab=users')
+    return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
 # --- VIP MANAGEMENT ---
 
@@ -759,7 +782,7 @@ def save_vip_level(request, level_id=None):
         except Exception as e:
             messages.error(request, f"Error saving VIP: {str(e)}")
 
-    return redirect('/staff/?tab=vip')
+    return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=vip'))
 
 @staff_member_required
 def delete_vip_level(request, level_id):
@@ -829,10 +852,23 @@ def submit_withdrawal(request):
     lang = request.GET.get('lang', 'es')
     if request.method == "POST":
         p = request.user.profile
+
+        # --- 1. ADMIN RESTRICTION CHECK ---
+        # This checks the toggle from your toggle_withdrawal_status function
+        if not p.can_withdraw:
+            if lang == 'es':
+                msg = "Tu cuenta tiene restringidos los retiros. Contacta al soporte."
+            else:
+                msg = "Your account is restricted from withdrawing. Contact support."
+
+            messages.error(request, msg)
+            return redirect(f'/?tab=withdraw&lang={lang}')
+
+        # --- 2. TASK COMPLETION & PENDING STATUS CHECK ---
         vip = p.membership_vip
         target_tasks = vip.max_tasks if vip else 0
 
-        # ✅ UNIFIED LOCK: Checks if the set is unfinished OR if an order is stuck in Pending
+        # Checks if the set is unfinished OR if an order is stuck in Pending
         has_pending = MissionRecord.objects.filter(user=request.user, status='Pending').exists()
 
         if p.missions_count < target_tasks or has_pending:
@@ -844,9 +880,7 @@ def submit_withdrawal(request):
             messages.error(request, msg)
             return redirect(f'/?tab=withdraw&lang={lang}')
 
-        # ------------------------------------------
-        # 3. WITHDRAWAL PROCESSING (Fixed 30 BOB)
-        # ------------------------------------------
+        # --- 3. WITHDRAWAL PROCESSING (Fixed 30 BOB Minimum) ---
         try:
             amount = Decimal(request.POST.get('amount', '0'))
         except:
@@ -854,6 +888,7 @@ def submit_withdrawal(request):
 
         password = request.POST.get('password')
 
+        # Logic for password validation, balance check, and minimum amount
         if p.withdrawal_password == password and p.balance >= amount and amount >= 30:
             with transaction.atomic():
                 p.balance -= amount
@@ -986,13 +1021,23 @@ def update_security(request):
 
 @staff_member_required
 def toggle_withdrawal_status(request, user_id):
+    # Get the specific user being edited
     target_user = get_object_or_404(User, id=user_id)
     p = target_user.profile
+
+    # Flip the boolean value (True becomes False, False becomes True)
     p.can_withdraw = not p.can_withdraw
     p.save()
-    status = "habilitados" if p.can_withdraw else "deshabilitados"
-    messages.success(request, f"Retiros {status} para {target_user.username}")
-    return redirect('/staff/?tab=users')
+
+    # Prepare the message for the staff member
+    if p.can_withdraw:
+        status = "habilitados" # Enabled
+        messages.success(request, f"Retiros {status} para {target_user.username}")
+    else:
+        status = "deshabilitados" # Disabled
+        messages.warning(request, f"Retiros {status} para {target_user.username}")
+
+    return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
 
 @login_required
