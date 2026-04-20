@@ -50,54 +50,88 @@
     <div class="p-4">
 
         {% if active_mission and active_mission.is_pending_lock %}
-            <div class="van-steps-container flex flex-col mt-4">
-                <div class="step-row finished">
-                    <div class="step-line-vertical"></div>
-                    <div class="step-icon-box">✓</div>
-                    <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
-                </div>
-                <div class="step-row finished">
-                    <div class="step-line-vertical"></div>
-                    <div class="step-icon-box">✓</div>
-                    <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
-                </div>
-                <div class="step-row active">
-                    <div class="step-line-vertical"></div>
-                    <div class="step-icon-box pulse">!</div>
-                    <div class="flex-1">
-                        <div class="step-text mb-4 text-[#f78522] font-black" style="color: #f78522;">
-                            {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
+        <div class="van-steps-container flex flex-col mt-4">
+            <div class="step-row finished">
+                <div class="step-line-vertical"></div>
+                <div class="step-icon-box">✓</div>
+                <div class="step-text">{% if lang == 'en' %}Submitting task{% else %}Enviando tarea{% endif %}</div>
+            </div>
+            <div class="step-row finished">
+                <div class="step-line-vertical"></div>
+                <div class="step-icon-box">✓</div>
+                <div class="step-text">{% if lang == 'en' %}Allocating{% else %}Asignando{% endif %}</div>
+            </div>
+
+            <div class="step-row active">
+                <div class="step-line-vertical"></div>
+                <div class="step-icon-box pulse">!</div>
+                <div class="flex-1">
+                    <div class="step-text mb-2 text-[#f78522] font-black" style="color: #f78522;">
+                        {% if lang == 'en' %}Order Matched!{% else %}¡Pedido emparejado!{% endif %}
+                    </div>
+
+                    {% if profile.balance < active_mission.price %}
+                    <div class="text-red-500 text-[11px] mb-2 font-medium flex items-start gap-1">
+                        <div class="mt-0.5">
+                        <svg class="icon" style="width: 18px; height: 18px; vertical-align: middle; fill: #ee0a24; overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M522.656 388.064a32 32 0 0 0-32 32v160a32 32 0 0 0 64 0v-160a32 32 0 0 0-32-32M522.656 676.064a32 32 0 1 0 0 64 32 32 0 0 0 0-64"></path>
+                            <path d="M714.656 795.616H203.072l127.584-221.888 33.152-57.664 158.848-276.224 158.816 276.224 33.184 57.696 127.552 221.856h-127.552z m194.528-11.968L566.528 187.712c-10.144-17.6-26.112-27.712-43.872-27.712s-33.728 10.112-43.84 27.712L136.096 783.648c-10.048 17.568-10.784 36.48-1.92 51.84 8.896 15.328 25.6 24.128 45.824 24.128H865.344c20.16 0 36.864-8.8 45.76-24.128 8.896-15.36 8.192-34.24-1.92-51.84z"></path>
+                        </svg>
                         </div>
-                        <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm" style="background-color: #f8fafc; color: #1e293b;">
-                            <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200" style="border-radius: 12px;">
-                            <div class="text-xs space-y-2">
-                                <div class="flex justify-between items-start">
-                                    <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
-                                    <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                  <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
-                                  <span class="font-bold text-blue-600">x{{ active_mission.order_count|default:1 }} <span class="text-[10px] text-gray-400 font-normal ml-1">(BOB {{ active_mission.order_price }})</span></span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-400">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
-                                    <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
-                                    <span class="font-black text-slate-700">BOB {{ active_mission.commission|floatformat:2 }}</span>
-                                </div>
+                        <span>
+                            {% if lang == 'en' %}
+                                Account balance is insufficient and the price difference of BOB <span id="diff-amount-en"></span> is missing
+                            {% else %}
+                                El saldo de la cuenta es insuficiente y falta la diferencia de precio de BOB <span id="diff-amount-es"></span>
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <script>
+                        (function() {
+                            const price = parseFloat("{{ active_mission.price }}".replace(/[^\d.]/g, '')) || 0;
+                            const balance = parseFloat("{{ profile.balance }}".replace(/[^\d.]/g, '')) || 0;
+                            const diff = price - balance;
+                            const formattedDiff = diff.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                            if(document.getElementById('diff-amount-en')) document.getElementById('diff-amount-en').innerText = formattedDiff;
+                            if(document.getElementById('diff-amount-es')) document.getElementById('diff-amount-es').innerText = formattedDiff;
+                        })();
+                    </script>
+                    {% endif %}
+
+                    <div class="bg-slate-50 text-slate-800 rounded-[12px] p-4 text-center border border-slate-100 shadow-sm" style="background-color: #f8fafc; color: #1e293b;">
+                        <img src="{{ active_mission.image }}" class="mx-auto mb-4 object-cover bg-white shadow-sm" width="200" height="200" style="border-radius: 12px;">
+                        <div class="text-xs space-y-2">
+                            <div class="flex justify-between items-start">
+                                <span class="text-gray-400">{% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}</span>
+                                <span class="text-right font-bold flex-1 ml-4 line-clamp-2 text-slate-700">{{ active_mission.product_name }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Total Items{% else %}Artículos totales{% endif %}</span>
+                                <span class="font-bold text-blue-600">x{{ active_mission.order_count|default:1 }} <span class="text-[10px] text-gray-400 font-normal ml-1">(BOB {{ active_mission.order_price }})</span></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Total Price{% else %}Precio total{% endif %}</span>
+                                <span class="font-bold text-slate-700">BOB {{ active_mission.price }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">{% if lang == 'en' %}Commission{% else %}Comisión{% endif %}</span>
+                                <span class="font-black text-slate-700">BOB {{ active_mission.commission|floatformat:2 }}</span>
                             </div>
                         </div>
-                        <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
-                            {% csrf_token %}
-                            <button class="w-full text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase" style="background: rgb(247, 133, 34); border-radius: 4px;">
-                                {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
-                            </button>
-                        </form>
                     </div>
+
+                    <form action="{% url 'finalize_mission' active_mission.id %}" method="POST" class="mt-4">
+                        {% csrf_token %}
+                        <button class="w-full text-white py-3 text-sm font-black shadow-lg active:scale-95 transition-all uppercase" style="background: rgb(247, 133, 34); border-radius: 4px;">
+                            {% if lang == 'en' %}Submit Order{% else %}Enviar Pedido{% endif %}
+                        </button>
+                    </form>
                 </div>
             </div>
+        </div>
+        </div>
             <div class="order-list mt-8">
                 <div class="flex justify-between items-center px-4 mb-4">
                     <h2 class="text-[14px] font-bold text-slate-700">

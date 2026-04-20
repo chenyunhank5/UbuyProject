@@ -65,6 +65,19 @@
                     </p>
                 </div>
 
+                {% if messages %}
+                <div class="w-full mb-4 space-y-2">
+                    {% for message in messages %}
+                    <div class="bg-red-50 border border-red-100 p-3 rounded-xl flex items-center gap-3">
+                        <div class="w-1 h-1 rounded-full bg-red-500"></div>
+                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-tight">
+                            {{ message }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <form method="POST" action="{% url 'login' %}?lang={{ lang|default:'es' }}" class="w-full space-y-4">
                     {% csrf_token %}
 
@@ -99,7 +112,7 @@
                 <div class="mt-10 text-center space-y-4">
                     <p class="text-[11px] font-bold text-black/40 uppercase">
                         {% if lang == 'en' %}Don't have an account?{% else %}¿No tienes cuenta?{% endif %}
-                        <a href="/register/?lang={{ lang }}" class="text-black border-b border-black/20 ml-1">
+                        <a href="/register/?lang={{ lang|default:'es' }}" class="text-black border-b border-black/20 ml-1">
                             {% if lang == 'en' %}Register{% else %}Crear cuenta{% endif %}
                         </a>
                     </p>

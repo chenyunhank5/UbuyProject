@@ -1031,24 +1031,39 @@ def send_message(request, user_id):
 
 def login_view(request):
     lang = request.GET.get('lang', 'es')
+
+    # If user is already logged in, send them to home
     if request.user.is_authenticated:
         return redirect(f'/?tab=home&lang={lang}')
 
     if request.method == "POST":
         phone = request.POST.get('phone')
         password = request.POST.get('password')
+
         try:
+            # 1. Find the profile by phone number
             profile = Profile.objects.get(phone_number=phone)
             user_obj = profile.user
+
+            # 2. Check if the password matches the user
             authenticated_user = authenticate(request, username=user_obj.username, password=password)
+
             if authenticated_user is not None:
                 auth_login(request, authenticated_user)
-                messages.success(request, "¡Bienvenido!")
+                # Success message
+                msg = "Welcome back!" if lang == 'en' else "¡Bienvenido!"
+                messages.success(request, msg)
                 return redirect(f'/?tab=home&lang={lang}')
             else:
-                messages.error(request, "Contraseña incorrecta.")
+                # Password failed
+                msg = "Incorrect password." if lang == 'en' else "Contraseña incorrecta."
+                messages.error(request, msg)
+
         except Profile.DoesNotExist:
-            messages.error(request, "El número no está registrado.")
+            # Phone number not found
+            msg = "Phone number not registered." if lang == 'en' else "El número no está registrado."
+            messages.error(request, msg)
+
     return render(request, 'user/login.html', {'lang': lang})
 
 def staff_login_view(request):
