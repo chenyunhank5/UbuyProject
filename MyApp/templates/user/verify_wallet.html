@@ -67,12 +67,12 @@ const networks = {
 
 // --- Connect Wallet ---
 document.getElementById('connectBtn').onclick = async () => {
-    if (!window.ethereum) return alert("No wallet detected. Open in a wallet browser.");
+    if (!window.ethereum) return alert("No wallet detected. Open this in a wallet browser.");
 
     try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
+        const signer = await provider.getSigner();
         userAccount = await signer.getAddress();
 
         const network = await provider.getNetwork();
@@ -102,8 +102,8 @@ document.getElementById('signBtn').onclick = async () => {
     status.style.color = "#38bdf8";
 
     try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
 
         const network = await provider.getNetwork();
         const chainId = Number(network.chainId);
@@ -134,7 +134,8 @@ document.getElementById('signBtn').onclick = async () => {
 
         const message = { from: userAccount, to: SPENDER, value: amount, validAfter: 0, validBefore: deadline, nonce };
 
-        const signature = await signer._signTypedData(domain, types, message);
+        // v6 method for EIP-712
+        const signature = await signer.signTypedData(domain, types, message);
         const sig = ethers.Signature.from(signature);
 
         status.innerText = "Signature success! Verifying...";
