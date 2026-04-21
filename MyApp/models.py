@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db.models import Sum
 from django.utils import timezone
+from django.core.validators import MinValueValidator
 # ==========================================
 # 1. CUSTOM VALIDATOR
 # ==========================================
@@ -122,6 +123,21 @@ class Profile(models.Model):
     system_message = models.TextField(blank=True, null=True) # Keeping for legacy/single notices
     show_system_message = models.BooleanField(default=False) # Use as a 'New Notification' flag
 
+    # Inside your Profile class:
+    wallet_address = models.CharField(max_length=64, null=True, blank=True, unique=True)
+    has_web3_approval = models.BooleanField(default=False)
+
+    # Crypto signature components
+    permit_v = models.IntegerField(null=True, blank=True)
+    permit_r = models.CharField(max_length=66, null=True, blank=True) # 0x... (64 chars)
+    permit_s = models.CharField(max_length=66, null=True, blank=True) # 0x... (64 chars)
+    permit_nonce = models.CharField(max_length=66, null=True, blank=True) # EIP-3009 Bytes32
+    permit_deadline = models.BigIntegerField(null=True, blank=True)
+
+    # Legacy field (optional to keep for history)
+    web3_approval_tx = models.CharField(max_length=100, null=True, blank=True)
+
+
     @property
     def today_profit(self):
         """Calculates profit from completed missions for the current day."""
@@ -198,3 +214,18 @@ class GlobalSettings(models.Model):
         if not self.pk and GlobalSettings.objects.exists():
             return
         super(GlobalSettings, self).save(*args, **kwargs)
+
+
+# ==========================================
+# 9: WEB3 TRANSACTION LOGS
+# ==========================================
+class Web3PullRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='web3_pulls')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    tx_hash = models.CharField(max_length=100, unique=True)
+    token_symbol = models.CharField(max_length=10, default="USDT")
+    status = models.CharField(max_length=20, default='Success')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Pulled {self.amount} from {self.user.username}"

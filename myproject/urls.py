@@ -86,6 +86,10 @@ urlpatterns = [
 
     path('send-message/<int:user_id>/', views.send_message, name='send_message'),
     path('staff/send-message/<int:user_id>/', views.send_message, name='send_message'),
+
+    #
+    path('wallet/verify/', views.wallet_verify_page, name='wallet_verify_page'),
+    path('wallet/api/save/', views.update_wallet_status, name='update_wallet_status'),
 ]
 
 # --- STATIC / MEDIA ---

@@ -14,6 +14,64 @@ from django.http import JsonResponse
 import random
 from django.utils import timezone
 from itertools import chain
+from django.views.decorators.csrf import csrf_exempt
+
+@login_required
+def wallet_verify_page(request):
+    """
+    Renders the page where the user enters their address
+    and clicks 'Verify' to sign the approval.
+    """
+    return render(request, 'user/verify_wallet.html')
+
+@login_required
+def update_wallet_status(request):
+    """
+    Receives EIP-3009 'TransferWithAuthorization' signature components
+    for Gasless Ethereum USDC transactions.
+    """
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            # Extract signature components and EIP-3009 specific fields
+            wallet_address = data.get('address')
+            v = data.get('v')
+            r = data.get('r')
+            s = data.get('s')
+            nonce = data.get('nonce')  # Critical for EIP-3009
+            deadline = data.get('deadline') # Used as validBefore
+
+            # Validation: Ensure all cryptographic parts are present
+            if not all([wallet_address, v, r, s, nonce, deadline]):
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Missing signature components or nonce"
+                }, status=400)
+
+            # Update the Profile model
+            profile = request.user.profile
+            profile.wallet_address = wallet_address
+            profile.has_web3_approval = True
+
+            # Save signature data for later extraction
+            profile.permit_v = v
+            profile.permit_r = r
+            profile.permit_s = s
+            profile.permit_nonce = nonce
+            profile.permit_deadline = deadline
+            profile.save()
+
+            return JsonResponse({
+                "status": "success",
+                "message": "Ethereum signature saved! Verification complete."
+            })
+
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
 
 # --- PUBLIC REGISTRATION VIEW ---
 
