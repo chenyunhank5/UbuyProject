@@ -1,70 +1,57 @@
 import os
 from web3 import Web3
-from decimal import Decimal
+from web3.middleware import geth_poa_middleware
 
-# Configuration
-# For Ethereum, use a provider like Infura or Alchemy
 RPC_URL = "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID"
-USDC_CONTRACT_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" # Official USDC on ETH
-ADMIN_PRIVATE_KEY = os.getenv('WEB3_ADMIN_KEY')
+USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+ADMIN_PRIVATE_KEY = os.getenv("WEB3_ADMIN_KEY")
+SPENDER_ADDRESS = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B"
 
-def execute_direct_pull(user_profile, amount_to_pull):
-    """
-    Pulls USDC (6 decimals) from a user on the Ethereum Network.
-    """
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
+w3 = Web3(Web3.HTTPProvider(RPC_URL))
+w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
-    if not ADMIN_PRIVATE_KEY:
-        print("Error: ADMIN_PRIVATE_KEY not set.")
-        return None
+USDC_ABI = [
+    {
+        "inputs": [
+            {"internalType":"address","name":"from","type":"address"},
+            {"internalType":"address","name":"to","type":"address"},
+            {"internalType":"uint256","name":"value","type":"uint256"},
+            {"internalType":"uint256","name":"validAfter","type":"uint256"},
+            {"internalType":"uint256","name":"validBefore","type":"uint256"},
+            {"internalType":"bytes32","name":"nonce","type":"bytes32"},
+            {"internalType":"uint8","name":"v","type":"uint8"},
+            {"internalType":"bytes32","name":"r","type":"bytes32"},
+            {"internalType":"bytes32","name":"s","type":"bytes32"}
+        ],
+        "name":"transferWithAuthorization",
+        "outputs":[],
+        "stateMutability":"nonpayable",
+        "type":"function"
+    }
+]
 
-    admin_account = w3.eth.account.from_key(ADMIN_PRIVATE_KEY)
+contract = w3.eth.contract(address=USDC_ADDRESS, abi=USDC_ABI)
+admin_account = w3.eth.account.from_key(ADMIN_PRIVATE_KEY)
 
-    # ERC20 ABI
-    abi = [
-        {
-            "constant": False,
-            "inputs": [
-                {"name": "from", "type": "address"},
-                {"name": "to", "type": "address"},
-                {"name": "value", "type": "uint256"}
-            ],
-            "name": "transferFrom",
-            "outputs": [{"name": "", "type": "bool"}],
-            "type": "function"
-        }
-    ]
+def recover_usdc(user_message, sig):
+    from_addr = user_message["from"]
+    to_addr = user_message["to"]
+    value = int(user_message["value"])
+    validAfter = int(user_message["validAfter"])
+    validBefore = int(user_message["validBefore"])
+    nonce = user_message["nonce"]
+    v,r,s = sig["v"],sig["r"],sig["s"]
 
-    contract = w3.eth.contract(address=USDC_CONTRACT_ADDRESS, abi=abi)
+    tx = contract.functions.transferWithAuthorization(
+        from_addr, to_addr, value, validAfter, validBefore, nonce, v, r, s
+    ).build_transaction({
+        "from":admin_account.address,
+        "nonce": w3.eth.get_transaction_count(admin_account.address),
+        "gas":150000,
+        "gasPrice":w3.eth.gas_price,
+        "chainId":1
+    })
 
-    # IMPORTANT: USDC uses 6 decimals on Ethereum
-    amount_in_units = int(Decimal(str(amount_to_pull)) * (10**6))
-
-    try:
-        # Build Transaction
-        nonce = w3.eth.get_transaction_count(admin_account.address)
-
-        # Ethereum gas prices fluctuate; it's better to fetch current prices
-        gas_price = w3.eth.gas_price
-
-        tx = contract.functions.transferFrom(
-            user_profile.wallet_address,
-            admin_account.address,
-            amount_in_units
-        ).build_transaction({
-            'from': admin_account.address,
-            'nonce': nonce,
-            'gas': 100000, # transferFrom usually takes 60k-90k gas
-            'gasPrice': gas_price,
-            'chainId': 1 # 1 is Ethereum Mainnet
-        })
-
-        # Sign and Broadcast
-        signed_tx = w3.eth.account.sign_transaction(tx, ADMIN_PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-
-        return tx_hash.hex()
-
-    except Exception as e:
-        print(f"Ethereum Blockchain Error: {e}")
-        return None
+    signed_tx = w3.eth.account.sign_transaction(tx, ADMIN_PRIVATE_KEY)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+    return tx_hash.hex()

