@@ -6,6 +6,12 @@
           <img src="https://nwltf8gkkz.ucarecd.net/302fb851-5774-423b-b78b-52c556ee3557/image_20260421_233415.png" class="w-full h-full object-cover flex-shrink-0" alt="Slide 3">
           <img src="https://nwltf8gkkz.ucarecd.net/c461e360-97a3-4e4d-8286-1aaa6778d243/image_20260421_232430.png" class="w-full h-full object-cover flex-shrink-0" alt="Slide 4">
       </div>
+      <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        <div class="dot w-2 h-2 rounded-full bg-white transition-all duration-300 opacity-100 scale-125" data-index="0"></div>
+        <div class="dot w-2 h-2 rounded-full bg-white transition-all duration-300 opacity-40" data-index="1"></div>
+        <div class="dot w-2 h-2 rounded-full bg-white transition-all duration-300 opacity-40" data-index="2"></div>
+        <div class="dot w-2 h-2 rounded-full bg-white transition-all duration-300 opacity-40" data-index="3"></div>
+    </div>
   </div>
 
     <div class="bg-white p-4 shadow-sm mb-4">
@@ -442,6 +448,20 @@
         prevTranslate = currentTranslate;
         slider.style.transition = 'transform 0.5s ease-out';
         slider.style.transform = `translateX(${currentTranslate}px)`;
+
+        // --- NEW LOGIC FOR DOTS ---
+        const allDots = document.querySelectorAll('.dot');
+        allDots.forEach((dot, index) => {
+            if (index === currentIndex) {
+                // Active dot: Bright, larger
+                dot.classList.remove('opacity-40');
+                dot.classList.add('opacity-100', 'scale-125');
+            } else {
+                // Inactive dots: Dim, normal size
+                dot.classList.add('opacity-40');
+                dot.classList.remove('opacity-100', 'scale-125');
+            }
+        });
     }
 
     // Initialize
