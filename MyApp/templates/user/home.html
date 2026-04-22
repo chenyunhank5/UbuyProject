@@ -1,14 +1,12 @@
 <div class="flex flex-col gap-0 p-0 animate-in fade-in duration-500 bg-[#f7f8fa] pt-6 text-slate-800">
-    <div class="relative w-full h-48 overflow-hidden">
-        <video
-            class="absolute inset-0 w-full h-full object-cover"
-            autoplay
-            loop
-            muted
-            playsinline>
-            <source src="https://res.cloudinary.com/dkwg2x7qd/video/upload/v1775583586/animation_suo8f4.mp4" type="video/mp4">
-        </video>
-    </div>
+  <div class="relative w-full h-48 overflow-hidden cursor-grab active:cursor-grabbing" id="slider-container">
+      <div id="slider" class="flex w-full h-full transition-transform duration-300 ease-out pointer-events-none">
+          <img src="https://nwltf8gkkz.ucarecd.net/e5251c3a-9421-4ff7-9026-b1d802d30063/image_20260421_234203.png" class="w-full h-full object-cover flex-shrink-0" alt="Slide 1">
+          <img src="https://nwltf8gkkz.ucarecd.net/266e7ab7-7b68-4781-a9cd-b471eefb2358/image_20260421_233036.png" class="w-full h-full object-cover flex-shrink-0" alt="Slide 2">
+          <img src="https://nwltf8gkkz.ucarecd.net/302fb851-5774-423b-b78b-52c556ee3557/image_20260421_233415.png" class="w-full h-full object-cover flex-shrink-0" alt="Slide 3">
+          <img src="https://nwltf8gkkz.ucarecd.net/c461e360-97a3-4e4d-8286-1aaa6778d243/image_20260421_232430.png" class="w-full h-full object-cover flex-shrink-0" alt="Slide 4">
+      </div>
+  </div>
 
     <div class="bg-white p-4 shadow-sm mb-4">
         <div class="grid grid-cols-4 gap-y-6 gap-x-2">
@@ -384,6 +382,71 @@
             toggleInviteModal();
         }
     }
+
+    const container = document.getElementById('slider-container');
+    const slider = document.getElementById('slider');
+    let isDragging = false, startPos = 0, currentTranslate = 0, prevTranslate = 0, currentIndex = 0;
+    let slideInterval;
+
+    // --- AUTO SLIDE LOGIC ---
+    function startAutoSlide() {
+        slideInterval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % 4; // Cycles back to 0 after slide 4
+            setPositionByIndex();
+        }, 3000); // Changes every 3 seconds
+    }
+
+    function stopAutoSlide() {
+        clearInterval(slideInterval);
+    }
+
+    // --- DRAG LOGIC ---
+    container.addEventListener('mousedown', dragStart);
+    container.addEventListener('touchstart', dragStart);
+    container.addEventListener('mousemove', dragAction);
+    container.addEventListener('touchmove', dragAction);
+    container.addEventListener('mouseup', dragEnd);
+    container.addEventListener('touchend', dragEnd);
+    container.addEventListener('mouseleave', dragEnd);
+
+    function dragStart(e) {
+        stopAutoSlide();
+        isDragging = true;
+        startPos = getPositionX(e);
+        slider.style.transition = 'none';
+    }
+
+    function dragAction(e) {
+        if (!isDragging) return;
+        const currentPosition = getPositionX(e);
+        currentTranslate = prevTranslate + currentPosition - startPos;
+        slider.style.transform = `translateX(${currentTranslate}px)`;
+    }
+
+    function dragEnd() {
+        isDragging = false;
+        const movedBy = currentTranslate - prevTranslate;
+        if (movedBy < -100 && currentIndex < 3) currentIndex += 1;
+        if (movedBy > 100 && currentIndex > 0) currentIndex -= 1;
+
+        setPositionByIndex();
+        startAutoSlide(); // Restart timer after user interaction
+    }
+
+    function getPositionX(e) {
+        return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+    }
+
+    function setPositionByIndex() {
+        currentTranslate = currentIndex * -container.offsetWidth;
+        prevTranslate = currentTranslate;
+        slider.style.transition = 'transform 0.5s ease-out';
+        slider.style.transform = `translateX(${currentTranslate}px)`;
+    }
+
+    // Initialize
+    startAutoSlide();
+
 </script>
 
 <style>
