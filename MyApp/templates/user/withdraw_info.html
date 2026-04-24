@@ -32,9 +32,10 @@
                             <option value="bank_transfer" {% if user.profile.withdrawal_method == 'bank_transfer' %}selected{% endif %}>
                                 {% if request.GET.lang == 'en' %}Bank Transfer{% else %}Transferencia Bancaria{% endif %}
                             </option>
-                            <option value="tigo_money" {% if user.profile.withdrawal_method == 'tigo_money' %}selected{% endif %}>
-                                Tigo Money
-                            </option>
+                            <option value="tigo_money" {% if user.profile.withdrawal_method == 'tigo_money' %}selected{% endif %}>Tigo Money</option>
+                            <option value="yape" {% if user.profile.withdrawal_method == 'yape' %}selected{% endif %}>Yape</option>
+                            <option value="yasta" {% if user.profile.withdrawal_method == 'yasta' %}selected{% endif %}>Yasta</option>
+                            <option value="altoke" {% if user.profile.withdrawal_method == 'altoke' %}selected{% endif %}>Altoke</option>
                         </select>
                     </div>
 
@@ -43,12 +44,13 @@
                             {% if request.GET.lang == 'en' %}Bank Name{% else %}Nombre del Banco{% endif %}
                         </label>
                         <select name="bank_name" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all appearance-none">
-                            <option value="Banco Económico">Banco Económico</option>
-                            <option value="Banco Ganadero (YOLO)">Banco Ganadero (YOLO)</option>
-                            <option value="Banco BCP (Yape)">Banco BCP (Yape)</option>
-                            <option value="Banco Unión (Yasta)">Banco Unión (Yasta)</option>
+                            <option value="Banco Unión">Banco Unión</option>
+                            <option value="Banco BCP">Banco BCP</option>
                             <option value="Banco Mercantil Santa Cruz (MSC)">Banco Mercantil Santa Cruz (MSC)</option>
-                            <option value="BancoSol (Altoke)">BancoSol (Altoke)</option>
+                            <option value="Banco Económico">Banco Económico</option>
+                            <option value="Banco Ganadero">Banco Ganadero</option>
+                            <option value="Banco Nacional de Bolivia (BNB)">Banco Nacional de Bolivia (BNB)</option>
+                            <option value="Banco FIE">Banco FIE</option>
                         </select>
                     </div>
 
@@ -61,17 +63,17 @@
                                placeholder="Juan Perez" required>
                     </div>
 
-                    <div class="space-y-1.5">
+                    <div id="account_number_container" class="space-y-1.5">
                         <label class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Account Number / CI{% else %}Nro de Cuenta / CI{% endif %}
                         </label>
                         <input type="text" name="account_number" value="{{ user.profile.account_number|default:'' }}"
                                class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all"
-                               placeholder="1234567890" required>
+                               placeholder="1234567890">
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">
+                        <label id="phone_label" class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Phone Number{% else %}Número de Teléfono{% endif %}
                         </label>
                         <input type="text" name="bank_phone" value="{{ user.profile.bank_phone_number|default:'' }}"
@@ -89,15 +91,17 @@
 </div>
 
 <script>
-    // Logic to hide Bank Name dropdown if Tigo Money is selected
     const methodSelect = document.getElementById('withdraw_method');
     const bankContainer = document.getElementById('bank_name_container');
+    const accountNumberContainer = document.getElementById('account_number_container');
 
     function toggleBankVisibility() {
-        if (methodSelect.value === 'tigo_money') {
-            bankContainer.classList.add('hidden');
-        } else {
+        if (methodSelect.value === 'bank_transfer') {
             bankContainer.classList.remove('hidden');
+            accountNumberContainer.classList.remove('hidden');
+        } else {
+            bankContainer.classList.add('hidden');
+            accountNumberContainer.classList.add('hidden');
         }
     }
 
@@ -106,7 +110,6 @@
 </script>
 
 <style>
-    /* Styled Select Arrows */
     select {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
         background-repeat: no-repeat;
