@@ -325,37 +325,63 @@
                     </div>
                     <div x-show="activeTab === 'bank'" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
+
+                            <!-- Method -->
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Method</label>
-                                <select name="withdrawal_method" x-model="editUser.method" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+                                <select name="withdrawal_method" x-model="editUser.method"
+                                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+
                                     <option value="">Select Method</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="Tigo Money">Tigo Money</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="tigo_money">Tigo Money</option>
+                                    <option value="yape">Yape</option>
+                                    <option value="yasta">Yasta</option>
+                                    <option value="altoke">Altoke</option>
                                 </select>
                             </div>
-                            <div>
+
+                            <!-- Bank Name (ONLY for bank_transfer) -->
+                            <div x-show="editUser.method === 'bank_transfer'">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bank Name</label>
-                                <select name="bank_name" x-model="editUser.bank_name" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+                                <select name="bank_name" x-model="editUser.bank_name"
+                                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+
                                     <option value="">Select Bank</option>
-                                    <option value="Banco BCP (Yape)">Banco BCP (Yape)</option>
-                                    <option value="Banco Ganadero (YOLO)">Banco Ganadero (YOLO)</option>
-                                    <option value="Banco Unión (Yasta)">Banco Unión (Yasta)</option>
-                                    <option value="Banco Mercantil">Mercantil Santa Cruz</option>
+                                    <option value="Banco Unión">Banco Unión</option>
+                                    <option value="Banco BCP">Banco BCP</option>
+                                    <option value="Banco Mercantil Santa Cruz (MSC)">Banco Mercantil Santa Cruz (MSC)</option>
+                                    <option value="Banco Económico">Banco Económico</option>
+                                    <option value="Banco Ganadero">Banco Ganadero</option>
+                                    <option value="Banco Nacional de Bolivia (BNB)">Banco Nacional de Bolivia (BNB)</option>
                                     <option value="Banco FIE">Banco FIE</option>
                                 </select>
                             </div>
+
+                            <!-- Account Name -->
                             <div class="col-span-2">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Account Name</label>
-                                <input type="text" name="account_name" x-model="editUser.acc_name" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+                                <input type="text" name="account_name" x-model="editUser.acc_name"
+                                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
                             </div>
-                            <div>
+
+                            <!-- Account Number (ONLY for bank_transfer) -->
+                            <div x-show="editUser.method === 'bank_transfer'">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Account Number / CI</label>
-                                <input type="text" name="account_number" x-model="editUser.acc_num" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+                                <input type="text" name="account_number" x-model="editUser.acc_num"
+                                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bank Phone</label>
-                                <input type="text" name="bank_phone_number" x-model="editUser.bank_phone" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
+
+                            <!-- Phone (ALWAYS for wallets, optional for bank) -->
+                            <div :class="editUser.method === 'bank_transfer' ? '' : 'col-span-2'">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                    <span x-show="editUser.method === 'bank_transfer'">Bank Phone</span>
+                                    <span x-show="editUser.method !== 'bank_transfer'">Phone Number</span>
+                                </label>
+                                <input type="text" name="bank_phone_number" x-model="editUser.bank_phone"
+                                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
                             </div>
+
                         </div>
                     </div>
                     <div x-show="activeTab === 'recharge'" class="space-y-6" x-data="{ confirmDelete: false, resetToGlobal: false }">
