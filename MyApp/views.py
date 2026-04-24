@@ -974,7 +974,10 @@ def update_withdrawal_info(request):
         profile.bank_name = request.POST.get('bank_name')
         profile.account_name = request.POST.get('account_name')
         profile.account_number = request.POST.get('account_number')
-        profile.bank_phone_number = request.POST.get('bank_phone')
+        profile.bank_phone_number = (
+            request.POST.get('bank_phone') or
+            request.POST.get('bank_phone_number')
+        )
         profile.save()
         messages.success(request, "Información guardada")
     return redirect('/?tab=profile')
@@ -1313,33 +1316,33 @@ def api_admin_recharge_list(request):
 def api_admin_withdrawal_list(request):
     """API for the Withdrawal Management Table with Search and Pagination"""
 
-    # 1. Get parameters from the request
     search_q = request.GET.get('q', '')
     status_filter = request.GET.get('status', 'Pending')
     page_number = request.GET.get('page', 1)
 
-    # 2. Start with a base queryset
     queryset = WithdrawalRequest.objects.select_related('user__profile').all().order_by('-created_at')
 
-    # 3. Apply Search Filter (Searches username, account number, or bank name)
     if search_q:
         queryset = queryset.filter(
             Q(user__username__icontains=search_q) |
             Q(user__profile__account_number__icontains=search_q) |
-            Q(user__profile__bank_name__icontains=search_q)
+            Q(user__profile__bank_name__icontains=search_q) |
+            Q(user__profile__account_name__icontains=search_q) |
+            Q(user__profile__bank_phone_number__icontains=search_q) |
+            Q(user__profile__withdrawal_method__icontains=search_q)
         )
 
-    # 4. Apply Status Tab Filter
     if status_filter != 'All':
         queryset = queryset.filter(status=status_filter)
 
-    # 5. Paginate the results (10 items per page)
     paginator = Paginator(queryset, 10)
     page_obj = paginator.get_page(page_number)
 
     data = []
+
     for w in page_obj:
         p = w.user.profile
+
         data.append({
             "id": w.id,
             "username": w.user.username,
@@ -1350,11 +1353,11 @@ def api_admin_withdrawal_list(request):
                 "method": p.withdrawal_method or "N/A",
                 "bank": p.bank_name or "N/A",
                 "name": p.account_name or "N/A",
-                "number": p.account_number or "N/A"
+                "number": p.account_number or "N/A",
+                "phone": p.bank_phone_number or "N/A"
             }
         })
 
-    # 6. Return data + pagination metadata
     return JsonResponse({
         "withdrawals": data,
         "total_pages": paginator.num_pages,
