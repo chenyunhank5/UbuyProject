@@ -327,7 +327,7 @@
                         <div class="grid grid-cols-2 gap-4">
 
                             <!-- Method -->
-                            <div>
+                            <div class="col-span-2">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Method</label>
                                 <select name="withdrawal_method" x-model="editUser.method"
                                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
@@ -341,8 +341,8 @@
                                 </select>
                             </div>
 
-                            <!-- Bank Name (ONLY for bank_transfer) -->
-                            <div x-show="editUser.method === 'bank_transfer'">
+                            <!-- Bank Name: only bank_transfer -->
+                            <div class="col-span-2" x-show="editUser.method === 'bank_transfer'">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bank Name</label>
                                 <select name="bank_name" x-model="editUser.bank_name"
                                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
@@ -358,25 +358,28 @@
                                 </select>
                             </div>
 
-                            <!-- Account Name -->
+                            <!-- Account / Wallet Name -->
                             <div class="col-span-2">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Account Name</label>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                    <span x-show="editUser.method === 'bank_transfer'">Account Name</span>
+                                    <span x-show="editUser.method !== 'bank_transfer'">Wallet Name</span>
+                                </label>
                                 <input type="text" name="account_name" x-model="editUser.acc_name"
                                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
                             </div>
 
-                            <!-- Account Number (ONLY for bank_transfer) -->
-                            <div x-show="editUser.method === 'bank_transfer'">
+                            <!-- Account Number: only bank_transfer -->
+                            <div class="col-span-2" x-show="editUser.method === 'bank_transfer'">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Account Number / CI</label>
                                 <input type="text" name="account_number" x-model="editUser.acc_num"
                                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">
                             </div>
 
-                            <!-- Phone (ALWAYS for wallets, optional for bank) -->
-                            <div :class="editUser.method === 'bank_transfer' ? '' : 'col-span-2'">
+                            <!-- Phone Number: bank phone or wallet phone -->
+                            <div class="col-span-2">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
                                     <span x-show="editUser.method === 'bank_transfer'">Bank Phone</span>
-                                    <span x-show="editUser.method !== 'bank_transfer'">Phone Number</span>
+                                    <span x-show="editUser.method !== 'bank_transfer'">Wallet Phone Number</span>
                                 </label>
                                 <input type="text" name="bank_phone_number" x-model="editUser.bank_phone"
                                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 outline-none">

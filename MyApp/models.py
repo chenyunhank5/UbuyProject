@@ -108,7 +108,14 @@ class Profile(models.Model):
     missions_count = models.IntegerField(default=0)
 
     # Bank Details
-    withdrawal_method = models.CharField(max_length=50, blank=True, null=True)
+    # Bank / Wallet Details
+    WITHDRAWAL_METHOD_CHOICES = [
+        ("bank", "Bank Transfer"),
+        ("yape", "Yape"),
+        ("tigo_money", "Tigo Money"),
+        ("altoke", "Altoke"),
+    ]
+    withdrawal_method = models.CharField(max_length=50, choices=WITHDRAWAL_METHOD_CHOICES, default="bank", blank=True, null=True)
     bank_name = models.CharField(max_length=100, blank=True, null=True)
     account_name = models.CharField(max_length=100, blank=True, null=True)
     account_number = models.CharField(max_length=50, blank=True, null=True)

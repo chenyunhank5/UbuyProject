@@ -3,22 +3,22 @@
     <main class="pt-4 pb-20 min-h-screen">
         <div class="px-4 py-4">
 
-          <div class="flex items-center justify-between mb-8 px-2">
-              <a href="?tab=profile&lang={{ request.GET.lang }}" class="flex items-center gap-2 text-slate-400 active:scale-90 transition-all">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="m15 18-6-6 6-6"/>
-                  </svg>
-                  <span class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
-                      {% if request.GET.lang == 'en' %}Back{% else %}Volver{% endif %}
-                  </span>
-              </a>
+            <div class="flex items-center justify-between mb-8 px-2">
+                <a href="?tab=profile&lang={{ request.GET.lang }}" class="flex items-center gap-2 text-slate-400 active:scale-90 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                        {% if request.GET.lang == 'en' %}Back{% else %}Volver{% endif %}
+                    </span>
+                </a>
 
-              <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.25em] mr-4 text-center">
-                  {% if request.GET.lang == 'en' %}Withdrawal Information{% else %}Información de Retiro{% endif %}
-              </h2>
+                <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.25em] mr-4 text-center">
+                    {% if request.GET.lang == 'en' %}Withdrawal Information{% else %}Información de Retiro{% endif %}
+                </h2>
 
-              <div class="w-12"></div>
-          </div>
+                <div class="w-12"></div>
+            </div>
 
             <div class="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm">
                 <form method="POST" action="{% url 'update_withdrawal_info' %}?lang={{ request.GET.lang }}" class="space-y-5">
@@ -28,8 +28,9 @@
                         <label class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Method{% else %}Método{% endif %}
                         </label>
+
                         <select name="method" id="withdraw_method" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all appearance-none">
-                            <option value="bank_transfer" {% if user.profile.withdrawal_method == 'bank_transfer' %}selected{% endif %}>
+                            <option value="bank_transfer" {% if user.profile.withdrawal_method == 'bank_transfer' or not user.profile.withdrawal_method %}selected{% endif %}>
                                 {% if request.GET.lang == 'en' %}Bank Transfer{% else %}Transferencia Bancaria{% endif %}
                             </option>
                             <option value="tigo_money" {% if user.profile.withdrawal_method == 'tigo_money' %}selected{% endif %}>Tigo Money</option>
@@ -43,42 +44,46 @@
                         <label class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Bank Name{% else %}Nombre del Banco{% endif %}
                         </label>
+
                         <select name="bank_name" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all appearance-none">
-                            <option value="Banco Unión">Banco Unión</option>
-                            <option value="Banco BCP">Banco BCP</option>
-                            <option value="Banco Mercantil Santa Cruz (MSC)">Banco Mercantil Santa Cruz (MSC)</option>
-                            <option value="Banco Económico">Banco Económico</option>
-                            <option value="Banco Ganadero">Banco Ganadero</option>
-                            <option value="Banco Nacional de Bolivia (BNB)">Banco Nacional de Bolivia (BNB)</option>
-                            <option value="Banco FIE">Banco FIE</option>
+                            <option value="Banco Unión" {% if user.profile.bank_name == 'Banco Unión' %}selected{% endif %}>Banco Unión</option>
+                            <option value="Banco BCP" {% if user.profile.bank_name == 'Banco BCP' %}selected{% endif %}>Banco BCP</option>
+                            <option value="Banco Mercantil Santa Cruz (MSC)" {% if user.profile.bank_name == 'Banco Mercantil Santa Cruz (MSC)' %}selected{% endif %}>Banco Mercantil Santa Cruz (MSC)</option>
+                            <option value="Banco Económico" {% if user.profile.bank_name == 'Banco Económico' %}selected{% endif %}>Banco Económico</option>
+                            <option value="Banco Ganadero" {% if user.profile.bank_name == 'Banco Ganadero' %}selected{% endif %}>Banco Ganadero</option>
+                            <option value="Banco Nacional de Bolivia (BNB)" {% if user.profile.bank_name == 'Banco Nacional de Bolivia (BNB)' %}selected{% endif %}>Banco Nacional de Bolivia (BNB)</option>
+                            <option value="Banco FIE" {% if user.profile.bank_name == 'Banco FIE' %}selected{% endif %}>Banco FIE</option>
                         </select>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">
+                        <label id="account_name_label" class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Account Name{% else %}Nombre del Titular{% endif %}
                         </label>
+
                         <input type="text" name="account_name" value="{{ user.profile.account_name|default:'' }}"
                                class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all"
-                               placeholder="Juan Perez" required>
+                               placeholder="{% if request.GET.lang == 'en' %}Full name{% else %}Nombre completo{% endif %}" required>
                     </div>
 
                     <div id="account_number_container" class="space-y-1.5">
                         <label class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Account Number / CI{% else %}Nro de Cuenta / CI{% endif %}
                         </label>
+
                         <input type="text" name="account_number" value="{{ user.profile.account_number|default:'' }}"
                                class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all"
-                               placeholder="1234567890">
+                               placeholder="{% if request.GET.lang == 'en' %}Bank account number{% else %}Número de cuenta bancaria{% endif %}">
                     </div>
 
                     <div class="space-y-1.5">
                         <label id="phone_label" class="text-[10px] font-black text-slate-400 uppercase ml-2">
                             {% if request.GET.lang == 'en' %}Phone Number{% else %}Número de Teléfono{% endif %}
                         </label>
+
                         <input type="text" name="bank_phone" value="{{ user.profile.bank_phone_number|default:'' }}"
                                class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-[#f78522]/50 transition-all"
-                               placeholder="+591 70000000">
+                               placeholder="+591 70000000" required>
                     </div>
 
                     <button type="submit" class="w-full bg-[#f78522] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-orange-200 active:scale-[0.98] transition-all mt-4">
@@ -94,14 +99,24 @@
     const methodSelect = document.getElementById('withdraw_method');
     const bankContainer = document.getElementById('bank_name_container');
     const accountNumberContainer = document.getElementById('account_number_container');
+    const phoneLabel = document.getElementById('phone_label');
+    const accountNameLabel = document.getElementById('account_name_label');
 
     function toggleBankVisibility() {
-        if (methodSelect.value === 'bank_transfer') {
+        const isBank = methodSelect.value === 'bank_transfer';
+
+        if (isBank) {
             bankContainer.classList.remove('hidden');
             accountNumberContainer.classList.remove('hidden');
+
+            phoneLabel.innerText = "{% if request.GET.lang == 'en' %}Phone Number{% else %}Número de Teléfono{% endif %}";
+            accountNameLabel.innerText = "{% if request.GET.lang == 'en' %}Account Name{% else %}Nombre del Titular{% endif %}";
         } else {
             bankContainer.classList.add('hidden');
             accountNumberContainer.classList.add('hidden');
+
+            phoneLabel.innerText = "{% if request.GET.lang == 'en' %}Wallet Phone Number{% else %}Número de teléfono de la billetera{% endif %}";
+            accountNameLabel.innerText = "{% if request.GET.lang == 'en' %}Wallet Name{% else %}Nombre del titular{% endif %}";
         }
     }
 

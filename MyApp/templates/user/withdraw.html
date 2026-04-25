@@ -28,40 +28,141 @@
         </div>
     </div>
 
-    {% if not profile.account_number %}
+    {% if not profile.withdrawal_method or not profile.account_name or not profile.bank_phone_number %}
         <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 flex items-center justify-between">
             <div>
-                <p class="text-[8px] text-rose-500 uppercase font-black tracking-widest">{% if lang == 'en' %}Status{% else %}Estado{% endif %}</p>
-                <p class="font-bold text-slate-400 text-xs mt-0.5">{% if lang == 'en' %}No bank account added{% else %}Sin cuenta vinculada{% endif %}</p>
+                <p class="text-[8px] text-rose-500 uppercase font-black tracking-widest">
+                    {% if lang == 'en' %}Status{% else %}Estado{% endif %}
+                </p>
+                <p class="font-bold text-slate-400 text-xs mt-0.5">
+                    {% if lang == 'en' %}No payment account added{% else %}Sin cuenta vinculada{% endif %}
+                </p>
             </div>
+
             <a href="?tab=withdraw_info&lang={{ lang }}" class="bg-brand text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">
                 {% if lang == 'en' %}Add{% else %}Agregar{% endif %}
             </a>
         </div>
     {% else %}
-        <a href="?tab=withdraw_info&lang={{ lang }}" class="block bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm active:bg-slate-50 transition-all group">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
+
+    <a href="?tab=withdraw_info&lang={{ lang }}" class="block bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm active:bg-slate-50 transition-all group">
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+
+                {% if profile.withdrawal_method == "bank_transfer" %}
+                    <!-- BANK TRANSFER STYLE -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Method{% else %}Método{% endif %}</p>
-                            <p class="font-bold text-slate-900 text-xs mt-0.5">Bank Transfer</p>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Method{% else %}Método{% endif %}
+                            </p>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5">
+                                {% if lang == 'en' %}Bank Transfer{% else %}Transferencia bancaria{% endif %}
+                            </p>
                         </div>
+
                         <div>
-                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Bank{% else %}Banco{% endif %}</p>
-                            <p class="font-bold text-slate-900 text-xs mt-0.5 truncate">{{ profile.bank_name|default:"---" }}</p>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Bank{% else %}Banco{% endif %}
+                            </p>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5 truncate">
+                                {{ profile.bank_name|default:"---" }}
+                            </p>
                         </div>
                     </div>
-                    <div class="pt-3 mt-3 border-t border-slate-50">
-                        <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">{% if lang == 'en' %}Account Number{% else %}Cuenta Bancaria{% endif %}</p>
-                        <p class="text-xs text-slate-600 font-mono font-bold tracking-tighter">{{ profile.account_number }}</p>
+
+                    <div class="pt-3 mt-3 border-t border-slate-50 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Account Name{% else %}Nombre de cuenta{% endif %}
+                            </p>
+                            <p class="text-xs text-slate-600 font-bold truncate">
+                                {{ profile.account_name|default:"---" }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Phone Number{% else %}Número de teléfono{% endif %}
+                            </p>
+                            <p class="text-xs text-slate-600 font-mono font-bold tracking-tighter">
+                                {{ profile.bank_phone_number|default:"---" }}
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="pl-4 text-slate-300 group-active:text-brand transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </div>
+
+                    <div class="pt-3 mt-3 border-t border-slate-50">
+                        <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                            {% if lang == 'en' %}Account Number{% else %}Cuenta bancaria{% endif %}
+                        </p>
+                        <p class="text-xs text-slate-600 font-mono font-bold tracking-tighter">
+                            {{ profile.account_number|default:"---" }}
+                        </p>
+                    </div>
+
+                {% else %}
+                    <!-- WALLET STYLE -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Method{% else %}Método{% endif %}
+                            </p>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5">
+                                {% if profile.withdrawal_method == "yape" %}
+                                    Yape
+                                {% elif profile.withdrawal_method == "tigo_money" %}
+                                    Tigo Money
+                                {% elif profile.withdrawal_method == "yasta" %}
+                                    Yasta
+                                {% elif profile.withdrawal_method == "altoke" %}
+                                    Altoke
+                                {% else %}
+                                    Wallet
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Type{% else %}Tipo{% endif %}
+                            </p>
+                            <p class="font-bold text-slate-900 text-xs mt-0.5">
+                                {% if lang == 'en' %}Digital Wallet{% else %}Billetera digital{% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 mt-3 border-t border-slate-50 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Name{% else %}Nombre{% endif %}
+                            </p>
+                            <p class="text-xs text-slate-600 font-bold truncate">
+                                {{ profile.account_name|default:"---" }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-[8px] text-slate-400 uppercase font-black tracking-widest">
+                                {% if lang == 'en' %}Phone Number{% else %}Número de teléfono{% endif %}
+                            </p>
+                            <p class="text-xs text-slate-600 font-mono font-bold tracking-tighter">
+                                {{ profile.bank_phone_number|default:"---" }}
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+
             </div>
-        </a>
+
+            <div class="pl-4 text-slate-300 group-active:text-brand transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                </svg>
+            </div>
+        </div>
+    </a>
+
     {% endif %}
 
     <form action="{% url 'submit_withdrawal' %}?lang={{ lang }}" method="POST" class="space-y-4">
