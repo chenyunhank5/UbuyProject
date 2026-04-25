@@ -1003,9 +1003,9 @@ def update_withdrawal_info(request):
             f"Saved: method={method}, bank={bank_name}, account={account_number}, phone={bank_phone}"
         )
 
-        return redirect(f"/?tab=withdraw_info&lang={request.GET.get('lang', 'es')}")
+        return redirect(f"/?tab=profile&lang={request.GET.get('lang', 'es')}")
 
-    return redirect(f"/?tab=withdraw_info&lang={request.GET.get('lang', 'es')}")
+    return redirect(f"/?tab=profile&lang={request.GET.get('lang', 'es')}")
 
 @staff_member_required
 def process_withdrawal(request, request_id, action):
