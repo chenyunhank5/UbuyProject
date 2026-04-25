@@ -976,16 +976,17 @@ def update_withdrawal_info(request):
         profile.withdrawal_method = method
         profile.account_name = request.POST.get("account_name", "").strip()
 
-        if method == "bank":
+        if method == "bank_transfer":
             profile.bank_name = request.POST.get("bank_name", "").strip()
             profile.account_number = request.POST.get("account_number", "").strip()
             profile.bank_phone_number = (
                 request.POST.get("bank_phone") or
                 request.POST.get("bank_phone_number") or ""
             ).strip()
+
         else:
-            # Wallets: yape / tigo_money / altoke
-            profile.bank_name = ""
+            # Wallets: yape / tigo_money / altoke / yasta
+            profile.bank_name = method
             profile.account_number = ""
             profile.bank_phone_number = (
                 request.POST.get("wallet_phone") or
