@@ -971,33 +971,41 @@ def update_withdrawal_info(request):
     if request.method == "POST":
         profile = request.user.profile
 
-        method = request.POST.get("method", "").strip()
+        print("WITHDRAW POST DATA:", request.POST)
+
+        method = (request.POST.get("method") or "").strip()
+        bank_name = (request.POST.get("bank_name") or "").strip()
+        account_name = (request.POST.get("account_name") or "").strip()
+        account_number = (request.POST.get("account_number") or "").strip()
+        bank_phone = (request.POST.get("bank_phone") or "").strip()
 
         profile.withdrawal_method = method
-        profile.account_name = request.POST.get("account_name", "").strip()
+        profile.account_name = account_name
+        profile.bank_phone_number = bank_phone
 
         if method == "bank_transfer":
-            profile.bank_name = request.POST.get("bank_name", "").strip()
-            profile.account_number = request.POST.get("account_number", "").strip()
-            profile.bank_phone_number = (
-                request.POST.get("bank_phone") or
-                request.POST.get("bank_phone_number") or ""
-            ).strip()
-
+            profile.bank_name = bank_name
+            profile.account_number = account_number
         else:
-            # Wallets: yape / tigo_money / altoke / yasta
-            profile.bank_name = method
+            profile.bank_name = ""
             profile.account_number = ""
-            profile.bank_phone_number = (
-                request.POST.get("wallet_phone") or
-                request.POST.get("bank_phone") or
-                request.POST.get("bank_phone_number") or ""
-            ).strip()
 
-        profile.save()
-        messages.success(request, "Información guardada")
+        profile.save(update_fields=[
+            "withdrawal_method",
+            "bank_name",
+            "account_name",
+            "account_number",
+            "bank_phone_number",
+        ])
 
-    return redirect('/?tab=profile')
+        messages.success(
+            request,
+            f"Saved: method={method}, bank={bank_name}, account={account_number}, phone={bank_phone}"
+        )
+
+        return redirect(f"/?tab=withdraw_info&lang={request.GET.get('lang', 'es')}")
+
+    return redirect(f"/?tab=withdraw_info&lang={request.GET.get('lang', 'es')}")
 
 @staff_member_required
 def process_withdrawal(request, request_id, action):

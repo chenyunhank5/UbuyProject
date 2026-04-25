@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    {% if not profile.withdrawal_method or not profile.account_name or not profile.bank_phone_number %}
+    {% if not profile.withdrawal_method or not profile.account_name or not profile.bank_phone_number or profile.withdrawal_method == "bank_transfer" and not profile.bank_name or profile.withdrawal_method == "bank_transfer" and not profile.account_number %}
         <div class="bg-white rounded-xl border border-slate-200 p-4 mb-5 flex items-center justify-between">
             <div>
                 <p class="text-[8px] text-rose-500 uppercase font-black tracking-widest">
