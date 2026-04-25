@@ -970,9 +970,6 @@ def process_recharge(request, request_id, action):
 def update_withdrawal_info(request):
     if request.method == "POST":
         profile = request.user.profile
-
-        print("WITHDRAW POST DATA:", request.POST)
-
         method = (request.POST.get("method") or "").strip()
         bank_name = (request.POST.get("bank_name") or "").strip()
         account_name = (request.POST.get("account_name") or "").strip()
