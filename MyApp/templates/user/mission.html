@@ -73,15 +73,8 @@
             {% if profile.balance < active_mission.price %}
             <div class="mb-3 rounded-lg border border-red-200 bg-red-50/80 px-3 py-2">
                 <div class="text-red-500 text-[11px] font-medium leading-relaxed flex items-start gap-2">
-
-                    <svg
-                        class="text-red-500 flex-shrink-0 mt-[1px]"
-                        style="width:14px;height:14px;fill:currentColor;"
-                        viewBox="0 0 1024 1024"
-                        xmlns="http://www.w3.org/2000/svg">
-
+                    <svg class="text-red-500 flex-shrink-0 mt-[1px]" style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                         <path d="M585.142857 785.714286v-108.571429q0-8-5.428571-13.428571T566.857143 658.285714H457.142857q-7.428571 0-12.857143 5.428572T438.857143 677.142857v108.571429q0 8 5.428571 13.428571t12.857143 5.428572h109.714286q7.428571 0 12.857143-5.428572t5.428571-13.428571z m-1.142857-213.714286l10.285714-262.285714q0-6.857143-5.714285-10.857143-7.428571-6.285714-13.714286-6.285714H449.142857q-6.285714 0-13.714286 6.285714-5.714286 4-5.714285 12l9.714285 261.142857q0 5.714286 5.714286 9.428571t13.714286 3.714286h105.714286q8 0 13.428571-3.714286t6-9.428571z m-8-533.714286l438.857143 804.571429q20 36-1.142857 72-9.714286 16.571429-26.571429 26.285714t-36.285714 9.714286H73.142857q-19.428571 0-36.285714-9.714286T10.285714 914.857143q-21.142857-36-1.142857-72L448 38.285714q9.714286-17.714286 26.857143-28t37.142857-10.285714 37.142857 10.285714 26.857143 28z"></path>
-
                     </svg>
 
                     <span>
@@ -94,7 +87,6 @@
                             <span id="diff-amount-es" class="text-red-500 font-medium"></span>
                         {% endif %}
                     </span>
-
                 </div>
             </div>
 
@@ -111,87 +103,59 @@
             {% endif %}
 
             <div class="bg-white text-slate-800 rounded-[4px] p-4 text-center shadow-sm">
-              <img src="{{ active_mission.image }}" class="mx-auto mb-3 object-cover bg-white" width="180" height="124" style="border-radius:4px;">
+                <img src="{{ active_mission.image }}" class="mx-auto mb-3 object-cover bg-white" width="180" height="124" style="border-radius:4px;">
 
-              <div class="text-[11px] font-medium text-slate-700 leading-snug mb-1 line-clamp-2">
+                <div class="text-[11px] font-medium text-slate-700 leading-snug mb-1 line-clamp-2">
                     {{ active_mission.product_name }}
-                  </div>
+                </div>
 
-                  <div class="text-[16px] font-medium text-slate-900 mb-3">
+                <div class="text-[16px] font-medium text-slate-900 mb-3">
                     BOB{{ active_mission.order_price }}
                     <span class="text-red-500 text-[16px] font-medium">
                         *{{ active_mission.order_count }}
                     </span>
-                  </div>
+                </div>
 
                 <div class="grid grid-cols-2 bg-slate-50 border border-slate-100 text-left rounded-[4px] overflow-hidden">
-
-                    <!-- LEFT COLUMN -->
                     <div class="p-3 border-r border-slate-100 grid grid-rows-2 gap-2">
-
                         <div>
                             <p class="text-[10px] text-slate-500 font-semibold leading-[1.2] min-h-[20px]">
-                                {% if lang == 'en' %}
-                                    Eligibility
-                                {% else %}
-                                    Elegibilidad
-                                {% endif %}
+                                {% if lang == 'en' %}Eligibility{% else %}Elegibilidad{% endif %}
                             </p>
-
                             <p class="text-[14px] font-medium text-slate-900">
-                                {% if profile.membership_vip %}
-                                    {{ profile.membership_vip.name }}
-                                {% else %}
-                                    VIP
-                                {% endif %}
+                                {% if profile.membership_vip %}{{ profile.membership_vip.name }}{% else %}VIP{% endif %}
                             </p>
                         </div>
+
                         <div>
                             <p class="text-[10px] text-slate-500 font-semibold leading-[1.2] min-h-[20px]">
-                                {% if lang == 'en' %}
-                                    Order price
-                                {% else %}
-                                    Precio del pedido
-                                {% endif %}
+                                {% if lang == 'en' %}Order price{% else %}Precio del pedido{% endif %}
                             </p>
-
                             <p class="text-[14px] font-medium text-slate-900">
                                 BOB {{ active_mission.price }}
                             </p>
                         </div>
                     </div>
 
-                    <!-- RIGHT COLUMN -->
                     <div class="p-3 grid grid-rows-2 gap-2">
-                      <div>
-                          <p class="text-[10px] text-slate-500 font-semibold leading-[1.2] min-h-[20px]">
-                              {% if lang == 'en' %}
-                                  Number of tasks
-                              {% else %}
-                                  Número de tareas
-                              {% endif %}
-                          </p>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-semibold leading-[1.2] min-h-[20px]">
+                                {% if lang == 'en' %}Number of tasks{% else %}Número de tareas{% endif %}
+                            </p>
+                            <p class="text-[14px] font-medium text-slate-900">
+                                {{ profile.missions_count|default:0 }}/{{ profile.membership_vip.max_tasks|default:0 }}
+                            </p>
+                        </div>
 
-                          <p class="text-[14px] font-medium text-slate-900">
-                              {{ profile.missions_count|default:0 }}/{{ profile.membership_vip.max_tasks|default:0 }}
-                          </p>
-                      </div>
-
-                      <div>
-                          <p class="text-[10px] text-slate-500 font-semibold leading-[1.2] min-h-[20px]">
-                              {% if lang == 'en' %}
-                                  This commission
-                              {% else %}
-                                  Esta comisión
-                              {% endif %}
-                          </p>
-
-                          <p class="text-[14px] font-medium text-slate-900">
-                              BOB {{ active_mission.commission|floatformat:2 }}
-                          </p>
-                      </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-semibold leading-[1.2] min-h-[20px]">
+                                {% if lang == 'en' %}This commission{% else %}Esta comisión{% endif %}
+                            </p>
+                            <p class="text-[14px] font-medium text-slate-900">
+                                BOB {{ active_mission.commission|floatformat:2 }}
+                            </p>
+                        </div>
                     </div>
-
                 </div>
             </div>
 
@@ -219,68 +183,76 @@
 
     {% for record in records %}
     <div class="order-item-wrapper" style="background-color:#ffffff;">
-      <div class="order-item">
+        <div class="order-item">
+            <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-[11px]">
 
-          <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-[11px]">
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}
+                </div>
+                <div class="text-right text-slate-700 font-medium">
+                    O{{ record.id }}{{ record.created_at|date:"is" }}
+                </div>
 
-              <div class="text-slate-400 font-medium">
-                  {% if lang == 'en' %}Order Number{% else %}Número de orden{% endif %}
-              </div>
-              <div class="text-right text-slate-700 font-medium">
-                  O{{ record.id }}{{ record.created_at|date:"is" }}
-              </div>
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Matched Time{% else %}Hora de emparejamiento{% endif %}
+                </div>
+                <div class="text-right text-slate-700 font-medium">
+                    {% if record.matched_at %}
+                        {{ record.matched_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                        {{ record.created_at|date:"Y-m-d H:i:s" }}
+                    {% endif %}
+                </div>
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}
+                </div>
+                <div class="text-right text-slate-700 font-medium truncate">
+                    {{ record.mission_name }}
+                </div>
 
-              <div class="text-slate-400 font-medium">
-                  {% if lang == 'en' %}Merchant{% else %}Comerciante{% endif %}
-              </div>
-              <div class="text-right text-slate-700 font-medium truncate">
-                  {{ record.mission_name }}
-              </div>
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Items{% else %}Artículos{% endif %}
+                </div>
+                <div class="text-right">
+                    <span class="text-blue-500 font-medium">
+                        x{{ record.order_count }}
+                    </span>
+                    <span class="text-slate-400 text-[10px]">
+                        (BOB {{ record.order_price|floatformat:2 }})
+                    </span>
+                </div>
 
-              <div class="text-slate-400 font-medium">
-                  {% if lang == 'en' %}Items{% else %}Artículos{% endif %}
-              </div>
-              <div class="text-right">
-                  <span class="text-blue-500 font-medium">
-                      x{{ record.order_count }}
-                  </span>
-                  <span class="text-slate-400 text-[10px]">
-                      (BOB {{ record.order_price|floatformat:2 }})
-                  </span>
-              </div>
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Total Order Price{% else %}Precio total del pedido{% endif %}
+                </div>
+                <div class="text-right text-slate-700 font-medium">
+                    BOB {{ record.amount|floatformat:2 }}
+                </div>
 
-              <div class="text-slate-400 font-medium">
-                  {% if lang == 'en' %}Total Order Price{% else %}Precio total del pedido{% endif %}
-              </div>
-              <div class="text-right text-slate-700 font-medium">
-                  BOB {{ record.amount|floatformat:2 }}
-              </div>
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
+                </div>
+                <div class="text-right text-slate-700 font-medium">
+                    BOB {{ record.commission|floatformat:2 }}
+                </div>
 
-              <div class="text-slate-400 font-medium">
-                  {% if lang == 'en' %}Commission{% else %}Comisión{% endif %}
-              </div>
-              <div class="text-right text-slate-700 font-medium">
-                  BOB {{ record.commission|floatformat:2 }}
-              </div>
+                <div class="text-slate-400 font-medium">
+                    {% if lang == 'en' %}Status{% else %}Estado{% endif %}
+                </div>
+                <div class="text-right">
+                    {% if record.status == 'Completed' or record.status == 'success' %}
+                    <button class="border-radius-5 van-button van-button--mini van-button--plain" style="color:rgb(34,197,94);border:1px solid rgb(34,197,94);">
+                        <span>{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span>
+                    </button>
+                    {% else %}
+                    <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain">
+                        <span>{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span>
+                    </button>
+                    {% endif %}
+                </div>
 
-              <div class="text-slate-400 font-medium">
-                  {% if lang == 'en' %}Status{% else %}Estado{% endif %}
-              </div>
-              <div class="text-right">
-                  {% if record.status == 'Completed' or record.status == 'success' %}
-                  <button class="border-radius-5 van-button van-button--mini van-button--plain" style="color:rgb(34,197,94);border:1px solid rgb(34,197,94);">
-                      <span>{% if lang == 'en' %}Sent{% else %}Enviado{% endif %}</span>
-                  </button>
-                  {% else %}
-                  <button class="border-radius-5 van-button van-button--primary van-button--mini van-button--plain">
-                      <span>{% if lang == 'en' %}To be sent{% else %}Para ser enviado{% endif %}</span>
-                  </button>
-                  {% endif %}
-              </div>
-
-          </div>
-
-      </div>
+            </div>
+        </div>
         <div class="line-divider"></div>
     </div>
     {% empty %}
@@ -373,7 +345,7 @@
 
     <div id="anim-step-4" class="step-row opacity-20">
         <div class="step-icon-box"><span class="mark hidden">✓</span></div>
-        <div class="step-text">{% if lang == 'en' %}Order Completed{% else %}Pedido completado{% endif %}</div>
+        <div class="step-text">{% if lang == 'en' %}Waiting for submission{% else %}Esperando envío{% endif %}</div>
     </div>
 </div>
 
@@ -398,11 +370,11 @@ body{background-color:#f1f5f9!important}
 .van-button--primary{color:#1989fa;border:1px solid #1989fa}
 
 .steps-card{
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    background:#ffffff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 4px 14px rgba(15,23,42,0.04);
 }
 
 .step-row{display:flex;gap:12px;margin-bottom:25px;position:relative}
@@ -482,27 +454,17 @@ document.getElementById('btn-start-match')?.addEventListener('click', function()
         .then(() => runStep("anim-step-2", 1400))
         .then(() => runStep("anim-step-3", 1000, true, true))
         .then(() => {
-            if(data.mission && data.mission.id){
-                fetch(`/finalize-mission/${data.mission.id}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": document.getElementById('csrf-token').value
-                    }
-                })
-                .then(() => {
-                    const step4 = document.getElementById('anim-step-4');
-                    if(step4){
-                        step4.classList.remove('opacity-20');
-                        step4.classList.add('anim-done');
-                        step4.querySelector('.mark')?.classList.remove('hidden');
-                    }
+            const step4 = document.getElementById('anim-step-4');
 
-                    setTimeout(() => location.reload(), 900);
-                })
-                .catch(() => location.reload());
-            } else {
-                location.reload();
+            if(step4){
+                step4.classList.remove('opacity-20');
+                step4.classList.add('anim-done');
+                step4.querySelector('.mark')?.classList.remove('hidden');
             }
+
+            setTimeout(() => {
+                location.reload();
+            }, 900);
         });
     })
     .catch(() => location.reload());

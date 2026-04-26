@@ -70,6 +70,7 @@ class MissionRecord(models.Model):
     image_link = models.URLField(max_length=500, null=True, blank=True)
     required_recharge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     scheduled_at = models.IntegerField(null=True, blank=True)
+    matched_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

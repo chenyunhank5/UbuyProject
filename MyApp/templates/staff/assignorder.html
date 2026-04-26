@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assign Trap | {{ target_user.username }}</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,7 +15,9 @@
             theme: { extend: { colors: { darker: '#020617' } } }
         }
     </script>
+
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
         [x-cloak] { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
@@ -24,181 +27,338 @@
 
 <body class="font-sans antialiased bg-slate-50 dark:bg-darker text-slate-900 dark:text-slate-300 min-h-screen">
 
-    <header class="h-20 flex items-center justify-between px-8 sticky top-0 z-20 bg-white/80 dark:bg-darker/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/50">
-        <div class="flex items-center gap-6">
-            <div class="flex flex-col">
-                <h1 class="text-xl font-bold tracking-tight dark:text-white leading-none">Task Deployer</h1>
-                <p class="text-[9px] font-black uppercase tracking-widest text-blue-500 mt-1">Target User: {{ target_user.username }}</p>
-            </div>
-        </div>
-        <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode); document.documentElement.classList.toggle('dark')"
-                class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest">
-            <span x-text="darkMode ? '☀️ Light' : '🌙 Dark'"></span>
-        </button>
-    </header>
+<header class="h-20 flex items-center justify-between px-8 sticky top-0 z-20 bg-white/80 dark:bg-darker/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/50">
+    <div class="flex flex-col">
+        <h1 class="text-xl font-bold tracking-tight dark:text-white leading-none">Task Deployer</h1>
+        <p class="text-[9px] font-black uppercase tracking-widest text-blue-500 mt-1">
+            Target User: {{ target_user.username }}
+        </p>
+    </div>
 
-    <main class="max-w-7xl mx-auto p-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest">
+        <span x-text="darkMode ? '☀️ Light' : '🌙 Dark'"></span>
+    </button>
+</header>
 
-        <div class="lg:col-span-7 space-y-6">
-            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Active Deployment Queue</h3>
+<main class="max-w-7xl mx-auto p-8 grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-            <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                        <tr>
-                            <th class="px-6 py-5">Turn</th>
-                            <th class="px-6 py-5">Details</th>
-                            <th class="px-6 py-5 text-center">Order Amount</th>
-                            <th class="px-6 py-5 text-center text-emerald-500">Saved Profit</th>
-                            <th class="px-6 py-5 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        {% for order in scheduled_orders %}
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
-                            <td class="px-6 py-6">
-                                <span class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-mono font-black text-xs">
-                                    #{{ order.scheduled_at }}
+    <div class="lg:col-span-7 space-y-6">
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+            Active Deployment Queue
+        </h3>
+
+        <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    <tr>
+                        <th class="px-6 py-5">Turn</th>
+                        <th class="px-6 py-5">Details</th>
+                        <th class="px-6 py-5 text-center">Order Amount</th>
+                        <th class="px-6 py-5 text-center text-emerald-500">Saved Profit</th>
+                        <th class="px-6 py-5 text-right">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for order in scheduled_orders %}
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors"
+                        x-data="{
+                            modalOpen: false,
+                            turn: {{ order.scheduled_at|default:1 }},
+                            units: {{ order.order_count|default:1 }},
+                            price: {{ order.order_price|default:0 }},
+                            profit: {{ order.commission|default:0 }},
+                            get total() {
+                                return (Number(this.units || 0) * Number(this.price || 0)).toFixed(2)
+                            }
+                        }">
+
+                        <td class="px-6 py-6">
+                            <span class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 font-mono font-black text-xs">
+                                #{{ order.scheduled_at }}
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-6">
+                            <p class="text-sm font-bold dark:text-slate-100 leading-tight">
+                                {{ order.mission_name }}
+                            </p>
+                            <p class="text-[9px] font-mono font-bold text-slate-400 mt-1 uppercase">
+                                {{ order.order_count }} Units @ {{ order.order_price }}
+                            </p>
+                        </td>
+
+                        <td class="px-6 py-6 text-center">
+                            <span class="text-xs font-mono font-black text-blue-500">
+                                BOB {% widthratio order.order_count 1 order.order_price %}
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-6 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs font-mono font-black text-emerald-500">
+                                    BOB {{ order.commission|floatformat:2 }}
                                 </span>
-                            </td>
-                            <td class="px-6 py-6">
-                                <p class="text-sm font-bold dark:text-slate-100 leading-tight">{{ order.mission_name }}</p>
-                                <p class="text-[9px] font-mono font-bold text-slate-400 mt-1 uppercase">
-                                    {{ order.order_count }} Units @ {{ order.order_price }}
-                                </p>
-                            </td>
-
-                            <td class="px-6 py-6 text-center">
-                                <span class="text-xs font-mono font-black text-blue-500">
-                                    BOB {% widthratio order.order_count 1 order.order_price %}
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                    Fixed Amount
                                 </span>
-                            </td>
+                            </div>
+                        </td>
 
-                            <td class="px-6 py-6 text-center">
-                                <div class="flex flex-col items-center">
-                                    <span class="text-xs font-mono font-black text-emerald-500">
-                                        {# Now displays the saved profit value directly #}
-                                        BOB {{ order.commission|floatformat:2 }}
-                                    </span>
-                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                                        Fixed Amount
-                                    </span>
-                                </div>
-                            </td>
+                        <td class="px-6 py-6 text-right">
+                            <div class="flex justify-end gap-2">
+                                <button type="button"
+                                        @click="modalOpen = true"
+                                        class="px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[9px] font-black uppercase hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
+                                    Edit
+                                </button>
 
-                            <td class="px-6 py-6 text-right">
                                 <form method="POST">
                                     {% csrf_token %}
                                     <input type="hidden" name="order_id" value="{{ order.id }}">
-                                    <button type="submit" name="delete_scheduled" class="p-2 text-slate-300 hover:text-rose-600 transition-colors">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    <button type="submit" name="delete_scheduled"
+                                            class="p-2 text-slate-300 hover:text-rose-600 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
                                     </button>
                                 </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="px-6 py-24 text-center">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Queue is empty</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                            </div>
+                        </td>
 
-        <div class="lg:col-span-5 space-y-6">
-            <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Deployment Config</h3>
+                        <td>
+                            <div x-cloak
+                                 x-show="modalOpen"
+                                 x-transition.opacity
+                                 class="fixed inset-0 z-50 flex items-center justify-center px-4">
 
-            <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-8">
+                                <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+                                     @click="modalOpen = false"></div>
 
-                <div class="mb-8 space-y-4">
-                    <form method="GET" class="relative">
-                        <input type="text" name="q_template" value="{{ search_query }}" placeholder="Search templates..."
-                               class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 transition-all">
-                    </form>
+                                <div x-show="modalOpen"
+                                     x-transition.scale
+                                     class="relative w-full max-w-md bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-7">
 
-                    <div class="p-5 bg-blue-50 dark:bg-blue-600/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                        <label class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">Target Deployment Turn</label>
-                        <input type="number" x-model="targetTurn"
-                               class="w-full bg-transparent font-mono font-black text-4xl text-blue-600 outline-none border-none p-0">
-                    </div>
-                </div>
+                                    <div class="flex items-start justify-between mb-6">
+                                        <div>
+                                            <p class="text-[9px] font-black uppercase tracking-widest text-blue-500">
+                                                Edit Assigned Order
+                                            </p>
+                                            <h3 class="text-lg font-black dark:text-white mt-1">
+                                                {{ order.mission_name }}
+                                            </h3>
+                                        </div>
 
-                <div class="space-y-4 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
-                    {% for t in templates %}
-                    <div class="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/40"
-                         x-data="{
-                            units: {{ t.order_count|default:1 }},
-                            price: {{ t.order_price|default:0 }},
-                            comm_pct: 10,
-                            get total() { return (this.units * this.price).toFixed(2) },
-                            get profit() { return (this.total * (this.comm_pct / 100)).toFixed(2) }
-                         }">
+                                        <button type="button"
+                                                @click="modalOpen = false"
+                                                class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-500 hover:text-rose-500 transition">
+                                            ✕
+                                        </button>
+                                    </div>
 
-                        <div class="flex items-center gap-4 mb-5">
-                            <img src="{{ t.image_link }}" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 object-contain p-1">
-                            <h5 class="text-[11px] font-black uppercase dark:text-white flex-1">{{ t.name }}</h5>
-                        </div>
+                                    <form method="POST" class="space-y-4">
+                                        {% csrf_token %}
 
-                        <form method="POST" class="space-y-4">
-                            {% csrf_token %}
-                            <input type="hidden" name="mission_id" value="{{ t.id }}">
-                            <input type="hidden" name="target_turn" :value="targetTurn">
+                                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                                        <input type="hidden" name="scheduled_at" :value="turn">
+                                        <input type="hidden" name="order_units" :value="units">
+                                        <input type="hidden" name="unit_price" :value="price">
+                                        <input type="hidden" name="commission" :value="profit">
 
-                            <input type="hidden" name="commission" :value="profit">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="relative">
+                                                <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">
+                                                    Turn
+                                                </label>
+                                                <input type="number" x-model="turn"
+                                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                                            </div>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="relative">
-                                    <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">Units</label>
-                                    <input type="number" name="order_units" x-model="units" required
-                                           class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
-                                </div>
-                                <div class="relative">
-                                    <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">Unit Price</label>
-                                    <input type="number" name="unit_price" step="0.01" x-model="price" required
-                                           class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                                            <div class="relative">
+                                                <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">
+                                                    Units
+                                                </label>
+                                                <input type="number" x-model="units"
+                                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                                            </div>
+                                        </div>
+
+                                        <div class="relative">
+                                            <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">
+                                                Unit Price
+                                            </label>
+                                            <input type="number" step="0.01" x-model="price"
+                                                   class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                                        </div>
+
+                                        <div class="relative">
+                                            <label class="absolute left-3 top-2 text-[7px] font-black text-emerald-500 uppercase">
+                                                Saved Profit
+                                            </label>
+                                            <input type="number" step="0.01" x-model="profit"
+                                                   class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold text-emerald-500 outline-none">
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="p-4 bg-blue-50 dark:bg-blue-600/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                                                <p class="text-[7px] font-black text-blue-500 uppercase">Order Amount</p>
+                                                <p class="text-sm font-mono font-black text-blue-600" x-text="'BOB ' + total"></p>
+                                            </div>
+
+                                            <div class="p-4 bg-emerald-50 dark:bg-emerald-600/5 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+                                                <p class="text-[7px] font-black text-emerald-500 uppercase">Profit</p>
+                                                <p class="text-sm font-mono font-black text-emerald-600" x-text="'BOB ' + Number(profit || 0).toFixed(2)"></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-3 pt-2">
+                                            <button type="button"
+                                                    @click="modalOpen = false"
+                                                    class="w-1/2 py-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-500 text-[10px] font-black uppercase">
+                                                Cancel
+                                            </button>
+
+                                            <button type="submit" name="update_scheduled"
+                                                    class="w-1/2 py-4 rounded-xl bg-emerald-500 text-white text-[10px] font-black uppercase hover:bg-emerald-600 transition">
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-24 text-center">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                Queue is empty
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="p-3 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                                    <p class="text-[7px] font-black text-slate-400 uppercase">Total Value</p>
-                                    <p class="text-[11px] font-mono font-black text-blue-500" x-text="'BOB ' + total"></p>
-                                </div>
-                                <div class="p-3 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                                    <p class="text-[7px] font-black text-emerald-500 uppercase">Est. Profit (BOB)</p>
-                                    <p class="text-[11px] font-mono font-black text-emerald-500" x-text="'BOB ' + profit"></p>
-                                </div>
+    <div class="lg:col-span-5 space-y-6">
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+            Deployment Config
+        </h3>
+
+        <div class="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-8">
+
+            <div class="mb-8 space-y-4">
+                <form method="GET" class="relative">
+                    <input type="text" name="q_template" value="{{ search_query }}" placeholder="Search templates..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3 text-xs outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+                </form>
+
+                <div class="p-5 bg-blue-50 dark:bg-blue-600/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                    <label class="block text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
+                        Target Deployment Turn
+                    </label>
+                    <input type="number" x-model="targetTurn"
+                           class="w-full bg-transparent font-mono font-black text-4xl text-blue-600 outline-none border-none p-0">
+                </div>
+            </div>
+
+            <div class="space-y-4 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
+                {% for t in templates %}
+                <div class="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/40"
+                     x-data="{
+                        units: {{ t.order_count|default:1 }},
+                        price: {{ t.order_price|default:0 }},
+                        comm_pct: 10,
+                        get total() {
+                            return (Number(this.units || 0) * Number(this.price || 0)).toFixed(2)
+                        },
+                        get profit() {
+                            return (Number(this.total || 0) * (Number(this.comm_pct || 0) / 100)).toFixed(2)
+                        }
+                     }">
+
+                    <div class="flex items-center gap-4 mb-5">
+                        <img src="{{ t.image_link }}" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 object-contain p-1">
+                        <h5 class="text-[11px] font-black uppercase dark:text-white flex-1">
+                            {{ t.name }}
+                        </h5>
+                    </div>
+
+                    <form method="POST" class="space-y-4">
+                        {% csrf_token %}
+
+                        <input type="hidden" name="mission_id" value="{{ t.id }}">
+                        <input type="hidden" name="target_turn" :value="targetTurn">
+                        <input type="hidden" name="commission" :value="profit">
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">
+                                    Units
+                                </label>
+                                <input type="number" name="order_units" x-model="units" required
+                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
                             </div>
 
                             <div class="relative">
-                                <label class="absolute left-3 top-2 text-[7px] font-black text-emerald-500 uppercase">Commission % Calculator</label>
-                                <input type="number" step="0.1" x-model="comm_pct" required
-                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-xs font-mono font-bold text-emerald-500 outline-none">
+                                <label class="absolute left-3 top-2 text-[7px] font-black text-blue-500 uppercase">
+                                    Unit Price
+                                </label>
+                                <input type="number" name="unit_price" step="0.01" x-model="price" required
+                                       class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono font-bold dark:text-white outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                <p class="text-[7px] font-black text-slate-400 uppercase">Total Value</p>
+                                <p class="text-[11px] font-mono font-black text-blue-500" x-text="'BOB ' + total"></p>
                             </div>
 
-                            <button type="submit" class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase rounded-xl hover:shadow-2xl transition-all active:scale-95">
-                                Deploy Turn <span x-text="targetTurn"></span> (Save <span x-text="profit"></span> BOB)
-                            </button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </main>
+                            <div class="p-3 bg-slate-50 dark:bg-darker/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                <p class="text-[7px] font-black text-emerald-500 uppercase">Est. Profit (BOB)</p>
+                                <p class="text-[11px] font-mono font-black text-emerald-500" x-text="'BOB ' + profit"></p>
+                            </div>
+                        </div>
 
-    {% if messages %}
-    <div class="fixed bottom-8 right-8 space-y-3 z-50">
-        {% for message in messages %}
-        <div class="px-6 py-4 rounded-2xl shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <p class="text-[10px] font-black uppercase tracking-widest text-blue-600">{{ message }}</p>
+                        <div class="relative">
+                            <label class="absolute left-3 top-2 text-[7px] font-black text-emerald-500 uppercase">
+                                Commission % Calculator
+                            </label>
+                            <input type="number" step="0.1" x-model="comm_pct" required
+                                   class="w-full pl-3 pr-2 pt-5 pb-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-xs font-mono font-bold text-emerald-500 outline-none">
+                        </div>
+
+                        <button type="submit"
+                                class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase rounded-xl hover:shadow-2xl transition-all active:scale-95">
+                            Deploy Turn <span x-text="targetTurn"></span>
+                            (Save <span x-text="profit"></span> BOB)
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+
         </div>
-        {% endfor %}
     </div>
-    {% endif %}
+
+</main>
+
+{% if messages %}
+<div class="fixed bottom-8 right-8 space-y-3 z-50">
+    {% for message in messages %}
+    <div class="px-6 py-4 rounded-2xl shadow-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <p class="text-[10px] font-black uppercase tracking-widest text-blue-600">
+            {{ message }}
+        </p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 </body>
 </html>

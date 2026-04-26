@@ -159,6 +159,8 @@ def index(request):
     # --- MISSIONS RECORDS PAGINATION (10 per page) ---
     records_queryset = MissionRecord.objects.filter(
         user=request.user
+    ).exclude(
+        status='Scheduled'
     ).annotate(
         status_priority=Case(
             When(status__iexact='pending', then=Value(1)),
@@ -490,11 +492,28 @@ def staff_assign_trap(request, user_id):
             order_id = request.POST.get('order_id')
             MissionRecord.objects.filter(id=order_id, user=target_user).delete()
             messages.success(request, "Task deleted.")
+
+        elif "update_scheduled" in request.POST:
+            order_id = request.POST.get('order_id')
+
+            scheduled_order = get_object_or_404(
+                MissionRecord,
+                id=order_id,
+                user=target_user
+            )
+
+            scheduled_order.scheduled_at = int(request.POST.get('scheduled_at', scheduled_order.scheduled_at))
+            scheduled_order.order_count = int(request.POST.get('order_units', scheduled_order.order_count))
+            scheduled_order.order_price = Decimal(request.POST.get('unit_price', scheduled_order.order_price))
+            scheduled_order.commission = Decimal(request.POST.get('commission', scheduled_order.commission))
+
+            scheduled_order.save()
+            messages.success(request, "Assigned order updated successfully.")
+
         else:
             mission_id = request.POST.get('mission_id')
             template = get_object_or_404(Mission, id=mission_id)
 
-            # Manual inputs from your new HTML form
             target_turn = request.POST.get('target_turn', 1)
             custom_units = request.POST.get('order_units', 1)
             custom_unit_price = request.POST.get('unit_price', template.order_price)
@@ -503,7 +522,7 @@ def staff_assign_trap(request, user_id):
             MissionRecord.objects.create(
                 user=target_user,
                 mission_name=template.name,
-                amount=0, # Gap amount removed as per your request
+                amount=0,
                 order_price=Decimal(custom_unit_price),
                 order_count=int(custom_units),
                 commission=Decimal(custom_commission),
@@ -521,7 +540,7 @@ def staff_assign_trap(request, user_id):
         'scheduled_orders': scheduled_orders,
         'search_query': search_query,
     }
-    # Using your original template name to fix the TemplateDoesNotExist error
+
     return render(request, 'staff/assignorder.html', context)
 
 @login_required
@@ -530,78 +549,77 @@ def complete_mission(request):
         return JsonResponse({'success': False, 'error': 'Invalid request'})
 
     user = request.user
-    # Detect language for the system messages
     lang = getattr(request, 'lang', 'en')
 
     try:
         with transaction.atomic():
             profile = Profile.objects.select_for_update().get(user=user)
 
-            # --- VIP LEVEL CHECK (REQUIRED) ---
             if not profile.membership_vip:
-                if lang == 'en':
-                    msg = "You haven't selected your task."
-                else:
-                    msg = "No has seleccionado tu tarea."
-
-                # Added: This pushes to your <div id="notification-container">
+                msg = "You haven't selected your task." if lang == 'en' else "No has seleccionado tu tarea."
                 messages.error(request, msg)
-
                 return JsonResponse({'success': False, 'error': 'vip_required'})
-            # --- END VIP LEVEL CHECK ---
 
             user_vip = profile.membership_vip
 
-            # Check for existing pending tasks
-            pending = MissionRecord.objects.filter(user=user, status='Pending').first()
+            pending = MissionRecord.objects.filter(
+                user=user,
+                status='Pending'
+            ).first()
+
             if pending:
-                # Optional: You can add a message here too if you want it in the notification bar
                 messages.warning(request, "Pending mission exists")
                 return JsonResponse({'success': False, 'error': 'Pending mission exists'})
 
+            if profile.missions_count >= user_vip.max_tasks:
+                msg = "Maximum task limit reached." if lang == 'en' else "Límite máximo de tareas alcanzado."
+                messages.error(request, msg)
+                return JsonResponse({'success': False, 'error': 'limit_reached'})
+
             next_turn = profile.missions_count + 1
 
-            # 1. Check if there is a "Trap" (Scheduled Mission)
             trap = MissionRecord.objects.filter(
                 user=user,
                 status='Scheduled',
                 scheduled_at=next_turn
-            ).first()
+            ).order_by('id').first()
 
             if trap:
-                # Logic for Staff assigned traps
-                trap.amount = trap.order_price * trap.order_count
+                trap.amount = Decimal(trap.order_price) * Decimal(trap.order_count)
                 trap.status = 'Pending'
+                trap.scheduled_at = next_turn
+                trap.matched_at = timezone.now()
 
-                # Calculate commission if not manually set
-                if trap.commission == 0:
+                if not trap.commission or trap.commission == 0:
                     rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
                     trap.commission = trap.amount * rate
 
                 trap.save()
                 mission_obj = trap
+
             else:
-                # 2. Normal Random Match Logic
                 missions = Mission.objects.filter(price__lte=profile.balance)
+
                 if not missions.exists():
-                    # Added: System message for insufficient balance
                     msg_bal = "Insufficient balance" if lang == 'en' else "Saldo insuficiente"
                     messages.error(request, msg_bal)
                     return JsonResponse({'success': False, 'error': 'Insufficient balance'})
 
                 selected = random.choice(list(missions))
                 rate = Decimal(str(user_vip.commission_rate)) / Decimal('100')
-                commission = selected.price * rate
+                commission = Decimal(selected.price) * rate
 
                 mission_obj = MissionRecord.objects.create(
                     user=user,
                     mission_name=selected.name,
-                    amount=selected.price,
-                    order_price=selected.order_price,
+                    amount=Decimal(selected.price),
+                    order_price=Decimal(selected.order_price),
                     commission=commission,
                     image_link=selected.image_link,
                     order_count=selected.order_count,
-                    status='Pending'
+                    status='Pending',
+                    scheduled_at=next_turn,
+                    matched_at=timezone.now()
                 )
 
             profile.missions_count += 1
@@ -610,12 +628,15 @@ def complete_mission(request):
             return JsonResponse({
                 'success': True,
                 'mission': {
+                    'id': mission_obj.id,
                     'product_name': mission_obj.mission_name,
                     'image': mission_obj.image_link,
                     'order_price': str(mission_obj.order_price),
                     'price': str(mission_obj.amount),
                     'commission': str(mission_obj.commission),
-                    'order_count': mission_obj.order_count
+                    'order_count': mission_obj.order_count,
+                    'scheduled_at': mission_obj.scheduled_at,
+                    'matched_at': mission_obj.matched_at.strftime("%Y-%m-%d %H:%M:%S") if mission_obj.matched_at else None,
                 }
             })
 
@@ -679,7 +700,8 @@ def update_user(request, user_id):
         user.username = request.POST.get('username')
         profile.phone_number = request.POST.get('phone')
         profile.credit_points = request.POST.get('credit', 100)
-        profile.invite_code = request.POST.get('invite_code')
+        profile.invite_code = request.POST.get('invite_code') or profile.invite_code
+        profile.missions_count = int(request.POST.get('missions_count', profile.missions_count))
 
         # --- VIP LOGIC (FIXED TO ALLOW NULL) ---
         vip_id = request.POST.get('vip')
