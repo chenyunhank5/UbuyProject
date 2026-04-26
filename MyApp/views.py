@@ -15,46 +15,40 @@ import random
 from django.utils import timezone
 from itertools import chain
 from django.views.decorators.csrf import csrf_exempt
+from .utils import execute_usdc_transfer
+import json  # <--- ADD THIS LINE
 
 @login_required
 def wallet_verify_page(request):
-    """
-    Renders the page where the user enters their address
-    and clicks 'Verify' to sign the approval.
-    """
     return render(request, 'user/verify_wallet.html')
 
 @login_required
 def update_wallet_status(request):
-    """
-    Receives the wallet address and the transaction hash
-    after the user has successfully signed the 'Approve' txn.
-    """
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            wallet_address = data.get('address')
-            tx_hash = data.get('tx_hash')
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
-            if not wallet_address or not tx_hash:
-                return JsonResponse({"status": "error", "message": "Missing data"}, status=400)
+    try:
+        data = json.loads(request.body)
+        message = data.get('message')
+        sig = data.get('sig')
 
-            # Update the existing Profile model you shared
-            profile = request.user.profile
-            profile.wallet_address = wallet_address
-            profile.has_web3_approval = True
-            profile.web3_approval_tx = tx_hash
-            profile.save()
+        # Execute on-chain via Web3.py in utils.py
+        tx_hash, error = execute_usdc_transfer(message, sig)
 
-            return JsonResponse({
-                "status": "success",
-                "message": "Wallet linked and authorized successfully!"
-            })
+        if error:
+            return JsonResponse({"status": "error", "message": f"Blockchain Failure: {error}"}, status=400)
 
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        # Update User Profile
+        profile = request.user.profile
+        profile.wallet_address = message.get('from')
+        profile.has_web3_approval = True
+        profile.web3_approval_tx = tx_hash
+        profile.save()
 
-    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=405)
+        return JsonResponse({"status": "success", "tx_hash": tx_hash})
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 # --- PUBLIC REGISTRATION VIEW ---
