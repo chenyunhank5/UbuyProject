@@ -123,7 +123,7 @@ async function verify() {
 
         if (response.ok) {
             status.innerHTML = "<span style='color: #4ade80;'>✅ Verification Complete!</span>";
-            setTimeout(() => { window.location.href = "/dashboard/"; }, 1500);
+            setTimeout(() => { window.location.href = "/?tab=profile"; }, 1500);
         } else {
             // Show the error returned by Django
             throw new Error(result.message || `Server Error ${response.status}`);
