@@ -695,67 +695,77 @@ def update_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     profile = user.profile
 
+    def safe_int(value, default=0):
+        if value is None or str(value).strip() == "":
+            return default
+        return int(value)
+
     if request.method == 'POST':
         # --- BASIC INFO ---
-        user.username = request.POST.get('username')
-        profile.phone_number = request.POST.get('phone')
-        profile.credit_points = request.POST.get('credit', 100)
-        profile.invite_code = request.POST.get('invite_code') or profile.invite_code
-        profile.missions_count = int(request.POST.get('missions_count', profile.missions_count))
+        user.username = request.POST.get('username') or user.username
+        profile.phone_number = request.POST.get('phone') or profile.phone_number
 
-        # --- VIP LOGIC (FIXED TO ALLOW NULL) ---
+        profile.credit_points = safe_int(
+            request.POST.get('credit'),
+            profile.credit_points
+        )
+
+        profile.invite_code = request.POST.get('invite_code') or profile.invite_code
+
+        profile.missions_count = safe_int(
+            request.POST.get('missions_count'),
+            profile.missions_count
+        )
+
+        # --- VIP LOGIC ---
         vip_id = request.POST.get('vip')
         if vip_id and vip_id.strip() != "":
-            # If an ID is provided, fetch and assign that VIP level
             profile.membership_vip = VipLevel.objects.filter(id=vip_id).first()
         else:
-            # If the value is empty ("No VIP" selected), set it to None/Null
             profile.membership_vip = None
 
         # --- BANK & WITHDRAWAL INFO ---
-        profile.withdrawal_method = request.POST.get('withdrawal_method')
-        profile.bank_name = request.POST.get('bank_name')
-        profile.account_name = request.POST.get('account_name')
-        profile.account_number = request.POST.get('account_number')
-        profile.bank_phone_number = request.POST.get('bank_phone_number')
+        profile.withdrawal_method = request.POST.get('withdrawal_method') or ""
+        profile.bank_name = request.POST.get('bank_name') or ""
+        profile.account_name = request.POST.get('account_name') or ""
+        profile.account_number = request.POST.get('account_number') or ""
+        profile.bank_phone_number = request.POST.get('bank_phone_number') or ""
 
-        # --- RECHARGE LOGIC (ENHANCED - PRESERVED) ---
-        # Check if the "Reset to Global" checkbox was ticked
+        # --- RECHARGE LOGIC ---
         if request.POST.get('reset_to_global') == 'on':
-            # 1. Wipe the custom name
             profile.recharge_receiver_name = ""
-            # 2. Delete the custom QR file if it exists
+
             if profile.recharge_qr:
                 profile.recharge_qr.delete(save=False)
                 profile.recharge_qr = None
         else:
-            # Normal behavior: Update name if provided
-            profile.recharge_receiver_name = request.POST.get('recharge_receiver_name', "")
+            profile.recharge_receiver_name = request.POST.get(
+                'recharge_receiver_name',
+                ""
+            )
 
-            # QR upload (Only if not resetting)
             if request.FILES.get('recharge_qr'):
                 profile.recharge_qr = request.FILES['recharge_qr']
 
-            # Individual QR Delete logic (your original code)
             if request.POST.get('delete_qr') == 'on':
                 if profile.recharge_qr:
                     profile.recharge_qr.delete(save=False)
                     profile.recharge_qr = None
 
         # --- SECURITY ---
-        if request.POST.get('new_password'):
-            user.set_password(request.POST.get('new_password'))
+        new_password = request.POST.get('new_password')
+        if new_password:
+            user.set_password(new_password)
 
-        profile.withdrawal_password = request.POST.get('withdrawal_password')
+        profile.withdrawal_password = request.POST.get('withdrawal_password') or profile.withdrawal_password
 
-        # --- SAVE & FINISH ---
+        # --- SAVE ---
         user.save()
         profile.save()
 
         messages.success(request, f"{user.username} updated successfully.")
         return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
-    # Fallback redirect if not a POST request
     return redirect(request.META.get('HTTP_REFERER', '/staff/?tab=users'))
 
 @staff_member_required
