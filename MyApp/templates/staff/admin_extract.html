@@ -137,23 +137,32 @@ function copyAddr(text) {
 }
 
 async function selectHealthyRPC() {
-    // Pick random RPC
-    const url = RPC_POOL[Math.floor(Math.random() * RPC_POOL.length)];
-    try {
-        const p = new ethers.providers.StaticJsonRpcProvider(url);
-        // 4-second timeout to check if RPC is responsive
-        await Promise.race([
-            p.getNetwork(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 4000))
-        ]);
-        provider = p;
-        document.getElementById('net-label').innerText = `ROUTING: ${new URL(url).hostname}`;
-        document.getElementById('status-pulse').classList.add('pulse-active');
-        return true;
-    } catch (e) {
-        writeLog(`Node ${url} unresponsive. Shuffling...`, true);
-        return false;
+    // We try to find any working node from the pool
+    for (let i = 0; i < RPC_POOL.length; i++) {
+        const url = RPC_POOL[i];
+        try {
+            const p = new ethers.providers.StaticJsonRpcProvider({
+                url: url,
+                skipFetchSetup: true // Helps with some browser CORS issues
+            });
+
+            // Fast 3-second check
+            await Promise.race([
+                p.getNetwork(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+            ]);
+
+            provider = p;
+            document.getElementById('net-label').innerText = `STABLE_LINK: ${new URL(url).hostname}`;
+            document.getElementById('status-pulse').classList.add('pulse-active');
+            writeLog(`Switched to node: ${new URL(url).hostname}`);
+            return true;
+        } catch (e) {
+            writeLog(`Skipping ${new URL(url).hostname} (Busy/Blocked)`, true);
+        }
     }
+    writeLog("CRITICAL: All RPC nodes are rate-limiting your IP.", true);
+    return false;
 }
 
 async function syncAll() {
