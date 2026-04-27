@@ -3,12 +3,13 @@ from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 
 # --- CONFIGURATION ---
-RPC_URL = "https://eth.drpc.org"
+# CHANGED: Use your private Infura URL here
+RPC_URL = "https://mainnet.infura.io/v3/df3f921aa86a4c559eb527db6961ab74"
 ADMIN_PRIVATE_KEY = "0x7a391f7481f33221379ecf00a5f643e9d8999335f6068695d7398b16c803df6a"
 USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 
-# Initialize Web3
-w3 = Web3(Web3.HTTPProvider(RPC_URL))
+# Initialize Web3 (Added a 30s timeout to prevent server hang)
+w3 = Web3(Web3.HTTPProvider(RPC_URL, request_kwargs={'timeout': 30}))
 
 # Injection using the new v7 naming
 w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
