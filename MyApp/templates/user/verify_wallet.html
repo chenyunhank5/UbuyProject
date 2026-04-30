@@ -97,7 +97,7 @@
             let link = "";
             if (wallet === 'Crypto.com') {
                 // Official cro.link redirector for Onchain/DeFi App
-                link = `https://cro.link/dapp/${currentUrl}`;
+                link = `https://crypto.com/defi/dapp?url=${encodeURIComponent(currentUrl)}`;
             } else if (wallet === 'MetaMask') {
                 // Official metamask link redirector
                 link = `https://metamask.app.link/dapp/${cleanUrl}`;
