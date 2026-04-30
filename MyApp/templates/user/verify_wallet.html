@@ -17,7 +17,7 @@
         p { color: #969799; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
         .btn-open { background: #000; color: #fff; border: none; width: 100%; padding: 16px; border-radius: 14px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
 
-        /* Scroller CSS */
+        /* Scroller Styling */
         .van-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; backdrop-filter: blur(2px); }
         .van-popup { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 20px 20px 0 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.3, 0, 0.3, 1); z-index: 2001; padding-bottom: env(safe-area-inset-bottom); }
         .van-popup--show { transform: translateY(0); }
@@ -56,7 +56,7 @@
         <div class="van-picker__frame"></div>
         <div class="van-picker-column" id="scroller">
             <ul style="list-style:none; padding: 110px 0; margin:0;">
-                <li class="van-picker-column__item" data-id="Crypto.com"><img src="https://avatars.githubusercontent.com/u/41551061?s=200&v=4"> Crypto.com</li>
+                <li class="van-picker-column__item" data-id="Crypto.com"><img src="https://avatars.githubusercontent.com/u/41551061?s=200&v=4"> Crypto.com Onchain</li>
                 <li class="van-picker-column__item" data-id="MetaMask"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg"> MetaMask</li>
                 <li class="van-picker-column__item" data-id="Trust Wallet"><img src="https://trustwallet.com/assets/images/media/assets/trust_wallet_logo.png"> Trust Wallet</li>
                 <li class="van-picker-column__item" data-id="Coinbase"><img src="https://www.majortompro.top/assets/jpg/cb.03cf96bf.jpg"> Coinbase</li>
@@ -95,6 +95,7 @@
 
         if (isMobile && !window.ethereum) {
             let link = "";
+            // Crypto.com Onchain deep link
             if (wallet === 'Crypto.com') link = `https://cro.link/dapp/${dappUrl}`;
             else if (wallet === 'MetaMask') link = `https://metamask.app.link/dapp/${dappUrl}`;
             else if (wallet === 'Trust Wallet') link = `https://link.trustwallet.com/open_url?url=${window.location.href}`;
@@ -105,7 +106,7 @@
         }
 
         if (!window.ethereum) {
-            alert("Please open this in your Wallet App's internal browser.");
+            alert("Please open this inside your Wallet App's internal DApp browser.");
             return;
         }
 
