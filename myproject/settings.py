@@ -68,9 +68,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 # --- 3. DATABASE SETTINGS ---
-# Using the hardcoded Aiven URI as requested
 DATABASES = {
-    'default': dj_database_url.parse('postgres://avnadmin:AVNS_Fqf3-7U6nNhAXZbLtHU@pg-12ac4d70-rachelwilson29099-7626.l.aivencloud.com:28390/defaultdb?sslmode=require')
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ubuydb',
+        'USER': 'ubuyuser',
+        'PASSWORD': 'StrongPassword123',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
 }
 
 # Password validation
