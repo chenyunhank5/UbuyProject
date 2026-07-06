@@ -23,7 +23,7 @@ ALLOWED_HOSTS = [
     'www.boemp.com',
     'localhost',
     '127.0.0.1',
-    '202.155.8.168'
+    '95.169.180.118',
 ]
 
 # Application definition
@@ -98,10 +98,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # This fixes the "Origin checking failed" error
 CSRF_TRUSTED_ORIGINS = [
-    'http://202.155.8.168',         # Added for VPS IP
-    'http://202.155.8.168:8000',    # Added for VPS IP with Port
-    'http://127.0.0.1:8000',        # Added for local testing
-    'http://localhost:8000'         # Added for local testing
+    'http://95.169.180.118',
+    'http://95.169.180.118:8000',
+    'http://boemp.com',
+    'https://boemp.com',
+    'http://www.boemp.com',
+    'https://www.boemp.com',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
 ]
 
 # REDIRECTS DISABLED:
